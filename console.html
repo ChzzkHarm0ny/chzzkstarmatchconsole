@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>CHZZK Style - StarCraft Console</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // 🔥 본인의 Firebase 설정 정보로 수정하세요
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // 🔥 본인의 구글 Apps Script 웹 앱 URL로 수정하세요
+        const GAS_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+
+        window.onload = async function() {
+            // 1. 오버레이 URL 자동 생성 및 입력창 세팅
+            generateOverlayUrl();
+
+            // 2. 스프레드시트 데이터 로드 및 셀렉트박스 채우기
+            try {
+                let res = await fetch(GAS_URL + "?action=getData");
+                let data = await res.json();
+                populateSelectors(data.players, data.maps);
+            } catch (e) {
+                console.error("스프레드시트 데이터 로드 실패:", e);
+            }
+
+            // 3. 점수 조작 이벤트 바인딩
+            document.getElementById('btn-p1-plus').addEventListener('click', () => updateScore('p1Score', 1));
+            document.getElementById('btn-p1-minus').addEventListener('click', () => updateScore('p1Score', -1));
+            document.getElementById('btn-p2-plus').addEventListener('click', () => updateScore('p2Score', 1));
+            document.getElementById('btn-p2-minus').addEventListener('click', () => updateScore('p2Score', -1));
+
+            // 4. 복사 버튼 이벤트 바인딩
+            document.getElementById('btn-copy-url').addEventListener('click', copyOverlayUrl);
+        };
+
+        // 현재 콘솔 주소를 기준으로 overlay.html 주소 자동 계산
+        function generateOverlayUrl() {
+            const currentUrl = window.location.href;
+            // console.html 부분을 overlay.html로 치환 (폴더 경로 유지)
+            const overlayUrl = currentUrl.replace(/console\.html$/, 'overlay.html');
+            document.getElementById('overlay-url-input').value = overlayUrl;
+        }
+
+        // 클립보드 복사 함수
+        function copyOverlayUrl() {
+            const urlInput = document.getElementById('overlay-url-input');
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999); // 모바일 대응
+
+            navigator.clipboard.writeText(urlInput.value).then(() => {
+                const btn = document.getElementById('btn-copy-url');
+                const originalText = btn.innerText;
+                btn.innerText = '복사 완료!';
+                btn.className = 'bg-green-600 text-white px-4 py-2 rounded text-sm font-bold transition-all';
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.className = 'bg-[#00FFA3] hover:bg-[#00e692] text-black px-4 py-2 rounded text-sm font-bold transition-all cursor-pointer';
+                }, 2000);
+            }).catch(err => {
+                console.error('주소 복사 실패:', err);
+            });
+        }
+
+        function populateSelectors(players, maps) {
+            const p1Select = document.getElementById('select-p1');
+            const p2Select = document.getElementById('select-p2');
+            const mapSelect = document.getElementById('select-map');
+
+            players.forEach(p => {
+                let opt1 = document.createElement('option');
+                opt1.value = p.name;
+                opt1.text = `${p.name} (${p.race})`;
+                p1Select.appendChild(opt1);
+
+                let opt2 = document.createElement('option');
+                opt2.value = p.name;
+                opt2.text = `${p.name} (${p.race})`;
+                p2Select.appendChild(opt2);
+            });
+
+            maps.forEach(m => {
+                let opt = document.createElement('option');
+                opt.value = m.url;
+                opt.text = m.name;
+                mapSelect.appendChild(opt);
+            });
+        }
+
+        function updateScore(targetField, delta) {
+            const scoreDisplay = document.getElementById(targetField);
+            let currentScore = parseInt(scoreDisplay.innerText) + delta;
+            if (currentScore < 0) currentScore = 0;
+            set(ref(db, 'matchState/' + targetField), currentScore);
+        }
+
+        onValue(ref(db, 'matchState'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('p1Score').innerText = data.p1Score || 0;
+                document.getElementById('p2Score').innerText = data.p2Score || 0;
+            }
+        });
+    </script>
+</head>
+<body class="bg-[#0b0c0e] text-white p-6 font-sans">
+    <div class="max-w-4xl mx-auto bg-[#141518] p-6 rounded-2xl border border-[#2c2d33] shadow-2xl">
+        <h1 class="text-xl font-bold mb-6 flex items-center justify-between border-b border-[#2c2d33] pb-4">
+            <span class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#00FFA3] animate-pulse"></span>
+                CHZZK CONSOLE CONTROL
+            </span>
+            <span class="text-xs bg-[#00FFA3]/10 text-[#00FFA3] border border-[#00FFA3]/30 px-3 py-1 rounded-full font-semibold">SHEETS LINKED</span>
+        </h1>
+
+        <!-- 🔗 OBS 오버레이 주소 복사 패널 (신규 추가) -->
+        <div class="mb-6 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
+            <label class="block text-xs font-bold text-gray-400 mb-2">OBS 브라우저 소스용 오버레이 링크</label>
+            <div class="flex gap-2">
+                <input type="text" id="overlay-url-input" readonly class="w-full bg-[#141518] border border-[#2c2d33] rounded px-3 py-2 text-xs text-gray-300 focus:outline-none">
+                <button id="btn-copy-url" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-4 py-2 rounded text-sm font-bold transition-all cursor-pointer whitespace-nowrap">주소 복사</button>
+            </div>
+        </div>
+
+        <!-- 매치 설정 패널 -->
+        <div class="grid grid-cols-3 gap-4 mb-6 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">PLAYER 1</label>
+                <select id="select-p1" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-sm text-white"></select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">MAP</label>
+                <select id="select-map" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-sm text-white"></select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">PLAYER 2</label>
+                <select id="select-p2" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-sm text-white"></select>
+            </div>
+        </div>
+
+        <!-- 스코어보드 조작 패널 -->
+        <div class="grid grid-cols-2 gap-6 bg-[#1b1c20] p-5 rounded-xl border border-[#2c2d33]">
+            <div class="text-center bg-[#141518] p-4 rounded-xl border border-[#2c2d33]">
+                <h3 class="text-sm font-bold text-gray-400 mb-1">TEAM 1</h3>
+                <div class="text-5xl font-black mb-4 text-[#00FFA3]" id="p1Score">0</div>
+                <div class="flex justify-center gap-2">
+                    <button id="btn-p1-plus" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-4 py-2 rounded-lg font-extrabold cursor-pointer">+</button>
+                    <button id="btn-p1-minus" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-4 py-2 rounded-lg font-extrabold cursor-pointer">-</button>
+                </div>
+            </div>
+            <div class="text-center bg-[#141518] p-4 rounded-xl border border-[#2c2d33]">
+                <h3 class="text-sm font-bold text-gray-400 mb-1">TEAM 2</h3>
+                <div class="text-5xl font-black mb-4 text-[#00FFA3]" id="p2Score">0</div>
+                <div class="flex justify-center gap-2">
+                    <button id="btn-p2-plus" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-4 py-2 rounded-lg font-extrabold cursor-pointer">+</button>
+                    <button id="btn-p2-minus" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-4 py-2 rounded-lg font-extrabold cursor-pointer">-</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

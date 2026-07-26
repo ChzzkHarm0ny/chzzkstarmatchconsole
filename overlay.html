@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>CHZZK Style Overlay</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'matchState'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('overlay-p1-score').innerText = data.p1Score || 0;
+                document.getElementById('overlay-p2-score').innerText = data.p2Score || 0;
+            }
+        });
+    </script>
+</head>
+<body class="flex items-start justify-start p-4">
+    <div class="flex items-center bg-[#0b0c0e]/90 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
+        <div class="px-5 py-3 bg-[#141518] font-bold text-sm tracking-wider text-gray-300 border-r border-[#2c2d33]">재호팀</div>
+        <div class="px-5 py-3 text-2xl font-black text-[#00FFA3]" id="overlay-p1-score">0</div>
+        
+        <div class="px-3 py-3 text-gray-600 font-bold">:</div>
+        
+        <div class="px-5 py-3 text-2xl font-black text-[#00FFA3]" id="overlay-p2-score">0</div>
+        <div class="px-5 py-3 bg-[#141518] font-bold text-sm tracking-wider text-gray-300 border-l border-[#2c2d33]">상대팀</div>
+    </div>
+</body>
+</html>
