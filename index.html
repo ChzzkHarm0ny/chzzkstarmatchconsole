@@ -8,28 +8,27 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // 🔥 본인의 Firebase 설정 정보로 수정하세요
+        // 🔥 전달주신 파이어베이스 설정 및 Realtime Database URL 반영 완료
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
+            apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
+            authDomain: "starcraft-console.firebaseapp.com",
+            databaseURL: "https://starcraft-console-default-rtdb.firebaseio.com",
+            projectId: "starcraft-console",
+            storageBucket: "starcraft-console.firebasestorage.app",
+            messagingSenderId: "928203238966",
+            appId: "1:928203238966:web:4c5333274ffb3255ff3297",
+            measurementId: "G-8KXBQ9J2MT"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 🔥 본인의 구글 Apps Script 웹 앱 URL로 수정하세요
+        // 🔥 본인의 구글 Apps Script 웹 앱 URL을 여기에 입력하세요
         const GAS_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
 
         window.onload = async function() {
-            // 1. 오버레이 URL 자동 생성 및 입력창 세팅
             generateOverlayUrl();
 
-            // 2. 스프레드시트 데이터 로드 및 셀렉트박스 채우기
             try {
                 let res = await fetch(GAS_URL + "?action=getData");
                 let data = await res.json();
@@ -38,29 +37,24 @@
                 console.error("스프레드시트 데이터 로드 실패:", e);
             }
 
-            // 3. 점수 조작 이벤트 바인딩
             document.getElementById('btn-p1-plus').addEventListener('click', () => updateScore('p1Score', 1));
             document.getElementById('btn-p1-minus').addEventListener('click', () => updateScore('p1Score', -1));
             document.getElementById('btn-p2-plus').addEventListener('click', () => updateScore('p2Score', 1));
             document.getElementById('btn-p2-minus').addEventListener('click', () => updateScore('p2Score', -1));
 
-            // 4. 복사 버튼 이벤트 바인딩
             document.getElementById('btn-copy-url').addEventListener('click', copyOverlayUrl);
         };
 
-        // 현재 콘솔 주소를 기준으로 overlay.html 주소 자동 계산
         function generateOverlayUrl() {
             const currentUrl = window.location.href;
-            // console.html 부분을 overlay.html로 치환 (폴더 경로 유지)
-            const overlayUrl = currentUrl.replace(/console\.html$/, 'overlay.html');
+            const overlayUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '') + '/overlay.html';
             document.getElementById('overlay-url-input').value = overlayUrl;
         }
 
-        // 클립보드 복사 함수
         function copyOverlayUrl() {
             const urlInput = document.getElementById('overlay-url-input');
             urlInput.select();
-            urlInput.setSelectionRange(0, 99999); // 모바일 대응
+            urlInput.setSelectionRange(0, 99999);
 
             navigator.clipboard.writeText(urlInput.value).then(() => {
                 const btn = document.getElementById('btn-copy-url');
@@ -71,8 +65,6 @@
                     btn.innerText = originalText;
                     btn.className = 'bg-[#00FFA3] hover:bg-[#00e692] text-black px-4 py-2 rounded text-sm font-bold transition-all cursor-pointer';
                 }, 2000);
-            }).catch(err => {
-                console.error('주소 복사 실패:', err);
             });
         }
 
@@ -81,24 +73,28 @@
             const p2Select = document.getElementById('select-p2');
             const mapSelect = document.getElementById('select-map');
 
-            players.forEach(p => {
-                let opt1 = document.createElement('option');
-                opt1.value = p.name;
-                opt1.text = `${p.name} (${p.race})`;
-                p1Select.appendChild(opt1);
+            if (players) {
+                players.forEach(p => {
+                    let opt1 = document.createElement('option');
+                    opt1.value = p.name;
+                    opt1.text = `${p.name} (${p.race})`;
+                    p1Select.appendChild(opt1);
 
-                let opt2 = document.createElement('option');
-                opt2.value = p.name;
-                opt2.text = `${p.name} (${p.race})`;
-                p2Select.appendChild(opt2);
-            });
+                    let opt2 = document.createElement('option');
+                    opt2.value = p.name;
+                    opt2.text = `${p.name} (${p.race})`;
+                    p2Select.appendChild(opt2);
+                });
+            }
 
-            maps.forEach(m => {
-                let opt = document.createElement('option');
-                opt.value = m.url;
-                opt.text = m.name;
-                mapSelect.appendChild(opt);
-            });
+            if (maps) {
+                maps.forEach(m => {
+                    let opt = document.createElement('option');
+                    opt.value = m.url;
+                    opt.text = m.name;
+                    mapSelect.appendChild(opt);
+                });
+            }
         }
 
         function updateScore(targetField, delta) {
@@ -127,7 +123,7 @@
             <span class="text-xs bg-[#00FFA3]/10 text-[#00FFA3] border border-[#00FFA3]/30 px-3 py-1 rounded-full font-semibold">SHEETS LINKED</span>
         </h1>
 
-        <!-- 🔗 OBS 오버레이 주소 복사 패널 (신규 추가) -->
+        <!-- OBS 오버레이 링크 복사 패널 -->
         <div class="mb-6 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
             <label class="block text-xs font-bold text-gray-400 mb-2">OBS 브라우저 소스용 오버레이 링크</label>
             <div class="flex gap-2">
