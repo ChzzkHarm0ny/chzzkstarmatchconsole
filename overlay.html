@@ -11,37 +11,84 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
+        // 🔥 본인의 파이어베이스 설정 정보
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
+            apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
+            authDomain: "starcraft-console.firebaseapp.com",
+            databaseURL: "https://starcraft-console-default-rtdb.firebaseio.com",
+            projectId: "starcraft-console",
+            storageBucket: "starcraft-console.firebasestorage.app",
+            messagingSenderId: "928203238966",
+            appId: "1:928203238966:web:4c5333274ffb3255ff3297",
+            measurementId: "G-8KXBQ9J2MT"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // 실시간 상태 반영
         onValue(ref(db, 'matchState'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
+                // 세트 스코어
                 document.getElementById('overlay-p1-score').innerText = data.p1Score || 0;
                 document.getElementById('overlay-p2-score').innerText = data.p2Score || 0;
+
+                // 현재 송출 중인 대진표 (선수 및 맵)
+                if (data.currentMatch) {
+                    document.getElementById('overlay-set-title').innerText = `${data.currentMatch.activeSet}세트 경기`;
+                    document.getElementById('overlay-p1-player').innerText = data.currentMatch.t1Player;
+                    document.getElementById('overlay-p2-player').innerText = data.currentMatch.t2Player;
+                    document.getElementById('overlay-map-name').innerText = data.currentMatch.mapName;
+
+                    // 맵 이미지 로드
+                    const mapImg = document.getElementById('overlay-map-img');
+                    if (data.currentMatch.mapUrl) {
+                        mapImg.src = data.currentMatch.mapUrl;
+                        mapImg.style.display = 'block';
+                    } else {
+                        mapImg.style.display = 'none';
+                    }
+                }
             }
         });
     </script>
 </head>
 <body class="flex items-start justify-start p-4">
-    <div class="flex items-center bg-[#0b0c0e]/90 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
-        <div class="px-5 py-3 bg-[#141518] font-bold text-sm tracking-wider text-gray-300 border-r border-[#2c2d33]">우리팀</div>
-        <div class="px-5 py-3 text-2xl font-black text-[#00FFA3]" id="overlay-p1-score">0</div>
-        
-        <div class="px-3 py-3 text-gray-600 font-bold">:</div>
-        
-        <div class="px-5 py-3 text-2xl font-black text-[#00FFA3]" id="overlay-p2-score">0</div>
-        <div class="px-5 py-3 bg-[#141518] font-bold text-sm tracking-wider text-gray-300 border-l border-[#2c2d33]">상대팀</div>
+    <!-- 방송용 오버레이 본체 (치지직 다크 테마) -->
+    <div class="flex flex-col bg-[#0b0c0e]/90 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
+        <!-- 상단: 현재 세트 안내 -->
+        <div id="overlay-set-title" class="bg-[#141518] text-center text-xs font-bold text-[#00FFA3] py-1 border-b border-[#2c2d33]">
+            1세트 경기
+        </div>
+
+        <!-- 중앙: 선수 & 맵 정보 -->
+        <div class="flex items-center px-4 py-3 gap-4">
+            <!-- 팀 1 선수 -->
+            <div class="text-center">
+                <div class="text-xs text-gray-400 font-bold">재호팀</div>
+                <div id="overlay-p1-player" class="text-sm font-black text-white">선수 미정</div>
+            </div>
+
+            <!-- 스코어보드 -->
+            <div class="flex items-center bg-[#141518] px-3 py-1 rounded-lg border border-[#2c2d33]">
+                <span id="overlay-p1-score" class="text-xl font-black text-[#00FFA3]">0</span>
+                <span class="text-gray-600 mx-2">:</span>
+                <span id="overlay-p2-score" class="text-xl font-black text-[#00FFA3]">0</span>
+            </div>
+
+            <!-- 팀 2 선수 -->
+            <div class="text-center">
+                <div class="text-xs text-gray-400 font-bold">상대팀</div>
+                <div id="overlay-p2-player" class="text-sm font-black text-white">선수 미정</div>
+            </div>
+        </div>
+
+        <!-- 하단: 맵 정보 및 이미지 -->
+        <div class="flex items-center justify-between px-4 py-2 bg-[#141518]/60 border-t border-[#2c2d33] text-xs">
+            <span class="text-gray-400">맵: <strong id="overlay-map-name" class="text-white">미정</strong></span>
+            <img id="overlay-map-img" src="" alt="Map" class="w-8 h-8 object-cover rounded border border-[#2c2d33] hidden">
+        </div>
     </div>
 </body>
 </html>
