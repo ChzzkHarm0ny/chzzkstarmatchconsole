@@ -54,10 +54,25 @@
 
                 if (data.matchState) {
                     let ms = data.matchState;
-                    if (ms.teamNames) {
-                        document.getElementById('overlay-t1-name').innerText = ms.teamNames.team1;
-                        document.getElementById('overlay-t2-name').innerText = ms.teamNames.team2;
-                    }
+                    let isSoloMode = (ms.matchMode === 'solo');
+
+                    let activeSet = ms.currentActiveSet || 1;
+                    let currentMatch = (ms.matches && ms.matches[activeSet]) ? ms.matches[activeSet] : {};
+                    let t1Name = currentMatch.t1Player || "선수1";
+                    let t2Name = currentMatch.t2Player || "선수2";
+
+                    let team1Label = isSoloMode ? t1Name : (ms.teamNames ? ms.teamNames.team1 : "1팀");
+                    let team2Label = isSoloMode ? t2Name : (ms.teamNames ? ms.teamNames.team2 : "2팀");
+                    let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
+                    let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
+
+                    let elT1Box = document.getElementById('overlay-t1-box');
+                    let elT2Box = document.getElementById('overlay-t2-box');
+                    
+                    elT1Box.innerText = team1Label;
+                    elT1Box.style.backgroundColor = team1Color;
+                    elT2Box.innerText = team2Label;
+                    elT2Box.style.backgroundColor = team2Color;
 
                     document.getElementById('overlay-p1-score').innerText = ms.p1Score || 0;
                     document.getElementById('overlay-p2-score').innerText = ms.p2Score || 0;
@@ -70,21 +85,25 @@
                             let match = ms.matches[i];
                             if (!match) continue;
 
-                            let t1Name = match.t1Player || "미정";
-                            let t2Name = match.t2Player || "미정";
+                            let p1 = match.t1Player || "미정";
+                            let p2 = match.t2Player || "미정";
                             let mapName = match.mapName || "미정";
+                            let winner = match.winner || "";
 
-                            let t1RaceClass = getRaceClass(t1Name);
-                            let t2RaceClass = getRaceClass(t2Name);
+                            let t1RaceClass = getRaceClass(p1);
+                            let t2RaceClass = getRaceClass(p2);
                             let isActive = (ms.currentActiveSet == i);
                             let rowBg = isActive ? "bg-[#1f2026] border-l-4 border-[#00FFA3]" : "bg-[#141518]/80";
+
+                            let t1WinMark = (winner === "t1") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
+                            let t2WinMark = (winner === "t2") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
 
                             container.innerHTML += `
                                 <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold ${rowBg}">
                                     <div class="w-6 text-center text-gray-400">${i}</div>
-                                    <div class="w-24 text-center truncate ${t1RaceClass}">${t1Name}</div>
+                                    <div class="w-24 text-center truncate ${t1RaceClass}">${p1}${t1WinMark}</div>
                                     <div class="w-28 text-center text-gray-300 font-normal truncate">${mapName}</div>
-                                    <div class="w-24 text-center truncate ${t2RaceClass}">${t2Name}</div>
+                                    <div class="w-24 text-center truncate ${t2RaceClass}">${p2}${t2WinMark}</div>
                                 </div>
                             `;
                         }
@@ -105,13 +124,15 @@
 <body class="flex items-start justify-start p-4 font-sans">
     <div class="flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md w-80">
         <div class="bg-[#141518] border-b border-[#2c2d33] py-2 text-center">
-            <div class="text-[10px] tracking-widest text-gray-400 font-bold mb-0.5">PROLEAGUE 7SET</div>
-            <div class="flex items-center justify-center gap-3 text-sm font-black">
-                <span id="overlay-t1-name" class="text-blue-400">1팀</span>
-                <span class="text-[#00FFA3] text-base" id="overlay-p1-score">0</span>
-                <span class="text-gray-600">:</span>
-                <span class="text-[#00FFA3] text-base" id="overlay-p2-score">0</span>
-                <span id="overlay-t2-name" class="text-red-400">2팀</span>
+            <div class="text-[10px] tracking-widest text-gray-400 font-bold mb-1">STARCRAFT MATCH</div>
+            <div class="grid grid-cols-5 text-sm font-black items-center px-2">
+                <div id="overlay-t1-box" class="col-span-2 py-1 px-1 rounded truncate text-white">P1</div>
+                <div class="col-span-1 flex items-center justify-center gap-1">
+                    <span class="text-[#00FFA3] text-base" id="overlay-p1-score">0</span>
+                    <span class="text-gray-500">:</span>
+                    <span class="text-[#00FFA3] text-base" id="overlay-p2-score">0</span>
+                </div>
+                <div id="overlay-t2-box" class="col-span-2 py-1 px-1 rounded truncate text-white">P2</div>
             </div>
         </div>
         <div id="match-list-container" class="p-2 flex flex-col gap-0.5 max-h-80 overflow-y-auto"></div>
