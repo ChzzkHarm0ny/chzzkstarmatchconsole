@@ -61,12 +61,12 @@
                     let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
                     let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
 
-                    // 등록된 모든 세트(묶음) 대진표를 우측으로 나란히 생성
-                    if (ms.matchSetsList) {
+                    // 객체 구조(matchSetsObj) 데이터를 정확히 읽어와 우측으로 확장 렌더링
+                    if (ms.matchSetsObj) {
                         let wrapper = document.getElementById('sets-wrapper');
                         wrapper.innerHTML = '';
 
-                        ms.matchSetsList.forEach(setObj => {
+                        Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
                             card.className = "flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md w-80 shrink-0";
                             
@@ -93,7 +93,6 @@
                                 let t1RaceClass = getRaceClass(p1);
                                 let t2RaceClass = getRaceClass(p2);
 
-                                // 승리 시 이름 옆에 [승] 마크가 확실하게 출력되도록 수정
                                 let t1WinMark = (winner === "t1") ? "<span class='text-[#00FFA3] ml-1 font-black text-[10px]'>[승]</span>" : "";
                                 let t2WinMark = (winner === "t2") ? "<span class='text-[#00FFA3] ml-1 font-black text-[10px]'>[승]</span>" : "";
 
