@@ -33,7 +33,6 @@
         let userGasUrl = "";
         let selectedRoster = [];
         let selectedMapPool = [];
-        // 세트(묶음) 리스트: 기본 1세트 (기본 7경기 구성)
         let matchSetsList = [{ id: 1, name: "1세트 (매치)", matchesCount: 7 }];
         let activeSetId = 1;
 
@@ -67,7 +66,6 @@
                 });
             });
 
-            // 새 세트(묶음) 추가 버튼 이벤트
             document.getElementById('btn-add-match-set').addEventListener('click', () => {
                 if (matchSetsList.length >= 4) {
                     alert("세트는 최대 4개까지만 추가할 수 있습니다.");
@@ -121,7 +119,7 @@
             document.getElementById('console-main-content').classList.remove('hidden');
             document.getElementById('room-display-name').innerText = `현재 방: [ ${roomId} ]`;
 
-            generateOverlayUrls(roomId, 1);
+            generateOverlayUrls(roomId);
             loadRoomData(roomId);
         }
 
@@ -299,7 +297,6 @@
             });
         }
 
-        // 세트(묶음) 탭 렌더링
         function renderMatchSetTabs() {
             const container = document.getElementById('match-set-tabs');
             if(!container) return;
@@ -320,10 +317,8 @@
             let target = document.getElementById(`match-set-panel-${setId}`);
             if(target) target.classList.remove('hidden');
             renderMatchSetTabs();
-            generateOverlayUrls(currentRoomId, setId);
         }
 
-        // 세트별 대진 설정 패널 렌더링
         function renderMatchSetPanels() {
             const wrapper = document.getElementById('match-sets-wrapper');
             if(!wrapper) return;
@@ -332,7 +327,7 @@
             matchSetsList.forEach(setObj => {
                 let panel = document.createElement('div');
                 panel.id = `match-set-panel-${setObj.id}`;
-                panel.className = `match-set-panel ${setObj.id === activeSetId ? '' : 'hidden'} bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col justify-between`;
+                panel.className = `match-set-panel ${setObj.id === activeSetId ? '' : 'hidden'} bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col justify-between h-full`;
                 
                 panel.innerHTML = `
                     <div>
@@ -340,25 +335,25 @@
                             <h3 class="text-sm font-bold text-[#00FFA3]">${setObj.name} 상세 대진 설정</h3>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-400">경기 수 조절:</span>
-                                <button onclick="adjustSetMatchesCount(${setObj.id}, -1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold">-</button>
+                                <button onclick="adjustSetMatchesCount(${setObj.id}, -1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">-</button>
                                 <span class="text-xs font-black text-[#00FFA3]">${setObj.matchesCount}경기</span>
-                                <button onclick="adjustSetMatchesCount(${setObj.id}, 1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold">+</button>
+                                <button onclick="adjustSetMatchesCount(${setObj.id}, 1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">+</button>
                             </div>
                         </div>
-                        <div class="max-h-60 overflow-y-auto mb-3 pr-1">
+                        <div class="overflow-y-auto mb-3 pr-1" style="max-height: 420px;">
                             <table class="w-full text-xs">
                                 <thead>
                                     <tr class="text-gray-400 border-b border-[#2c2d33]">
-                                        <th class="p-1 pb-2">경기</th>
-                                        <th class="p-1 pb-2">선수 1 (승리)</th>
-                                        <th class="p-1 pb-2">맵</th>
-                                        <th class="p-1 pb-2">선수 2 (승리)</th>
+                                        <th class="p-1.5 pb-2">경기</th>
+                                        <th class="p-1.5 pb-2">선수 1 (승리)</th>
+                                        <th class="p-1.5 pb-2">맵</th>
+                                        <th class="p-1.5 pb-2">선수 2 (승리)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
                             </table>
                         </div>
-                        <button onclick="saveMatchSetState(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2 rounded-lg text-sm cursor-pointer mb-3">${setObj.name} 대진 송출 (적용하기)</button>
+                        <button onclick="saveMatchSetState(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer mb-2">${setObj.name} 대진 송출 (적용하기)</button>
                     </div>
                 `;
                 wrapper.appendChild(panel);
@@ -394,13 +389,13 @@
                     tr.innerHTML = `
                         <td class="p-2 font-bold text-gray-400 whitespace-nowrap">${i}경기</td>
                         <td class="p-2 flex items-center justify-center gap-1">
-                            <select id="s${setId}-t1-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select>
+                            <select id="s${setId}-t1-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                             <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer"><input type="radio" name="s${setId}-winner-${i}" value="t1" ${m.winner==='t1'?'checked':''} class="accent-blue-500">승</label>
                         </td>
-                        <td class="p-2"><select id="s${setId}-map-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select></td>
+                        <td class="p-2"><select id="s${setId}-map-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
                         <td class="p-2 flex items-center justify-center gap-1">
                             <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer"><input type="radio" name="s${setId}-winner-${i}" value="t2" ${m.winner==='t2'?'checked':''} class="accent-red-500">승</label>
-                            <select id="s${setId}-t2-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select>
+                            <select id="s${setId}-t2-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -528,10 +523,10 @@
             });
         }
 
-        function generateOverlayUrls(roomId, setId = 1) {
+        function generateOverlayUrls(roomId) {
             const currentUrl = window.location.href;
             const baseUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '');
-            document.getElementById('overlay-url-input').value = `${baseUrl}/overlay.html?room=${roomId}&set=${setId}`;
+            document.getElementById('overlay-url-input').value = `${baseUrl}/overlay.html?room=${roomId}`;
             document.getElementById('score-url-input').value = `${baseUrl}/score-overlay.html?room=${roomId}`;
             document.getElementById('vs-url-input').value = `${baseUrl}/vs-overlay.html?room=${roomId}`;
         }
@@ -558,7 +553,7 @@
     </script>
 </head>
 <body class="bg-[#0b0c0e] text-white p-6 font-sans">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
         
         <!-- 방 입장 화면 -->
         <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
@@ -583,10 +578,10 @@
                 </div>
             </h1>
 
-            <!-- 상단 탭 메뉴 -->
+            <!-- 상단 탭 이름 변경 반영 (중계 대시보드) -->
             <div class="flex gap-2 mb-6 border-b border-[#2c2d33] pb-3">
                 <button data-tab="roster" class="tab-btn bg-[#00FFA3] text-black px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">👥 1. 선수 및 맵 선택</button>
-                <button data-tab="match" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚔️ 2. 세트별 대진 설정</button>
+                <button data-tab="match" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚔️ 2. 중계 대시보드</button>
                 <button data-tab="settings" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚙️ 3. 기본 설정 및 링크</button>
             </div>
 
@@ -607,60 +602,56 @@
                 </div>
             </div>
 
-            <!-- 탭 2: 세트별 대진 설정 탭 -->
+            <!-- 탭 2: 중계 대시보드 탭 (세로 배치 및 넓은 대진표 영역) -->
             <div id="tab-match" class="tab-content hidden">
                 
                 <!-- 세트 탭 선택 및 추가 바 -->
                 <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between flex-wrap gap-2">
-                    <div class="flex items-center gap-2" id="match-set-tabs">
-                        <!-- 동적으로 세트 탭 버튼들이 생성됩니다 -->
-                    </div>
+                    <div class="flex items-center gap-2" id="match-set-tabs"></div>
                     <button id="btn-add-match-set" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-3 py-1.5 rounded text-xs font-bold cursor-pointer">+새 세트(묶음) 추가</button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- 세트별 상세 대진 패널 -->
-                    <div id="match-sets-wrapper"></div>
+                <!-- 세로(Vertical) 배치: 상세 대진 설정 란을 넓게 배치하여 스크롤 최소화 -->
+                <div class="flex flex-col gap-6 mb-6">
+                    <!-- 상세 대진 설정 패널 -->
+                    <div id="match-sets-wrapper" class="w-full"></div>
 
-                    <!-- 스코어 제어 패널 -->
-                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col justify-between">
-                        <div>
-                            <h3 class="text-sm font-bold text-[#00FFA3] mb-3">스코어보드 세트스코어 제어</h3>
-                            <div class="grid grid-cols-2 gap-3 mb-4">
-                                <div class="text-center bg-[#141518] p-3 rounded-xl border border-[#2c2d33]">
-                                    <h4 class="text-xs font-bold text-blue-400 mb-1">P1 / Team 1</h4>
-                                    <div class="text-3xl font-black mb-2 text-[#00FFA3]" id="p1Score">0</div>
-                                    <div class="flex justify-center gap-2">
-                                        <button id="btn-p1-plus" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded font-bold cursor-pointer">+</button>
-                                        <button id="btn-p1-minus" class="bg-[#2c2d33] text-white px-2.5 py-1 rounded font-bold cursor-pointer">-</button>
-                                    </div>
+                    <!-- 세로형 스코어 제어 패널 (가로 공간을 슬림하게 활용) -->
+                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 세트스코어 제어</h3>
+                        <div class="flex items-center gap-6">
+                            <!-- P1 점수 -->
+                            <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
+                                <span class="text-xs font-bold text-blue-400">P1 / Team 1</span>
+                                <span class="text-2xl font-black text-[#00FFA3]" id="p1Score">0</span>
+                                <div class="flex gap-1">
+                                    <button id="btn-p1-plus" class="bg-[#00FFA3] text-black px-2 py-0.5 rounded font-bold cursor-pointer">+</button>
+                                    <button id="btn-p1-minus" class="bg-[#2c2d33] text-white px-2 py-0.5 rounded font-bold cursor-pointer">-</button>
                                 </div>
-                                <div class="text-center bg-[#141518] p-3 rounded-xl border border-[#2c2d33]">
-                                    <h4 class="text-xs font-bold text-red-400 mb-1">P2 / Team 2</h4>
-                                    <div class="text-3xl font-black mb-2 text-[#00FFA3]" id="p2Score">0</div>
-                                    <div class="flex justify-center gap-2">
-                                        <button id="btn-p2-plus" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded font-bold cursor-pointer">+</button>
-                                        <button id="btn-p2-minus" class="bg-[#2c2d33] text-white px-2.5 py-1 rounded font-bold cursor-pointer">-</button>
-                                    </div>
+                            </div>
+                            <!-- P2 점수 -->
+                            <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
+                                <span class="text-xs font-bold text-red-400">P2 / Team 2</span>
+                                <span class="text-2xl font-black text-[#00FFA3]" id="p2Score">0</span>
+                                <div class="flex gap-1">
+                                    <button id="btn-p2-plus" class="bg-[#00FFA3] text-black px-2 py-0.5 rounded font-bold cursor-pointer">+</button>
+                                    <button id="btn-p2-minus" class="bg-[#2c2d33] text-white px-2 py-0.5 rounded font-bold cursor-pointer">-</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-[#141518] p-2.5 rounded-lg border border-[#2c2d33] flex items-center justify-between gap-2">
-                            <span class="text-[11px] font-bold text-[#00FFA3]">🔗 미니맵 스코어보드 링크</span>
-                            <div class="flex gap-1.5 flex-1 max-w-[220px]">
-                                <input type="text" id="score-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
-                                <button id="btn-copy-score-url" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer">복사</button>
-                            </div>
+                        <div class="flex items-center gap-2 max-w-[240px] w-full">
+                            <input type="text" id="score-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                            <button id="btn-copy-score-url" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer">스코어 링크</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 현재 선택된 세트의 오버레이 링크 복사 -->
+                <!-- 통합 대진표 오버레이 링크 복사 (불필요한 문구 제거 및 단일화) -->
                 <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] mb-4 flex items-center justify-between gap-4">
-                    <span class="text-xs font-bold text-[#00FFA3]">🔗 현재 선택된 세트 오버레이 링크 (OBS용)</span>
+                    <span class="text-xs font-bold text-[#00FFA3]">🔗 대진표 통합 오버레이 링크 (OBS용 하나만 등록하세요)</span>
                     <div class="flex gap-2 flex-1 max-w-md">
                         <input type="text" id="overlay-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1.5 text-xs text-gray-300">
-                        <button id="btn-copy-url" class="bg-[#00FFA3] text-black px-3 py-1.5 rounded text-xs font-bold whitespace-nowrap cursor-pointer">복사</button>
+                        <button id="btn-copy-url" class="bg-[#00FFA3] text-black px-3 py-1.5 rounded text-xs font-bold whitespace-nowrap cursor-pointer">링크 복사</button>
                     </div>
                 </div>
 
