@@ -7,14 +7,31 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
+        /* 미니맵 상단 UI 틀에 맞춘 사다리꼴 디자인 및 여백 확보 */
         .minimap-scoreboard {
             width: 320px;
-            background: rgba(15, 17, 21, 0.92);
+            background: rgba(15, 17, 21, 0.95);
             border: 2px solid #2c2d33;
             box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), calc(100% - 35px) 100%, 35px 100%, 0 calc(100% - 28px));
+            /* 하단 좌우가 안쪽으로 사다리꼴 모양으로 파이도록 클리핑 */
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 32px), calc(100% - 42px) 100%, 42px 100%, 0 calc(100% - 32px));
             position: relative;
+            padding-bottom: 26px; /* 하단 빈 공간 영역 확보 */
             transition: opacity 0.3s ease;
+        }
+
+        /* 하단 파인 공간에 배치될 선수 이름 영역 스타일 */
+        .player-footer {
+            position: absolute;
+            bottom: 2px;
+            left: 36px;
+            right: 36px;
+            height: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
         }
     </style>
     <script type="module">
@@ -44,12 +61,11 @@
                 return;
             }
 
-            const roomRef = ref(db, `rooms/${roomId}`);
+            const roomRef = ref(db, "rooms/" + roomId);
             onValue(roomRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 let ms = data.matchState || {};
                 
-                // [표시 토글 제어] 콘솔에서 숨김으로 지정하면 오버레이 전체를 투명하게 만듦
                 let scoreboardEl = document.getElementById('scoreboard-wrapper');
                 if (ms.scoreVisible === false) {
                     scoreboardEl.style.opacity = '0';
@@ -84,18 +100,16 @@
                         let targetSet = setsArray[0];
                         activeSetName = targetSet.name.replace(" (매치)", "");
                         
-                        if (targetSet.matches) {
-                            let matchEntries = Object.values(targetSet.matches);
-                            let activeMatch = matchEntries.find(m => m.t1Player && m.t1Player !== "미정") || matchEntries[0];
-                            if (activeMatch) {
-                                currentP1Player = activeMatch.t1Player !== "미정" ? activeMatch.t1Player : "-";
-                                currentP2Player = activeMatch.t2Player !== "미정" ? activeMatch.t2Player : "-";
-                            }
+                        let activeIdx = targetSet.activeMatchIdx || 1;
+                        if (targetSet.matches && targetSet.matches[activeIdx]) {
+                            let activeMatch = targetSet.matches[activeIdx];
+                            currentP1Player = activeMatch.t1Player && activeMatch.t1Player !== "미정" ? activeMatch.t1Player : "-";
+                            currentP2Player = activeMatch.t2Player && activeMatch.t2Player !== "미정" ? activeMatch.t2Player : "-";
                         }
                     }
                 }
 
-                document.getElementById('set-title').innerText = `[${activeSetName}]`;
+                document.getElementById('set-title').innerText = "[" + activeSetName + "]";
                 document.getElementById('t1-player').innerText = currentP1Player;
                 document.getElementById('t2-player').innerText = currentP2Player;
             });
@@ -104,12 +118,14 @@
 </head>
 <body class="flex items-start justify-start p-2">
     
-    <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans overflow-hidden">
+    <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans">
+        <!-- 상단 세트 정보 타이틀 바 -->
         <div class="bg-[#141518] border-b border-[#2c2d33] py-1 text-center flex items-center justify-center gap-2">
             <span id="set-title" class="text-[#00FFA3] text-xs font-black tracking-wider">[1세트]</span>
             <span class="text-gray-300 text-[11px] font-bold">스타크래프트 프로리그</span>
         </div>
 
+        <!-- 팀 이름 및 스코어 영역 -->
         <div class="grid grid-cols-5 text-xs font-black text-center items-center h-8">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
                 <span id="t1-name" class="truncate">TEAM 이름</span>
@@ -124,11 +140,12 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 text-xs font-bold text-center items-center h-7 bg-[#0b0c0e] border-t border-[#2c2d33]">
-            <div class="h-full flex items-center justify-center px-1 truncate text-blue-300 border-r border-[#2c2d33]">
+        <!-- 사다리꼴로 파인 하단 빈 공간에 쏙 들어가는 선수 이름 영역 -->
+        <div class="player-footer">
+            <div class="flex items-center justify-center px-1 truncate text-blue-300 border-r border-[#2c2d33]/50 bg-[#0b0c0e]/80">
                 <span id="t1-player" class="truncate">홍길동</span>
             </div>
-            <div class="h-full flex items-center justify-center px-1 truncate text-red-300">
+            <div class="flex items-center justify-center px-1 truncate text-red-300 bg-[#0b0c0e]/80">
                 <span id="t2-player" class="truncate">홍길동</span>
             </div>
         </div>
