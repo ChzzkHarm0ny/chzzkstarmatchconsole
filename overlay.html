@@ -9,6 +9,8 @@
         .race-P { color: #FFE000; }
         .race-T { color: #00AFFF; }
         .race-Z { color: #FF4545; }
+        /* 패배한 선수 글씨를 어둡고 흐리게 처리하는 스타일 */
+        .player-loser { color: #4b5563 !important; opacity: 0.5; }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -61,27 +63,27 @@
                     let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
                     let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
 
-                    // 객체 구조(matchSetsObj) 데이터를 정확히 읽어와 우측으로 확장 렌더링
                     if (ms.matchSetsObj) {
                         let wrapper = document.getElementById('sets-wrapper');
                         wrapper.innerHTML = '';
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
+                            // 카드 전체 폭을 넓히고 폰트 크기 확장
                             let card = document.createElement('div');
-                            card.className = "flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md w-80 shrink-0";
+                            card.className = "flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md w-96 shrink-0";
                             
                             let headerHtml = `
-                                <div class="bg-[#141518] border-b border-[#2c2d33] py-2 text-center">
-                                    <div class="text-[10px] tracking-widest text-[#00FFA3] font-bold mb-1">${setObj.name.toUpperCase()}</div>
-                                    <div class="grid grid-cols-5 text-sm font-black items-center px-2">
-                                        <div class="col-span-2 py-1 px-1 rounded truncate text-white" style="background-color: ${team1Color};">${team1Name}</div>
-                                        <div class="col-span-1 flex items-center justify-center text-gray-400 text-xs">-</div>
-                                        <div class="col-span-2 py-1 px-1 rounded truncate text-white" style="background-color: ${team2Color};">${team2Name}</div>
+                                <div class="bg-[#141518] border-b border-[#2c2d33] py-3 text-center">
+                                    <div class="text-xs tracking-widest text-[#00FFA3] font-black mb-1.5">${setObj.name.toUpperCase()}</div>
+                                    <div class="grid grid-cols-5 text-base font-black items-center px-3">
+                                        <div class="col-span-2 py-1.5 px-2 rounded-lg truncate text-white shadow" style="background-color: ${team1Color};">${team1Name}</div>
+                                        <div class="col-span-1 flex items-center justify-center text-gray-400 text-sm">-</div>
+                                        <div class="col-span-2 py-1.5 px-2 rounded-lg truncate text-white shadow" style="background-color: ${team2Color};">${team2Name}</div>
                                     </div>
                                 </div>
                             `;
 
-                            let bodyHtml = `<div class="p-2 flex flex-col gap-0.5 max-h-80 overflow-y-auto">`;
+                            let bodyHtml = `<div class="p-3 flex flex-col gap-1.5 max-h-[450px] overflow-y-auto">`;
                             
                             for (let i = 1; i <= setObj.matchesCount; i++) {
                                 let match = (setObj.matches && setObj.matches[i]) ? setObj.matches[i] : {};
@@ -93,15 +95,22 @@
                                 let t1RaceClass = getRaceClass(p1);
                                 let t2RaceClass = getRaceClass(p2);
 
-                                let t1WinMark = (winner === "t1") ? "<span class='text-[#00FFA3] ml-1 font-black text-[10px]'>[승]</span>" : "";
-                                let t2WinMark = (winner === "t2") ? "<span class='text-[#00FFA3] ml-1 font-black text-[10px]'>[승]</span>" : "";
+                                // 승패에 따라 패배한 선수의 글씨 색상을 흐리게 처리 ([승] 글씨는 미표출)
+                                let t1StyleClass = t1RaceClass;
+                                let t2StyleClass = t2RaceClass;
+
+                                if (winner === "t1") {
+                                    t2StyleClass = "player-loser";
+                                } else if (winner === "t2") {
+                                    t1StyleClass = "player-loser";
+                                }
 
                                 bodyHtml += `
-                                    <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold bg-[#141518]/80">
-                                        <div class="w-6 text-center text-gray-400">${i}</div>
-                                        <div class="w-24 text-center truncate ${t1RaceClass}">${p1}${t1WinMark}</div>
-                                        <div class="w-28 text-center text-gray-300 font-normal truncate">${mapName}</div>
-                                        <div class="w-24 text-center truncate ${t2RaceClass}">${p2}${t2WinMark}</div>
+                                    <div class="flex items-center justify-between px-3 py-2 rounded-xl border border-[#2c2d33] text-sm font-bold bg-[#141518]/90 shadow-inner">
+                                        <div class="w-8 text-center text-gray-400 font-black">${i}</div>
+                                        <div class="w-28 text-center truncate ${t1StyleClass}">${p1}</div>
+                                        <div class="w-32 text-center text-gray-300 font-medium truncate text-xs">${mapName}</div>
+                                        <div class="w-28 text-center truncate ${t2StyleClass}">${p2}</div>
                                     </div>
                                 `;
                             }
