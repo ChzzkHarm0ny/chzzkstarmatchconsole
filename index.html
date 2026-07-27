@@ -30,21 +30,28 @@
         let currentUserId = null;
         let userGasUrl = "";
 
-        window.onload = async function() {
+        window.onload = function() {
+            // 최초 로딩 시 화면 깜빡임 방지를 위해 둘 다 숨긴 뒤 상태에 따라 켬
+            const loginSection = document.getElementById('login-section');
+            const mainContent = document.getElementById('console-main-content');
+            
+            loginSection.classList.add('hidden');
+            mainContent.classList.add('hidden');
+
             // 구글 로그인 상태 감지
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUserId = user.uid;
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('console-main-content').classList.remove('hidden');
+                    loginSection.classList.add('hidden');
+                    mainContent.classList.remove('hidden');
                     document.getElementById('user-email').innerText = `${user.displayName} (${user.email})님 접속중`;
 
                     generateOverlayUrls(currentUserId);
                     loadUserData(currentUserId);
                 } else {
                     currentUserId = null;
-                    document.getElementById('login-section').classList.remove('hidden');
-                    document.getElementById('console-main-content').classList.add('hidden');
+                    mainContent.classList.add('hidden');
+                    loginSection.classList.remove('hidden');
                 }
             });
 
@@ -67,13 +74,11 @@
             document.getElementById('btn-p2-minus').addEventListener('click', () => updateScore('p2Score', -1));
         };
 
-        // 사용자의 시트 URL 및 실시간 데이터 로드
         function loadUserData(uid) {
             const userRef = ref(db, `users/${uid}`);
             onValue(userRef, async (snapshot) => {
                 const data = snapshot.val() || {};
                 
-                // 1. 스프레드시트 URL 세팅 확인
                 if (data.settings && data.settings.gasUrl) {
                     userGasUrl = data.settings.gasUrl;
                     if(document.getElementById('input-user-gas-url').value !== userGasUrl) {
@@ -82,7 +87,6 @@
                     }
                 }
 
-                // 2. 스코어보드 및 팀 이름 실시간 반영
                 if (data.matchState) {
                     let ms = data.matchState;
                     if(ms.p1Score !== undefined) document.getElementById('p1Score').innerText = ms.p1Score;
@@ -98,7 +102,6 @@
             });
         }
 
-        // 개인 스프레드시트 데이터 가져오기
         async function fetchSpreadsheetData(url) {
             try {
                 let res = await fetch(url + "?action=getData");
@@ -113,7 +116,6 @@
             }
         }
 
-        // 개인 시트 URL 저장
         function saveUserGasUrl() {
             if (!currentUserId) return;
             let urlInput = document.getElementById('input-user-gas-url').value.trim();
@@ -258,7 +260,7 @@
     <div class="max-w-4xl mx-auto">
         
         <!-- 🔑 로그인 화면 -->
-        <div id="login-section" class="bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
+        <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
             <h1 class="text-2xl font-bold mb-4 text-[#00FFA3]">CHZZK STARCRAFT CONSOLE</h1>
             <p class="text-gray-400 text-sm mb-6">방송용 대진표 및 스코어보드를 사용하려면 구글 로그인이 필요합니다.</p>
             <button id="btn-google-login" class="bg-white hover:bg-gray-200 text-black font-bold px-6 py-3 rounded-xl transition-all cursor-pointer inline-flex items-center gap-2">
@@ -266,7 +268,7 @@
             </button>
         </div>
 
-        <!-- 🎛️ 콘솔 메인 화면 (로그인 후 표시) -->
+        <!-- 🎛️ 콘솔 메인 화면 -->
         <div id="console-main-content" class="hidden bg-[#141518] p-6 rounded-2xl border border-[#2c2d33] shadow-2xl">
             <h1 class="text-xl font-bold mb-6 flex items-center justify-between border-b border-[#2c2d33] pb-4">
                 <span class="flex items-center gap-2">
@@ -279,7 +281,7 @@
                 </div>
             </h1>
 
-            <!-- 📊 개인 구글 시트 연동 설정 패널 -->
+            <!-- 개인 구글 시트 연동 설정 패널 -->
             <div class="mb-6 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                 <h3 class="text-sm font-bold text-[#00FFA3] mb-1">내 구글 스프레드시트 연동 설정</h3>
                 <p class="text-[11px] text-gray-400 mb-2">본인의 선수/맵 시트에서 배포한 Apps Script 웹 앱 URL(`.../exec`)을 입력하세요.</p>
@@ -289,7 +291,7 @@
                 </div>
             </div>
 
-            <!-- 🏷️ 팀 이름 커스텀 설정 패널 -->
+            <!-- 팀 이름 커스텀 설정 패널 -->
             <div class="mb-6 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                 <h3 class="text-sm font-bold text-[#00FFA3] mb-2">팀 이름 커스텀 설정</h3>
                 <div class="grid grid-cols-2 gap-3 mb-3">
