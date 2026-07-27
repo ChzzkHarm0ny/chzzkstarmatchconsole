@@ -537,7 +537,6 @@
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
                             </table>
                         </div>
-                        <!-- 명확한 반영 버튼 추가 -->
                         <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
                             🎯 ${setObj.name} 대진 및 현재 경기(스코어·VS) 반영하기
                         </button>
@@ -668,7 +667,6 @@
             document.getElementById('prev-map-name').innerText = mapObj.name;
         }
 
-        // [반영하기 버튼]을 누를 때 대진 저장, 스코어 집계, 그리고 체크된 '현재 경기'를 VS 매치업에 연동
         window.applyMatchSet = function(setId) {
             if (!currentRoomId) return;
             let s = matchSetsObj[setId];
@@ -703,15 +701,12 @@
             s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
 
-            // 파이어베이스에 저장
             set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`), s);
             saveMatchSetsConfigToFirebase();
 
-            // 스코어 계산
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
 
-            // 체크된 현재 경기 정보를 VS 매치업(선수 소개 화면)에 자동 반영
             let activeMatch = matches[activeMatchIdx];
             if (activeMatch && (activeMatch.t1Player !== "미정" || activeMatch.t2Player !== "미정")) {
                 let t1PlayerName = activeMatch.t1Player;
@@ -733,7 +728,7 @@
                 updateVsPreview(t1PlayerName, t2PlayerName, mapName);
             }
 
-            alert(`${s.name} 대진 및 현재 진행 경기(${activeMatchIdx경기)가 스코어보드와 VS 매치업에 반영되었습니다!`);
+            alert(`${s.name} 대진 및 현재 진행 경기(${activeMatchIdx}경기)가 스코어보드와 VS 매치업에 반영되었습니다!`);
         };
 
         function calculateAndDisplayScores() {
