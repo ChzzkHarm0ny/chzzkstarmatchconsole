@@ -98,6 +98,9 @@
                 }
             });
 
+            // 누락되었던 [팀 설정, 참가 선수 및 맵 구성 저장하기] 버튼 이벤트 바인딩 추가
+            document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
+
             // VS 매치업 경기 리스트 선택 시 자동 바인딩 이벤트
             document.getElementById('vs-match-select').addEventListener('change', (e) => {
                 let val = e.target.value;
@@ -119,7 +122,6 @@
             document.getElementById('btn-save-match-mode').addEventListener('click', saveMatchMode);
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
-            document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
         };
 
         function switchTab(tabId) {
@@ -538,7 +540,6 @@
             });
         }
 
-        // VS 매치업 제어부에 제작된 경기 리스트 드롭다운 채우기
         function updateVsMatchDropdownOptions() {
             let vsSelect = document.getElementById('vs-match-select');
             if(!vsSelect) return;
@@ -589,14 +590,10 @@
             s.matches = matches;
             matchSetsObj[setId] = s;
 
-            // 1. 대진 상태 및 세트 설정 저장
             set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`), s);
             set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsConfig`), matchSetsObj);
 
-            // 2. [자동] 세트스코어 계산 및 실시간 반영
             calculateAndDisplayScores();
-
-            // 3. VS 매치업 드롭다운 리스트 갱신
             updateVsMatchDropdownOptions();
 
             if (lastActiveMatch) {
@@ -621,7 +618,6 @@
             alert(`${s.name} 대진 및 승리 스코어가 오버레이에 반영되었습니다!`);
         };
 
-        // 상세 대진에서 체크된 승리 개수를 합산하여 스코어 자동 계산 및 저장
         function calculateAndDisplayScores() {
             let p1TotalScore = 0;
             let p2TotalScore = 0;
@@ -805,7 +801,7 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
-                    <!-- [자동 연동형] 스코어보드 세트스코어 제어 파트 (수동 조작 불가, 상세 대진 체크 연동) -->
+                    <!-- 스코어보드 세트스코어 자동 집계 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col sm:flex-row items-center justify-between gap-4">
                         <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 세트스코어 (자동 집계)</h3>
                         <div class="flex items-center gap-6">
@@ -824,7 +820,7 @@
                         </div>
                     </div>
 
-                    <!-- [경기 리스트 연동형] VS 매치업 화면 제어 파트 -->
+                    <!-- VS 매치업 화면 제어 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
@@ -837,12 +833,6 @@
                         <div class="mb-3">
                             <label class="block text-[10px] text-gray-400 mb-1">출전 경기 선택 (목록에서 고르면 아래 정보가 자동으로 세팅됩니다)</label>
                             <select id="vs-match-select" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-[#00FFA3] font-bold"></select>
-                        </div>
-                        <div class="grid grid-cols-3 gap-3 mb-3 hidden">
-                            <!-- 내부 연동용 숨김 필드 -->
-                            <input type="text" id="vs-t1-player">
-                            <input type="text" id="vs-map">
-                            <input type="text" id="vs-t2-player">
                         </div>
                         <button id="btn-save-vs" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black py-2.5 rounded text-xs font-extrabold cursor-pointer">선택한 경기 VS 매치업 화면 송출하기</button>
                     </div>
