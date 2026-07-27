@@ -7,28 +7,28 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 스크린샷 미니맵 상단 UI 비율과 완벽히 일치하는 크기 및 사다리꼴 클리핑 */
+        /* 중앙 하단 사다리꼴 빈 공간을 더 길고 넓게 확장한 클리핑 디자인 */
         .minimap-scoreboard {
             width: 275px;
             height: 98px;
             background: rgba(15, 17, 21, 0.98);
             border: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            /* 중앙 하단(시간초 영역)이 뻥 뚫리도록 정밀 조정된 사다리꼴 패스 */
+            /* 중앙 하단 빈 공간의 가로 폭을 넓히고 깊이감을 키워 시계 영역을 완벽히 수용 */
             clip-path: polygon(
                 0 0, 
                 100% 0, 
                 100% 100%, 
-                62% 100%, 
-                56% calc(100% - 30px), 
-                44% calc(100% - 30px), 
-                38% 100%, 
+                68% 100%, 
+                59% calc(100% - 34px), 
+                41% calc(100% - 34px), 
+                32% 100%, 
                 0 100%
             );
             position: relative;
         }
 
-        /* 뚫린 사다리꼴 양옆 밑바닥에 걸쳐지는 선수 이름 영역 (글씨 대폭 확대) */
+        /* 넓어진 사다리꼴 양옆 밑바닥에 배치되는 선수 이름 영역 */
         .player-footer {
             position: absolute;
             bottom: 2px;
@@ -37,7 +37,7 @@
             height: 26px;
             display: flex;
             justify-content: space-between;
-            padding: 0 10px;
+            padding: 0 8px;
             font-size: 13px;
             font-weight: 900;
         }
@@ -151,12 +151,12 @@
 <body class="flex items-start justify-start p-0">
     
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans">
-        <!-- 상단 대회/매치 이름 바 (스크린샷 참고 컴팩트 디자인) -->
+        <!-- 상단 대회/매치 이름 바 -->
         <div class="bg-[#141518] border-b border-[#2c2d33] py-0.5 px-2 text-center">
             <span id="league-title" class="text-[#00FFA3] text-xs font-black tracking-wider">스진퉁 내전</span>
         </div>
 
-        <!-- 팀 이름 및 스코어 바 (글씨 크기 및 가독성 극대화) -->
+        <!-- 팀 이름 및 스코어 바 -->
         <div class="grid grid-cols-5 text-sm font-black text-center items-center h-8">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
                 <span id="t1-name" class="truncate text-xs font-black">카루하</span>
@@ -171,12 +171,12 @@
             </div>
         </div>
 
-        <!-- 하단 사다리꼴 빈 공간 양옆에 큼직하게 배치되는 선수 이름 영역 -->
+        <!-- 넓어진 사다리꼴 빈 공간 양옆에 배치되는 선수 이름 영역 -->
         <div class="player-footer">
-            <div class="w-24 text-left truncate text-blue-300 pl-1">
+            <div class="w-22 text-left truncate text-blue-300 pl-1">
                 <span id="t1-player">-</span>
             </div>
-            <div class="w-24 text-right truncate text-red-300 pr-1">
+            <div class="w-22 text-right truncate text-red-300 pr-1">
                 <span id="t2-player">-</span>
             </div>
         </div>
