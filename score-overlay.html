@@ -2,35 +2,21 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>StarCraft Minimap Match Scoreboard</title>
+    <title>CHZZK Minimap Scoreboard Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
+        body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
+        /* 하단 좌우가 사다리꼴 모양으로 빗겨 파인 클리핑 마스크 및 디자인 */
         .minimap-scoreboard {
-            width: 420px;
-            background: #141518;
-            border: 3px solid #2a2c35;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            font-family: 'Malgun Gothic', sans-serif;
+            width: 320px;
+            background: rgba(15, 17, 21, 0.92);
+            border: 2px solid #2c2d33;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            /* 하단 좌우 코너를 사다리꼴 형태로 깎아냄 */
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), calc(100% - 35px) 100%, 35px 100%, 0 calc(100% - 28px));
             position: relative;
         }
-
-        .minimap-scoreboard::after {
-            content: '';
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 140px;
-            height: 25px;
-            background: rgba(0, 0, 0, 0);
-            clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
-        }
-
-        .race-P { color: #FFE000; }
-        .race-T { color: #00AFFF; }
-        .race-Z { color: #FF4545; }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -49,118 +35,105 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let playerRaceMap = {};
 
-        window.onload = async function() {
+        window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const roomId = urlParams.get('room');
 
             if (!roomId) {
-                document.body.innerHTML = "<div style='color:white; padding:20px;'>방(room) 정보가 없습니다.</div>";
+                document.body.innerHTML = "<div style='color:white; padding:20px;'>방(room) 정보가 지정되지 않았습니다.</div>";
                 return;
             }
 
             const roomRef = ref(db, `rooms/${roomId}`);
-            onValue(roomRef, async (snapshot) => {
+            onValue(roomRef, (snapshot) => {
                 const data = snapshot.val() || {};
+                let ms = data.matchState || {};
                 
-                if (data.settings && data.settings.gasUrl) {
-                    try {
-                        let res = await fetch(data.settings.gasUrl + "?action=getData");
-                        let sheetData = await res.json();
-                        if (sheetData.players) {
-                            sheetData.players.forEach(p => { playerRaceMap[p.name] = p.race; });
+                // 1. 팀 이름 및 컬러
+                let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
+                let t1Name = teamNames.team1 || "1팀";
+                let t2Name = teamNames.team2 || "2팀";
+                let t1Color = teamNames.team1Color || "#1d3557";
+                let t2Color = teamNames.team2Color || "#6a1b1b";
+
+                document.getElementById('t1-name').innerText = t1Name;
+                document.getElementById('t2-name').innerText = t2Name;
+                document.getElementById('t1-box').style.backgroundColor = t1Color;
+                document.getElementById('t2-box').style.backgroundColor = t2Color;
+
+                // 2. 스코어 자동 반영
+                document.getElementById('p1Score').innerText = ms.p1Score !== undefined ? ms.p1Score : 0;
+                document.getElementById('p2Score').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
+
+                // 3. 현재 활성화된 세트 및 출전 선수 찾기
+                let activeSetName = "1세트";
+                let currentP1Player = "-";
+                let currentP2Player = "-";
+
+                if (ms.matchSetsObj) {
+                    // 가장 최근에 입력되었거나 첫 번째로 진행 중인 세트의 첫 번째 경기(또는 활성 경기) 정보를 매칭
+                    let setsArray = Object.values(ms.matchSetsObj);
+                    if (setsArray.length > 0) {
+                        let targetSet = setsArray[0]; // 예시로 첫 세트 기준 (원하시는 세트로 확장 가능)
+                        activeSetName = targetSet.name.replace(" (매치)", "");
+                        
+                        // 대진표에서 첫 번째로 선수가 지정된 경기를 현재 매치로 표시
+                        if (targetSet.matches) {
+                            let matchEntries = Object.values(targetSet.matches);
+                            let activeMatch = matchEntries.find(m => m.t1Player && m.t1Player !== "미정") || matchEntries[0];
+                            if (activeMatch) {
+                                currentP1Player = activeMatch.t1Player !== "미정" ? activeMatch.t1Player : "-";
+                                currentP2Player = activeMatch.t2Player !== "미정" ? activeMatch.t2Player : "-";
+                            }
                         }
-                    } catch (e) { console.error("시트 로드 실패:", e); }
+                    }
                 }
 
-                if (data.matchState) {
-                    let ms = data.matchState;
-                    let activeSet = ms.currentActiveSet || 1;
-                    let isSoloMode = (ms.matchMode === 'solo');
-
-                    let currentMatch = (ms.matches && ms.matches[activeSet]) ? ms.matches[activeSet] : {};
-                    let t1Name = currentMatch.t1Player || "선수1";
-                    let t2Name = currentMatch.t2Player || "선수2";
-
-                    let team1Label = isSoloMode ? t1Name : (ms.teamNames ? ms.teamNames.team1 : "1팀");
-                    let team2Label = isSoloMode ? t2Name : (ms.teamNames ? ms.teamNames.team2 : "2팀");
-                    let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
-                    let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
-
-                    let elTeam1 = document.getElementById('lbl-team1');
-                    let elTeam2 = document.getElementById('lbl-team2');
-                    let elPlayerT1 = document.getElementById('player-t1-name');
-                    let elPlayerT2 = document.getElementById('player-t2-name');
-
-                    elTeam1.innerText = team1Label;
-                    elTeam2.innerText = team2Label;
-                    elTeam1.style.backgroundColor = team1Color;
-                    elPlayerT1.style.backgroundColor = team1Color;
-
-                    elTeam2.style.backgroundColor = team2Color;
-                    elPlayerT2.style.backgroundColor = team2Color;
-
-                    document.getElementById('score-t1').innerText = ms.p1Score || 0;
-                    document.getElementById('score-t2').innerText = ms.p2Score || 0;
-
-                    let t1Race = getRaceLetter(t1Name);
-                    let t2Race = getRaceLetter(t2Name);
-
-                    document.getElementById('header-set-info').innerHTML = `
-                        <span class="text-[#00FFA3]">[${activeSet}세트]</span> 
-                        <span class="${getRaceColorClass(t1Race)}">${t1Name}${t1Race}</span> 
-                        <span class="text-gray-400 mx-1">vs</span> 
-                        <span class="${getRaceColorClass(t2Race)}">${t2Name}${t2Race}</span>
-                    `;
-
-                    document.getElementById('player-t1-name').innerText = t1Name;
-                    document.getElementById('player-t2-name').innerText = t2Name;
-
-                    document.getElementById('footer-t1-info').innerText = `${t1Race}12`;
-                    document.getElementById('footer-t2-info').innerText = `${t2Race}12`;
-                }
+                document.getElementById('set-title').innerText = `[${activeSetName}]`;
+                document.getElementById('t1-player').innerText = currentP1Player;
+                document.getElementById('t2-player').innerText = currentP2Player;
             });
         };
-
-        function getRaceLetter(playerName) {
-            let race = playerRaceMap[playerName];
-            if (race === "프로토스") return "P";
-            if (race === "테란") return "T";
-            if (race === "저그") return "Z";
-            return "";
-        }
-
-        function getRaceColorClass(raceLetter) {
-            if (raceLetter === "P") return "race-P";
-            if (raceLetter === "T") return "race-T";
-            if (raceLetter === "Z") return "race-Z";
-            return "text-white";
-        }
     </script>
 </head>
-<body class="flex items-start justify-start p-4">
-    <div class="minimap-scoreboard text-white">
-        <div id="header-set-info" class="bg-[#1b1c23] border-b border-[#2a2c35] py-1.5 px-3 text-center text-xs font-bold truncate">
-            <span class="text-[#00FFA3]">[1세트]</span> 선수 대진 정보 로딩중...
+<body class="flex items-start justify-start p-2">
+    
+    <!-- 미니맵 맞춤형 사다리꼴 스코어보드 프레임 -->
+    <div class="minimap-scoreboard flex flex-col text-white font-sans overflow-hidden">
+        
+        <!-- 상단 세트 정보 타이틀 바 -->
+        <div class="bg-[#141518] border-b border-[#2c2d33] py-1 text-center flex items-center justify-center gap-2">
+            <span id="set-title" class="text-[#00FFA3] text-xs font-black tracking-wider">[1세트]</span>
+            <span class="text-gray-300 text-[11px] font-bold">스타크래프트 프로리그</span>
         </div>
 
-        <div class="grid grid-cols-4 text-center font-bold text-xs">
-            <div id="lbl-team1" class="col-span-1 py-2 px-1 truncate border-r border-[#2a2c35] flex items-center justify-center">P1</div>
-            <div id="score-t1" class="col-span-1 bg-[#263850] py-2 text-base font-black text-white flex items-center justify-center">0</div>
-            <div id="score-t2" class="col-span-1 bg-[#3a1818] py-2 text-base font-black text-white flex items-center justify-center border-l border-[#2a2c35]">0</div>
-            <div id="lbl-team2" class="col-span-1 py-2 px-1 truncate flex items-center justify-center">P2</div>
+        <!-- 팀 이름 및 스코어 영역 -->
+        <div class="grid grid-cols-5 text-xs font-black text-center items-center h-8">
+            <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
+                <span id="t1-name" class="truncate">TEAM 이름</span>
+            </div>
+            <div class="col-span-1 bg-[#1b1c20] text-[#00FFA3] text-sm font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
+                <span id="p1Score">0</span>
+                <span class="text-gray-500 mx-0.5">:</span>
+                <span id="p2Score">0</span>
+            </div>
+            <div id="t2-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #6a1b1b;">
+                <span id="t2-name" class="truncate">TEAM 이름</span>
+            </div>
         </div>
 
-        <div class="grid grid-cols-2 text-center text-xs font-bold">
-            <div id="player-t1-name" class="py-1.5 truncate px-2 border-t border-[#2a2c35]">선수 1</div>
-            <div id="player-t2-name" class="py-1.5 truncate px-2 border-t border-[#2a2c35]">선수 2</div>
+        <!-- 하단 현재 출전 선수 이름 영역 -->
+        <div class="grid grid-cols-2 text-xs font-bold text-center items-center h-7 bg-[#0b0c0e] border-t border-[#2c2d33]">
+            <div class="h-full flex items-center justify-center px-1 truncate text-blue-300 border-r border-[#2c2d33]">
+                <span id="t1-player" class="truncate">홍길동</span>
+            </div>
+            <div class="h-full flex items-center justify-center px-1 truncate text-red-300">
+                <span id="t2-player" class="truncate">홍길동</span>
+            </div>
         </div>
 
-        <div class="flex justify-between px-4 py-1 bg-[#0e0f12] text-[11px] font-black tracking-widest border-t border-[#2a2c35]">
-            <span id="footer-t1-info" class="race-P">P12</span>
-            <span id="footer-t2-info" class="race-Z">Z12</span>
-        </div>
     </div>
+
 </body>
 </html>
