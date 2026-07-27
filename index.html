@@ -116,7 +116,6 @@
 
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
 
-            // 오버레이 표시/숨김 토글 버튼 이벤트 바인딩
             document.getElementById('btn-toggle-list').addEventListener('click', () => toggleOverlayVisibility('listVisible', 'btn-toggle-list'));
             document.getElementById('btn-toggle-score').addEventListener('click', () => toggleOverlayVisibility('scoreVisible', 'btn-toggle-score'));
             document.getElementById('btn-toggle-vs').addEventListener('click', () => toggleOverlayVisibility('vsVisible', 'btn-toggle-vs'));
@@ -200,7 +199,6 @@
                         updateVsPreview(ms.vsMatch.t1?.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name);
                     }
 
-                    // 오버레이 가시성 버튼 상태 동기화
                     updateToggleButtonState('listVisible', 'btn-toggle-list', ms.listVisible);
                     updateToggleButtonState('scoreVisible', 'btn-toggle-score', ms.scoreVisible);
                     updateToggleButtonState('vsVisible', 'btn-toggle-vs', ms.vsVisible);
@@ -227,7 +225,6 @@
 
         function updateToggleButtonState(visibleKey, btnId, state) {
             const btn = document.getElementById(btnId);
-            // 기본값은 true (켜져있음)
             let isVisible = state !== false; 
             btn.dataset.state = isVisible;
             if (isVisible) {
@@ -530,6 +527,7 @@
                             <table class="w-full text-xs">
                                 <thead>
                                     <tr class="text-gray-400 border-b border-[#2c2d33]">
+                                        <th class="p-1.5 pb-2">현재 경기</th>
                                         <th class="p-1.5 pb-2">경기</th>
                                         <th class="p-1.5 pb-2">${team1Name} 선수</th>
                                         <th class="p-1.5 pb-2">맵</th>
@@ -539,9 +537,10 @@
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
                             </table>
                         </div>
-                        <div class="text-center text-[11px] text-gray-400 py-1 bg-[#141518] rounded border border-[#2c2d33]">
-                            ⚡ 선수, 맵, 승패를 변경하면 대진표와 스코어보드에 **실시간 자동 반영**됩니다.
-                        </div>
+                        <!-- 명확한 반영 버튼 추가 -->
+                        <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
+                            🎯 ${setObj.name} 대진 및 현재 경기(스코어·VS) 반영하기
+                        </button>
                     </div>
                 `;
                 wrapper.appendChild(panel);
@@ -558,7 +557,6 @@
                 if(s.matchesCount < 1) s.matchesCount = 1;
                 if(s.matchesCount > 15) s.matchesCount = 15;
                 renderMatchSetPanels();
-                autoSaveMatchSetState(setId);
             }
         };
 
@@ -566,29 +564,34 @@
             const tbody = document.getElementById(`set-tbody-${setId}`);
             if(!tbody) return;
 
-            const roomRef = ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}/matches`);
+            const roomRef = ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`);
             onValue(roomRef, (snapshot) => {
-                let matchesData = snapshot.val() || {};
+                let setData = snapshot.val() || {};
+                let matchesData = setData.matches || {};
+                let activeMatchIdx = setData.activeMatchIdx || 1;
                 tbody.innerHTML = '';
 
                 for (let i = 1; i <= count; i++) {
                     let m = matchesData[i] || {};
+                    let isChecked = (Number(activeMatchIdx) === i);
+
                     let tr = document.createElement('tr');
                     tr.className = "border-b border-[#2c2d33] text-center";
                     tr.innerHTML = `
+                        <td class="p-2"><input type="radio" name="active_match_set${setId}" value="${i}" ${isChecked?'checked':''} class="accent-[#00FFA3] cursor-pointer" title="현재 진행 중인 경기 지정"></td>
                         <td class="p-2 font-bold text-gray-400 whitespace-nowrap">${i}경기</td>
                         <td class="p-2 flex items-center justify-center gap-1">
-                            <select id="s${setId}-t1-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
+                            <select id="s${setId}-t1-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                             <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer">
                                 <input type="radio" name="winner_s${setId}_m${i}" value="t1" ${m.winner==='t1'?'checked':''} class="accent-blue-500">승
                             </label>
                         </td>
-                        <td class="p-2"><select id="s${setId}-map-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
+                        <td class="p-2"><select id="s${setId}-map-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
                         <td class="p-2 flex items-center justify-center gap-1">
                             <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer">
                                 <input type="radio" name="winner_s${setId}_m${i}" value="t2" ${m.winner==='t2'?'checked':''} class="accent-red-500">승
                             </label>
-                            <select id="s${setId}-t2-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
+                            <select id="s${setId}-t2-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -596,22 +599,9 @@
                     let activeTeam1List = team1Roster.filter(name => selectedRoster.includes(name));
                     let activeTeam2List = team2Roster.filter(name => selectedRoster.includes(name));
 
-                    let t1Select = document.getElementById(`s${setId}-t1-${i}`);
-                    let t2Select = document.getElementById(`s${setId}-t2-${i}`);
-                    let mapSelect = document.getElementById(`s${setId}-map-${i}`);
-
-                    populatePlayerSelect(t1Select, "선수 선택", m.t1Player, activeTeam1List);
-                    populatePlayerSelect(t2Select, "선수 선택", m.t2Player, activeTeam2List);
-                    populateActiveMapSelect(mapSelect, "맵 선택", m.mapName);
-
-                    t1Select.onchange = () => autoSaveMatchSetState(setId);
-                    t2Select.onchange = () => autoSaveMatchSetState(setId);
-                    mapSelect.onchange = () => autoSaveMatchSetState(setId);
-
-                    let radios = document.getElementsByName(`winner_s${setId}_m${i}`);
-                    for(let r of radios) {
-                        r.onchange = () => autoSaveMatchSetState(setId);
-                    }
+                    populatePlayerSelect(document.getElementById(`s${setId}-t1-${i}`), "선수 선택", m.t1Player, activeTeam1List);
+                    populatePlayerSelect(document.getElementById(`s${setId}-t2-${i}`), "선수 선택", m.t2Player, activeTeam2List);
+                    populateActiveMapSelect(document.getElementById(`s${setId}-map-${i}`), "맵 선택", m.mapName);
                 }
             }, { onlyOnce: true });
         }
@@ -678,11 +668,18 @@
             document.getElementById('prev-map-name').innerText = mapObj.name;
         }
 
-        function autoSaveMatchSetState(setId) {
+        // [반영하기 버튼]을 누를 때 대진 저장, 스코어 집계, 그리고 체크된 '현재 경기'를 VS 매치업에 연동
+        window.applyMatchSet = function(setId) {
             if (!currentRoomId) return;
             let s = matchSetsObj[setId];
             if(!s) return;
             let matches = {};
+            let activeMatchIdx = 1;
+
+            let activeRadios = document.getElementsByName(`active_match_set${setId}`);
+            for(let ar of activeRadios) {
+                if(ar.checked) activeMatchIdx = parseInt(ar.value);
+            }
 
             for (let i = 1; i <= s.matchesCount; i++) {
                 let t1El = document.getElementById(`s${setId}-t1-${i}`);
@@ -703,14 +700,41 @@
             }
 
             s.matches = matches;
+            s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
 
+            // 파이어베이스에 저장
             set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`), s);
             saveMatchSetsConfigToFirebase();
 
+            // 스코어 계산
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
-        }
+
+            // 체크된 현재 경기 정보를 VS 매치업(선수 소개 화면)에 자동 반영
+            let activeMatch = matches[activeMatchIdx];
+            if (activeMatch && (activeMatch.t1Player !== "미정" || activeMatch.t2Player !== "미정")) {
+                let t1PlayerName = activeMatch.t1Player;
+                let t2PlayerName = activeMatch.t2Player;
+                let mapName = activeMatch.mapName;
+
+                let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
+                let t1Obj = allPlayers.find(p => p.name === t1PlayerName) || { name: t1PlayerName, race: "미정", img: githubBase + encodeURIComponent(t1PlayerName) + ".png" };
+                let t2Obj = allPlayers.find(p => p.name === t2PlayerName) || { name: t2PlayerName, race: "미정", img: githubBase + encodeURIComponent(t2PlayerName) + ".png" };
+                let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName, url: "" };
+
+                let vsData = {
+                    t1: { name: t1Obj.name, race: t1Obj.race, img: t1Obj.img },
+                    t2: { name: t2Obj.name, race: t2Obj.race, img: t2Obj.img },
+                    map: { name: mapObj.name, url: mapObj.url || "" }
+                };
+
+                set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
+                updateVsPreview(t1PlayerName, t2PlayerName, mapName);
+            }
+
+            alert(`${s.name} 대진 및 현재 진행 경기(${activeMatchIdx경기)가 스코어보드와 VS 매치업에 반영되었습니다!`);
+        };
 
         function calculateAndDisplayScores() {
             let p1TotalScore = 0;
@@ -889,7 +913,6 @@
                     </div>
                 </div>
 
-                <!-- 매치리스트 링크 및 토글 바 -->
                 <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-3">
                     <span class="text-xs font-bold text-[#00FFA3]">📋 매치리스트 오버레이 제어</span>
                     <div class="flex items-center gap-2">
@@ -902,7 +925,6 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
-                    <!-- 스코어보드 링크 및 토글 바 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col sm:flex-row items-center justify-between gap-4">
                         <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 (자동 집계)</h3>
                         <div class="flex items-center gap-6">
@@ -922,7 +944,6 @@
                         </div>
                     </div>
 
-                    <!-- VS 매치업 링크 및 토글 바 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
