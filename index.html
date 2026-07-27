@@ -31,7 +31,9 @@
         let allMaps = [];
         let currentRoomId = null;
         let userGasUrl = "";
-        let selectedRoster = []; // 이번 경기에 참여하는 선수 리스트
+        let selectedRoster = [];
+        let selectedMapPool = [];
+        let totalSetsCount = 7;
 
         window.onload = function() {
             const savedRoom = localStorage.getItem('starcraft_room_id');
@@ -57,23 +59,40 @@
                 location.reload();
             });
 
-            // 탭 전환 버튼 이벤트
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     switchTab(e.target.dataset.tab);
                 });
             });
 
+            document.querySelectorAll('.template-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    let sets = parseInt(e.target.dataset.sets);
+                    setTotalSets(sets);
+                });
+            });
+
+            document.getElementById('btn-sets-plus').addEventListener('click', () => {
+                if (totalSetsCount < 15) setTotalSets(totalSetsCount + 1);
+            });
+            document.getElementById('btn-sets-minus').addEventListener('click', () => {
+                if (totalSetsCount > 1) setTotalSets(totalSetsCount - 1);
+            });
+
             document.getElementById('btn-copy-url').addEventListener('click', () => copyUrl('overlay-url-input', 'btn-copy-url'));
-            document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
             document.getElementById('btn-copy-score-url').addEventListener('click', () => copyUrl('score-url-input', 'btn-copy-score-url'));
+            document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
             
             document.getElementById('btn-save-gas-url').addEventListener('click', saveUserGasUrl);
             document.getElementById('btn-save-match-mode').addEventListener('click', saveMatchMode);
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
             document.getElementById('btn-save-match').addEventListener('click', saveMatchState);
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
-            document.getElementById('btn-save-roster').addEventListener('click', saveRosterSelection);
+            document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
+
+            document.getElementById('active-set').addEventListener('change', () => {
+                applyActiveSetToVsSelectors();
+            });
             
             document.getElementById('btn-p1-plus').addEventListener('click', () => updateScore('p1Score', 1));
             document.getElementById('btn-p1-minus').addEventListener('click', () => updateScore('p1Score', -1));
@@ -90,8 +109,10 @@
 
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
-            activeBtn.classList.add('bg-[#00FFA3]', 'text-black', 'font-bold');
-            activeBtn.classList.remove('bg-[#1b1c20]', 'text-gray-300');
+            if(activeBtn) {
+                activeBtn.classList.add('bg-[#00FFA3]', 'text-black', 'font-bold');
+                activeBtn.classList.remove('bg-[#1b1c20]', 'text-gray-300');
+            }
         }
 
         function showLoginScreen() {
@@ -127,9 +148,10 @@
                     if(ms.matchMode) document.getElementById('select-match-mode').value = ms.matchMode;
                     toggleTeamPanelByMode(ms.matchMode || 'team');
 
-                    if(ms.selectedRoster) {
-                        selectedRoster = ms.selectedRoster;
-                    }
+                    if(ms.selectedRoster) selectedRoster = ms.selectedRoster;
+                    if(ms.selectedMapPool) selectedMapPool = ms.selectedMapPool;
+                    if(ms.totalSets) totalSetsCount = ms.totalSets;
+                    if(ms.currentActiveSet) document.getElementById('active-set').value = ms.currentActiveSet;
 
                     if(ms.p1Score !== undefined) document.getElementById('p1Score').innerText = ms.p1Score;
                     if(ms.p2Score !== undefined) document.getElementById('p2Score').innerText = ms.p2Score;
@@ -140,7 +162,7 @@
                         if(ms.teamNames.team2Color) document.getElementById('input-team2-color').value = ms.teamNames.team2Color;
                     }
                     
-                    renderPlayerGrid();
+                    renderSelectionUI();
                     initMatchTable();
                     initVsSelectors();
                 }
@@ -149,10 +171,12 @@
 
         function toggleTeamPanelByMode(mode) {
             const teamPanel = document.getElementById('team-setting-panel');
-            if (mode === 'solo') {
-                teamPanel.classList.add('opacity-50', 'pointer-events-none');
-            } else {
-                teamPanel.classList.remove('opacity-50', 'pointer-events-none');
+            if (teamPanel) {
+                if (mode === 'solo') {
+                    teamPanel.classList.add('opacity-50', 'pointer-events-none');
+                } else {
+                    teamPanel.classList.remove('opacity-50', 'pointer-events-none');
+                }
             }
         }
 
@@ -164,10 +188,13 @@
                 allMaps = data.maps || [];
                 
                 if(selectedRoster.length === 0) {
-                    selectedRoster = allPlayers.map(p => p.name); // 기본은 전원 선택
+                    selectedRoster = allPlayers.map(p => p.name);
+                }
+                if(selectedMapPool.length === 0) {
+                    selectedMapPool = allMaps.map(m => m.name);
                 }
 
-                renderPlayerGrid();
+                renderSelectionUI();
                 initMatchTable();
                 initVsSelectors();
             } catch (e) {
@@ -175,10 +202,14 @@
             }
         }
 
-        // 탭 1: 선수단 선택 및 팀 분리 그리드 렌더링
+        function renderSelectionUI() {
+            renderPlayerGrid();
+            renderMapGrid();
+        }
+
         function renderPlayerGrid() {
             const container = document.getElementById('player-grid-container');
-            if(allPlayers.length === 0) return;
+            if(!container || allPlayers.length === 0) return;
             container.innerHTML = '';
 
             const races = [
@@ -230,20 +261,77 @@
             renderPlayerGrid();
         }
 
-        function saveRosterSelection() {
+        // 맵 풀 그리드 (맵 이미지 연동 포함)
+        function renderMapGrid() {
+            const container = document.getElementById('map-grid-container');
+            if(!container || allMaps.length === 0) return;
+            container.innerHTML = '';
+
+            let grid = document.createElement('div');
+            grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2";
+
+            allMaps.forEach(m => {
+                let isChecked = selectedMapPool.includes(m.name);
+                let card = document.createElement('div');
+                card.className = `border rounded-lg p-2.5 flex items-center gap-2.5 cursor-pointer transition-all ${isChecked ? 'bg-[#1b2a24] border-[#00FFA3]' : 'bg-[#0b0c0e] border-[#2c2d33] opacity-50'}`;
+                card.onclick = () => toggleMapSelection(m.name);
+
+                let mapImgUrl = m.url || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/${encodeURIComponent(m.name)}.png`;
+                card.innerHTML = `
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
+                    <img src="${mapImgUrl}" class="w-8 h-8 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=Map'" alt="${m.name}">
+                    <span class="text-xs font-bold text-white truncate">${m.name}</span>
+                `;
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        function toggleMapSelection(mapName) {
+            if (selectedMapPool.includes(mapName)) {
+                selectedMapPool = selectedMapPool.filter(name => name !== mapName);
+            } else {
+                selectedMapPool.push(mapName);
+            }
+            renderMapGrid();
+        }
+
+        function saveSelectionConfig() {
             if (!currentRoomId) return;
-            set(ref(db, `rooms/${currentRoomId}/matchState/selectedRoster`), selectedRoster).then(() => {
+            
+            set(ref(db, `rooms/${currentRoomId}/matchState/selectedRoster`), selectedRoster);
+            set(ref(db, `rooms/${currentRoomId}/matchState/selectedMapPool`), selectedMapPool).then(() => {
                 initMatchTable();
                 initVsSelectors();
-                alert("참여 멤버 및 팀 구성이 저장되었습니다! 대진표에 반영됩니다.");
-                switchTab('match'); // 대진표 탭으로 자동 이동
+                alert("참여 선수 및 맵 풀 구성이 저장되었습니다!");
+                switchTab('match');
             });
+        }
+
+        function setTotalSets(sets) {
+            totalSetsCount = sets;
+            document.getElementById('sets-count-display').innerText = `${sets}세트`;
+            updateActiveSetDropdown(sets);
+            initMatchTable();
+        }
+
+        function updateActiveSetDropdown(sets) {
+            const activeSetSel = document.getElementById('active-set');
+            let currentVal = activeSetSel.value;
+            activeSetSel.innerHTML = '';
+            let maxSelectable = sets + 3;
+            for (let i = 1; i <= maxSelectable; i++) {
+                let label = i > sets ? `세트 추가 +${i - sets}` : `${i}세트`;
+                let opt = new Option(label, i);
+                if (i == currentVal) opt.selected = true;
+                activeSetSel.appendChild(opt);
+            }
         }
 
         function populateActivePlayerSelect(selectElement, defaultText, selectedValue) {
             selectElement.innerHTML = `<option value="">${defaultText}</option>`;
             
-            // 참여로 선택된 선수들만 필터링하여 종족별 그룹화
             let activePlayers = allPlayers.filter(p => selectedRoster.includes(p.name));
             let protoss = activePlayers.filter(p => p.race === "프로토스");
             let terran = activePlayers.filter(p => p.race === "테란");
@@ -281,61 +369,96 @@
             }
         }
 
+        function populateActiveMapSelect(selectElement, defaultText, selectedValue) {
+            selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+            let activeMaps = allMaps.filter(m => selectedMapPool.includes(m.name));
+            activeMaps.forEach(m => {
+                let opt = new Option(m.name, m.name);
+                if(m.name === selectedValue) opt.selected = true;
+                selectElement.appendChild(opt);
+            });
+        }
+
         function initMatchTable() {
             const tbody = document.getElementById('match-table-body');
-            tbody.innerHTML = '';
+            const extraTbody = document.getElementById('extra-match-table-body');
+            if(!tbody || !extraTbody) return;
             
+            document.getElementById('sets-count-display').innerText = `${totalSetsCount}세트`;
+            updateActiveSetDropdown(totalSetsCount);
+
             const roomRef = ref(db, `rooms/${currentRoomId}/matchState/matches`);
             onValue(roomRef, (snapshot) => {
                 let matchesData = snapshot.val() || {};
                 tbody.innerHTML = '';
+                extraTbody.innerHTML = '';
 
-                for (let i = 1; i <= 7; i++) {
-                    let m = matchesData[i] || {};
-                    let tr = document.createElement('tr');
-                    tr.className = "border-b border-[#2c2d33] text-center";
-                    tr.innerHTML = `
-                        <td class="p-2 font-bold text-gray-400">${i}세트</td>
-                        <td class="p-2 flex items-center justify-center gap-1.5">
-                            <select id="t1-player-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select>
-                            <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer" title="선수1 승리"><input type="radio" name="winner-${i}" value="t1" id="win-t1-${i}" ${m.winner==='t1'?'checked':''} class="accent-blue-500"> 승</label>
-                        </td>
-                        <td class="p-2"><select id="map-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"><option value="">맵 선택</option></select></td>
-                        <td class="p-2 flex items-center justify-center gap-1.5">
-                            <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer" title="선수2 승리"><input type="radio" name="winner-${i}" value="t2" id="win-t2-${i}" ${m.winner==='t2'?'checked':''} class="accent-red-500"> 승</label>
-                            <select id="t2-player-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-
-                    let t1Sel = document.getElementById(`t1-player-${i}`);
-                    let t2Sel = document.getElementById(`t2-player-${i}`);
-                    let mapSel = document.getElementById(`map-${i}`);
-
-                    populateActivePlayerSelect(t1Sel, "선수 선택", m.t1Player);
-                    populateActivePlayerSelect(t2Sel, "선수 선택", m.t2Player);
-
-                    allMaps.forEach(mapObj => {
-                        let opt = new Option(mapObj.name, mapObj.name);
-                        if(mapObj.name === m.mapName) opt.selected = true;
-                        mapSel.appendChild(opt);
-                    });
+                for (let i = 1; i <= totalSetsCount; i++) {
+                    renderMatchRow(tbody, i, matchesData[i], `${i}세트`);
                 }
+
+                for (let j = 1; j <= 3; j++) {
+                    let extraIndex = totalSetsCount + j;
+                    renderMatchRow(extraTbody, extraIndex, matchesData[extraIndex], `세트 추가 +${j}`, true);
+                }
+
+                applyActiveSetToVsSelectors();
             }, { onlyOnce: true });
+        }
+
+        function renderMatchRow(targetTbody, index, mData, labelText, isExtra = false) {
+            let m = mData || {};
+            let tr = document.createElement('tr');
+            tr.className = `border-b border-[#2c2d33] text-center ${isExtra ? 'bg-[#1b1c23]/50' : ''}`;
+            tr.innerHTML = `
+                <td class="p-2 font-bold ${isExtra ? 'text-[#00FFA3]' : 'text-gray-400'} whitespace-nowrap">${labelText}</td>
+                <td class="p-2 flex items-center justify-center gap-1">
+                    <select id="t1-player-${index}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select>
+                    <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer" title="선수1 승리"><input type="radio" name="winner-${index}" value="t1" id="win-t1-${index}" ${m.winner==='t1'?'checked':''} class="accent-blue-500">승</label>
+                </td>
+                <td class="p-2"><select id="map-${index}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select></td>
+                <td class="p-2 flex items-center justify-center gap-1">
+                    <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer" title="선수2 승리"><input type="radio" name="winner-${index}" value="t2" id="win-t2-${index}" ${m.winner==='t2'?'checked':''} class="accent-red-500">승</label>
+                    <select id="t2-player-${index}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white"></select>
+                </td>
+            `;
+            targetTbody.appendChild(tr);
+
+            let t1Sel = document.getElementById(`t1-player-${index}`);
+            let t2Sel = document.getElementById(`t2-player-${index}`);
+            let mapSel = document.getElementById(`map-${index}`);
+
+            populateActivePlayerSelect(t1Sel, "선수 선택", m.t1Player);
+            populateActivePlayerSelect(t2Sel, "선수 선택", m.t2Player);
+            populateActiveMapSelect(mapSel, "맵 선택", m.mapName);
         }
 
         function initVsSelectors() {
             let vsT1 = document.getElementById('vs-t1-player');
             let vsT2 = document.getElementById('vs-t2-player');
             let vsMap = document.getElementById('vs-map');
+            if(!vsT1) return;
 
             populateActivePlayerSelect(vsT1, "선수 선택", "");
             populateActivePlayerSelect(vsT2, "선수 선택", "");
+            populateActiveMapSelect(vsMap, "맵 선택", "");
+        }
 
-            vsMap.innerHTML = '<option value="">맵 선택</option>';
-            allMaps.forEach(m => {
-                vsMap.add(new Option(m.name, m.name));
-            });
+        function applyActiveSetToVsSelectors() {
+            let activeSet = document.getElementById('active-set').value;
+            let t1Sel = document.getElementById(`t1-player-${activeSet}`);
+            let t2Sel = document.getElementById(`t2-player-${activeSet}`);
+            let mapSel = document.getElementById(`map-${activeSet}`);
+
+            if (t1Sel && t2Sel && mapSel) {
+                let vsT1 = document.getElementById('vs-t1-player');
+                let vsT2 = document.getElementById('vs-t2-player');
+                let vsMap = document.getElementById('vs-map');
+
+                if(vsT1) vsT1.value = t1Sel.value;
+                if(vsT2) vsT2.value = t2Sel.value;
+                if(vsMap) vsMap.value = mapSel.value;
+            }
         }
 
         function saveMatchMode() {
@@ -343,7 +466,7 @@
             let mode = document.getElementById('select-match-mode').value;
             set(ref(db, `rooms/${currentRoomId}/matchState/matchMode`), mode).then(() => {
                 toggleTeamPanelByMode(mode);
-                alert(`경기 모드가 [${mode === 'team' ? '팀 대항전' : '개인전'}]으로 변경되었습니다!`);
+                alert(`경기 모드가 변경되었습니다!`);
             });
         }
 
@@ -355,10 +478,7 @@
             let team2Color = document.getElementById('input-team2-color').value || "#6a1b1b";
 
             set(ref(db, `rooms/${currentRoomId}/matchState/teamNames`), { 
-                team1: team1Name, 
-                team2: team2Name,
-                team1Color: team1Color,
-                team2Color: team2Color
+                team1: team1Name, team2: team2Name, team1Color, team2Color
             });
             alert("팀 정보가 적용되었습니다!");
         }
@@ -366,13 +486,19 @@
         function saveMatchState() {
             if (!currentRoomId) return;
             let matches = {};
-            for (let i = 1; i <= 7; i++) {
+            let maxSets = totalSetsCount + 3;
+            for (let i = 1; i <= maxSets; i++) {
+                let t1El = document.getElementById(`t1-player-${i}`);
+                if (!t1El) continue;
+
                 let winner = "";
-                if(document.getElementById(`win-t1-${i}`).checked) winner = "t1";
-                if(document.getElementById(`win-t2-${i}`).checked) winner = "t2";
+                let w1 = document.getElementById(`win-t1-${i}`);
+                let w2 = document.getElementById(`win-t2-${i}`);
+                if(w1 && w1.checked) winner = "t1";
+                if(w2 && w2.checked) winner = "t2";
 
                 matches[i] = {
-                    t1Player: document.getElementById(`t1-player-${i}`).value || "미정",
+                    t1Player: t1El.value || "미정",
                     t2Player: document.getElementById(`t2-player-${i}`).value || "미정",
                     mapName: document.getElementById(`map-${i}`).value || "미정",
                     winner: winner
@@ -388,11 +514,13 @@
                     ...existing,
                     p1Score: existing.p1Score || 0,
                     p2Score: existing.p2Score || 0,
+                    totalSets: totalSetsCount,
                     currentActiveSet: activeSet,
                     matches: matches
                 });
             }, { onlyOnce: true });
 
+            applyActiveSetToVsSelectors();
             alert("대진표가 오버레이에 반영되었습니다!");
         }
 
@@ -420,10 +548,7 @@
         function saveUserGasUrl() {
             if (!currentRoomId) return;
             let urlInput = document.getElementById('input-user-gas-url').value.trim();
-            if (!urlInput) {
-                alert("웹 앱 URL을 입력해주세요.");
-                return;
-            }
+            if (!urlInput) { alert("URL을 입력해주세요."); return; }
             set(ref(db, `rooms/${currentRoomId}/settings/gasUrl`), urlInput).then(() => {
                 alert("구글 시트 URL이 저장되었습니다!");
                 fetchSpreadsheetData(urlInput);
@@ -434,8 +559,8 @@
             const currentUrl = window.location.href;
             const baseUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '');
             document.getElementById('overlay-url-input').value = `${baseUrl}/overlay.html?room=${roomId}`;
-            document.getElementById('vs-url-input').value = `${baseUrl}/vs-overlay.html?room=${roomId}`;
             document.getElementById('score-url-input').value = `${baseUrl}/score-overlay.html?room=${roomId}`;
+            document.getElementById('vs-url-input').value = `${baseUrl}/vs-overlay.html?room=${roomId}`;
         }
 
         function copyUrl(inputId, btnId) {
@@ -485,72 +610,116 @@
                 </div>
             </h1>
 
-            <!-- 📑 상단 탭 메뉴 버튼 -->
+            <!-- 상단 탭 메뉴 버튼 -->
             <div class="flex gap-2 mb-6 border-b border-[#2c2d33] pb-3">
-                <button data-tab="roster" class="tab-btn bg-[#00FFA3] text-black px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">👥 1. 참관 선수단 선택</button>
+                <button data-tab="roster" class="tab-btn bg-[#00FFA3] text-black px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">👥 1. 선수 및 맵 선택</button>
                 <button data-tab="match" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚔️ 2. 대진표 및 경기 조작</button>
                 <button data-tab="settings" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚙️ 3. 기본 설정 및 링크</button>
             </div>
 
-            <!-- 탭 1: 참관 선수단 선택 탭 -->
+            <!-- 탭 1: 선수 및 맵 선택 탭 -->
             <div id="tab-roster" class="tab-content">
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                    <h3 class="text-sm font-bold text-[#00FFA3] mb-1">이번 경기에 참여할 선수 선택</h3>
-                    <p class="text-[11px] text-gray-400 mb-3">카드를 클릭하여 체크하면, 대진표 선택창에 해당 선수들만 노출됩니다.</p>
-                    <div id="player-grid-container" class="mb-4">
+                    <h3 class="text-sm font-bold text-[#00FFA3] mb-1">1. 이번 경기에 참여할 선수 선택</h3>
+                    <p class="text-[11px] text-gray-400 mb-3">체크된 선수들만 대진표 선택창에 노출됩니다.</p>
+                    <div id="player-grid-container" class="mb-6">
                         <div class="p-6 text-center text-xs text-gray-400">구글 시트 URL을 먼저 연동해 주세요.</div>
                     </div>
-                    <button id="btn-save-roster" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-xs cursor-pointer">선수단 구성 저장하고 대진표로 이동</button>
+
+                    <h3 class="text-sm font-bold text-[#00FFA3] mb-1">2. 이번 경기에 사용할 맵 풀(Pool) 선택</h3>
+                    <p class="text-[11px] text-gray-400 mb-3">체크된 맵들만 대진표 및 VS 매치업 맵 선택창에 노출됩니다.</p>
+                    <div id="map-grid-container" class="mb-4">
+                        <div class="p-6 text-center text-xs text-gray-400">구글 시트 URL을 먼저 연동해 주세요.</div>
+                    </div>
+
+                    <button id="btn-save-selection" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-xs cursor-pointer">선수 및 맵 구성 저장하고 대진표로 이동</button>
                 </div>
             </div>
 
             <!-- 탭 2: 대진표 및 경기 조작 탭 -->
             <div id="tab-match" class="tab-content hidden">
+                
+                <!-- 세트 템플릿 빠른 선택 바 -->
+                <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between flex-wrap gap-2">
+                    <div class="text-xs font-bold text-gray-300 flex items-center gap-2">
+                        <span>⚡ 세트 템플릿:</span>
+                        <button data-sets="3" class="template-btn bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-1 rounded text-xs font-bold cursor-pointer">3판2선 (3세트)</button>
+                        <button data-sets="5" class="template-btn bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-1 rounded text-xs font-bold cursor-pointer">5판3선 (5세트)</button>
+                        <button data-sets="7" class="template-btn bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-1 rounded text-xs font-bold cursor-pointer">7판4선 (7세트)</button>
+                        <button data-sets="9" class="template-btn bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-1 rounded text-xs font-bold cursor-pointer">9판5선 (9세트)</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400">기본 세트 수:</span>
+                        <button id="btn-sets-minus" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-2 py-0.5 rounded font-bold cursor-pointer">-</button>
+                        <span id="sets-count-display" class="text-xs font-black text-[#00FFA3] w-10 text-center">7세트</span>
+                        <button id="btn-sets-plus" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-2 py-0.5 rounded font-bold cursor-pointer">+</button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <!-- 대진표 설정 패널 -->
-                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-sm font-bold text-[#00FFA3]">전체 대진표 설정 (1~7세트)</h3>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs text-gray-400">송출 세트:</span>
-                                <select id="active-set" class="bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-white font-bold">
-                                    <option value="1">1세트</option><option value="2">2세트</option><option value="3">3세트</option>
-                                    <option value="4">4세트</option><option value="5">5세트</option><option value="6">6세트</option><option value="7">7세트</option>
-                                </select>
+                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-bold text-[#00FFA3]">전체 대진표 설정</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-400">송출 세트:</span>
+                                    <select id="active-set" class="bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-white font-bold"></select>
+                                </div>
+                            </div>
+                            <div class="max-h-60 overflow-y-auto mb-3 pr-1">
+                                <table class="w-full text-xs">
+                                    <thead>
+                                        <tr class="text-gray-400 border-b border-[#2c2d33]">
+                                            <th class="p-1 pb-2">세트</th>
+                                            <th class="p-1 pb-2">선수 1 (승리)</th>
+                                            <th class="p-1 pb-2">맵</th>
+                                            <th class="p-1 pb-2">선수 2 (승리)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="match-table-body"></tbody>
+                                    <tbody id="extra-match-table-body"></tbody>
+                                </table>
+                            </div>
+                            <button id="btn-save-match" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2 rounded-lg text-sm cursor-pointer mb-3">대진표 및 승리자 송출 (적용하기)</button>
+                        </div>
+                        <div class="bg-[#141518] p-2.5 rounded-lg border border-[#2c2d33] flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-gray-300">🔗 대진표 오버레이 링크</span>
+                            <div class="flex gap-1.5 flex-1 max-w-[220px]">
+                                <input type="text" id="overlay-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                                <button id="btn-copy-url" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer">복사</button>
                             </div>
                         </div>
-                        <div class="max-h-64 overflow-y-auto mb-3">
-                            <table class="w-full text-xs">
-                                <thead>
-                                    <tr class="text-gray-400 border-b border-[#2c2d33]">
-                                        <th class="p-1">세트</th><th class="p-1">선수 1 (승리 체크)</th><th class="p-1">맵</th><th class="p-1">선수 2 (승리 체크)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="match-table-body"></tbody>
-                            </table>
-                        </div>
-                        <button id="btn-save-match" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2 rounded-lg text-sm cursor-pointer">대진표 및 승리자 송출 (적용하기)</button>
                     </div>
 
                     <!-- 스코어 제어 패널 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col justify-between">
-                        <h3 class="text-sm font-bold text-[#00FFA3] mb-3">스코어보드 세트스코어 제어</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="text-center bg-[#141518] p-3 rounded-xl border border-[#2c2d33]">
-                                <h4 class="text-xs font-bold text-blue-400 mb-1">P1 / Team 1 점수</h4>
-                                <div class="text-4xl font-black mb-3 text-[#00FFA3]" id="p1Score">0</div>
-                                <div class="flex justify-center gap-2">
-                                    <button id="btn-p1-plus" class="bg-[#00FFA3] text-black px-3 py-1 rounded font-bold cursor-pointer">+</button>
-                                    <button id="btn-p1-minus" class="bg-[#2c2d33] text-white px-3 py-1 rounded font-bold cursor-pointer">-</button>
+                        <div>
+                            <h3 class="text-sm font-bold text-[#00FFA3] mb-3">스코어보드 세트스코어 제어</h3>
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="text-center bg-[#141518] p-3 rounded-xl border border-[#2c2d33]">
+                                    <h4 class="text-xs font-bold text-blue-400 mb-1">P1 / Team 1</h4>
+                                    <div class="text-3xl font-black mb-2 text-[#00FFA3]" id="p1Score">0</div>
+                                    <div class="flex justify-center gap-2">
+                                        <button id="btn-p1-plus" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded font-bold cursor-pointer">+</button>
+                                        <button id="btn-p1-minus" class="bg-[#2c2d33] text-white px-2.5 py-1 rounded font-bold cursor-pointer">-</button>
+                                    </div>
+                                </div>
+                                <div class="text-center bg-[#141518] p-3 rounded-xl border border-[#2c2d33]">
+                                    <h4 class="text-xs font-bold text-red-400 mb-1">P2 / Team 2</h4>
+                                    <div class="text-3xl font-black mb-2 text-[#00FFA3]" id="p2Score">0</div>
+                                    <div class="flex justify-center gap-2">
+                                        <button id="btn-p2-plus" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded font-bold cursor-pointer">+</button>
+                                        <button id="btn-p2-minus" class="bg-[#2c2d33] text-white px-2.5 py-1 rounded font-bold cursor-pointer">-</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="text-center bg-[#141518] p-3 rounded-xl border border-[#2c2d33]">
-                                <h4 class="text-xs font-bold text-red-400 mb-1">P2 / Team 2 점수</h4>
-                                <div class="text-4xl font-black mb-3 text-[#00FFA3]" id="p2Score">0</div>
-                                <div class="flex justify-center gap-2">
-                                    <button id="btn-p2-plus" class="bg-[#00FFA3] text-black px-3 py-1 rounded font-bold cursor-pointer">+</button>
-                                    <button id="btn-p2-minus" class="bg-[#2c2d33] text-white px-3 py-1 rounded font-bold cursor-pointer">-</button>
-                                </div>
+                        </div>
+                        <div class="bg-[#141518] p-2.5 rounded-lg border border-[#2c2d33] flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-[#00FFA3]">🔗 미니맵 스코어보드 링크</span>
+                            <div class="flex gap-1.5 flex-1 max-w-[220px]">
+                                <input type="text" id="score-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                                <button id="btn-copy-score-url" class="bg-[#00FFA3] text-black px-2.5 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer">복사</button>
                             </div>
                         </div>
                     </div>
@@ -558,10 +727,17 @@
 
                 <!-- VS 매치업 제어 패널 -->
                 <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                    <h3 class="text-sm font-bold text-[#00FFA3] mb-3">VS 매치업 화면 제어 (선수 소개 화면)</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-bold text-gray-300">🔗 링크</span>
+                            <input type="text" id="vs-url-input" readonly class="w-48 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                            <button id="btn-copy-vs-url" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">복사</button>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-3 gap-3 mb-3">
                         <div>
-                            <label class="block text-[10px] text-gray-400 mb-1">출전 선수 1</label>
+                            <label class="block text-[10px] text-gray-400 mb-1">출전 선수 1 (대진표 세트 연동됨)</label>
                             <select id="vs-t1-player" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                         </div>
                         <div>
@@ -579,7 +755,6 @@
 
             <!-- 탭 3: 기본 설정 및 링크 탭 -->
             <div id="tab-settings" class="tab-content hidden">
-                <!-- 경기 모드 설정 -->
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#00FFA3]/30 flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-bold text-[#00FFA3]">경기 진행 모드 선택</h3>
@@ -594,7 +769,6 @@
                     </div>
                 </div>
 
-                <!-- 시트 연동 설정 -->
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                     <div class="flex justify-between items-center mb-1">
                         <h3 class="text-sm font-bold text-[#00FFA3]">내 구글 스프레드시트 연동 설정</h3>
@@ -608,7 +782,6 @@
                     </div>
                 </div>
 
-                <!-- 팀 이름 및 색상 설정 -->
                 <div id="team-setting-panel" class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] transition-all">
                     <h3 class="text-sm font-bold text-[#00FFA3] mb-2">팀 이름 및 색상 설정 (팀 대항전용)</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
@@ -622,31 +795,6 @@
                         </div>
                     </div>
                     <button id="btn-save-teams" class="w-full bg-[#2c2d33] hover:bg-[#3c3d44] text-white font-bold py-1.5 rounded-lg text-xs cursor-pointer">팀 정보 적용하기</button>
-                </div>
-
-                <!-- OBS 링크 복사 -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                        <label class="block text-[10px] font-bold text-gray-400 mb-2">대진표 오버레이</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="overlay-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-gray-300">
-                            <button id="btn-copy-url" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-xs font-bold cursor-pointer">복사</button>
-                        </div>
-                    </div>
-                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                        <label class="block text-[10px] font-bold text-gray-400 mb-2">VS 매치업 오버레이</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="vs-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-gray-300">
-                            <button id="btn-copy-vs-url" class="bg-[#2c2d33] text-white px-3 py-1 rounded text-xs font-bold cursor-pointer">복사</button>
-                        </div>
-                    </div>
-                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                        <label class="block text-[10px] font-bold text-[#00FFA3] mb-2">미니맵 스코어보드</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="score-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-gray-300">
-                            <button id="btn-copy-score-url" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-xs font-bold cursor-pointer">복사</button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
