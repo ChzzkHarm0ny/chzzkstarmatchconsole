@@ -31,16 +31,15 @@
 
         window.onload = async function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const uid = urlParams.get('uid');
+            const roomId = urlParams.get('room');
 
-            if (!uid) {
-                document.body.innerHTML = "<div style='color:white; padding:20px;'>UID가 지정되지 않았습니다.</div>";
+            if (!roomId) {
+                document.body.innerHTML = "<div style='color:white; padding:20px;'>방(room) 정보가 지정되지 않았습니다.</div>";
                 return;
             }
 
-            // 1. 해당 사용자의 설정된 시트 URL을 가져와서 선수 종족 매핑 구성
-            const userRef = ref(db, `users/${uid}`);
-            onValue(userRef, async (snapshot) => {
+            const roomRef = ref(db, `rooms/${roomId}`);
+            onValue(roomRef, async (snapshot) => {
                 const data = snapshot.val() || {};
                 
                 if (data.settings && data.settings.gasUrl) {
@@ -53,7 +52,6 @@
                     } catch (e) { console.error("시트 데이터 로드 실패:", e); }
                 }
 
-                // 2. 대진표 및 스코어 렌더링
                 if (data.matchState) {
                     let ms = data.matchState;
                     if (ms.teamNames) {
