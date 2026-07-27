@@ -114,7 +114,6 @@
                 }
             });
 
-            // 누락되었던 VS 송출 버튼 이벤트 바인딩 추가
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
 
             document.getElementById('btn-copy-url').addEventListener('click', () => copyUrl('overlay-url-input', 'btn-copy-url'));
@@ -497,15 +496,17 @@
                                 <thead>
                                     <tr class="text-gray-400 border-b border-[#2c2d33]">
                                         <th class="p-1.5 pb-2">경기</th>
-                                        <th class="p-1.5 pb-2">${team1Name} 선수 (승리)</th>
+                                        <th class="p-1.5 pb-2">${team1Name} 선수</th>
                                         <th class="p-1.5 pb-2">맵</th>
-                                        <th class="p-1.5 pb-2">${team2Name} 선수 (승리)</th>
+                                        <th class="p-1.5 pb-2">${team2Name} 선수</th>
                                     </tr>
                                 </thead>
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
                             </table>
                         </div>
-                        <button onclick="saveMatchSetState(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer mb-2">${setObj.name} 대진 송출 (적용하기)</button>
+                        <div class="text-center text-[11px] text-gray-400 py-1 bg-[#141518] rounded border border-[#2c2d33]">
+                            ⚡ 선수, 맵, 승패를 변경하면 대진표와 스코어보드에 **실시간 자동 반영**됩니다.
+                        </div>
                     </div>
                 `;
                 wrapper.appendChild(panel);
@@ -522,6 +523,7 @@
                 if(s.matchesCount < 1) s.matchesCount = 1;
                 if(s.matchesCount > 15) s.matchesCount = 15;
                 renderMatchSetPanels();
+                autoSaveMatchSetState(setId); // 경기 수 변경 시 즉시 저장
             }
         };
 
@@ -559,9 +561,23 @@
                     let activeTeam1List = team1Roster.filter(name => selectedRoster.includes(name));
                     let activeTeam2List = team2Roster.filter(name => selectedRoster.includes(name));
 
-                    populatePlayerSelect(document.getElementById(`s${setId}-t1-${i}`), "선수 선택", m.t1Player, activeTeam1List);
-                    populatePlayerSelect(document.getElementById(`s${setId}-t2-${i}`), "선수 선택", m.t2Player, activeTeam2List);
-                    populateActiveMapSelect(document.getElementById(`s${setId}-map-${i}`), "맵 선택", m.mapName);
+                    let t1Select = document.getElementById(`s${setId}-t1-${i}`);
+                    let t2Select = document.getElementById(`s${setId}-t2-${i}`);
+                    let mapSelect = document.getElementById(`s${setId}-map-${i}`);
+
+                    populatePlayerSelect(t1Select, "선수 선택", m.t1Player, activeTeam1List);
+                    populatePlayerSelect(t2Select, "선수 선택", m.t2Player, activeTeam2List);
+                    populateActiveMapSelect(mapSelect, "맵 선택", m.mapName);
+
+                    // [자동 싱크 바인딩] 셀렉터나 라디오 버튼을 건드릴 때마다 즉시 파이어베이스에 동기화
+                    t1Select.onchange = () => autoSaveMatchSetState(setId);
+                    t2Select.onchange = () => autoSaveMatchSetState(setId);
+                    mapSelect.onchange = () => autoSaveMatchSetState(setId);
+
+                    let radios = document.getElementsByName(`winner_s${setId}_m${i}`);
+                    for(let r of radios) {
+                        r.onchange = () => autoSaveMatchSetState(setId);
+                    }
                 }
             }, { onlyOnce: true });
         }
@@ -628,11 +644,12 @@
             document.getElementById('prev-map-name').innerText = mapObj.name;
         }
 
-        window.saveMatchSetState = function(setId) {
+        // [자동 저장 함수] 변경 즉시 파이어베이스로 전송 및 스코어 집계
+        function autoSaveMatchSetState(setId) {
             if (!currentRoomId) return;
             let s = matchSetsObj[setId];
+            if(!s) return;
             let matches = {};
-            let lastActiveMatch = null;
 
             for (let i = 1; i <= s.matchesCount; i++) {
                 let t1El = document.getElementById(`s${setId}-t1-${i}`);
@@ -650,9 +667,6 @@
                 };
 
                 matches[i] = matchData;
-                if (matchData.t1Player !== "미정" || matchData.t2Player !== "미정") {
-                    lastActiveMatch = matchData;
-                }
             }
 
             s.matches = matches;
@@ -663,29 +677,7 @@
 
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
-
-            if (lastActiveMatch) {
-                let t1PlayerName = lastActiveMatch.t1Player;
-                let t2PlayerName = lastActiveMatch.t2Player;
-                let mapName = lastActiveMatch.mapName;
-
-                let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
-                let t1Obj = allPlayers.find(p => p.name === t1PlayerName) || { name: t1PlayerName, race: "미정", img: githubBase + encodeURIComponent(t1PlayerName) + ".png" };
-                let t2Obj = allPlayers.find(p => p.name === t2PlayerName) || { name: t2PlayerName, race: "미정", img: githubBase + encodeURIComponent(t2PlayerName) + ".png" };
-                let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName, url: "" };
-
-                let vsData = {
-                    t1: { name: t1Obj.name, race: t1Obj.race, img: t1Obj.img },
-                    t2: { name: t2Obj.name, race: t2Obj.race, img: t2Obj.img },
-                    map: { name: mapObj.name, url: mapObj.url || "" }
-                };
-
-                set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
-                updateVsPreview(t1PlayerName, t2PlayerName, mapName);
-            }
-
-            alert(`${s.name} 대진 및 승리 스코어가 오버레이에 반영되었습니다!`);
-        };
+        }
 
         function calculateAndDisplayScores() {
             let p1TotalScore = 0;
@@ -758,7 +750,7 @@
 
             set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
             updateVsPreview(t1PlayerName, t2PlayerName, mapName);
-            alert("선택한 경기 정보가 VS 매치업 오버레이에 송출되었습니다!");
+            alert("선택한 경기 정보가 VS 매치업 화면에 송출되었습니다!");
         }
 
         function saveUserGasUrl() {
