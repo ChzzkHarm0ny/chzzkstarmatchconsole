@@ -96,14 +96,21 @@
                 saveMatchSetsConfigToFirebase();
             });
 
-            document.getElementById('btn-reset-selection').addEventListener('click', () => {
-                if (confirm("참가 선수 및 맵 선택을 모두 초기화하시겠습니까?")) {
+            document.getElementById('btn-reset-players').addEventListener('click', () => {
+                if (confirm("참가 선수 선택을 모두 초기화(해제)하시겠습니까?")) {
                     selectedRoster = [];
                     team1Roster = [];
                     team2Roster = [];
+                    renderPlayerSelectionGrid();
+                    alert("선수 선택이 초기화되었습니다.");
+                }
+            });
+
+            document.getElementById('btn-reset-maps').addEventListener('click', () => {
+                if (confirm("맵 풀 선택을 모두 초기화(해제)하시겠습니까?")) {
                     selectedMapPool = [];
-                    renderSelectionUI();
-                    alert("초기화되었습니다.");
+                    renderMapGrid();
+                    alert("맵 풀이 초기화되었습니다.");
                 }
             });
 
@@ -117,12 +124,13 @@
                 let matchIdx = parts[1];
                 let matchData = matchSetsObj[setId]?.matches[matchIdx];
                 if(matchData) {
-                    updateLiveScoreboardAndVs(setId, matchIdx);
+                    updateVsPreview(matchData.t1Player, matchData.t2Player, matchData.mapName);
                 }
             });
 
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
             document.getElementById('btn-save-league-title').addEventListener('click', saveLeagueTitle);
+            document.getElementById('btn-save-score-pos').addEventListener('click', saveScorePosState);
 
             document.getElementById('btn-toggle-list').addEventListener('click', () => toggleOverlayVisibility('listVisible', 'btn-toggle-list'));
             document.getElementById('btn-toggle-score').addEventListener('click', () => toggleOverlayVisibility('scoreVisible', 'btn-toggle-score'));
@@ -156,6 +164,19 @@
                     r.dataset.checked = "false";
                 }
                 elem.dataset.checked = "true";
+            }
+        };
+
+        window.resetMatchSetData = function(setId) {
+            if (confirm(matchSetsObj[setId].name + " 대진 설정을 초기화하시겠습니까?")) {
+                matchSetsObj[setId].matches = {};
+                matchSetsObj[setId].activeMatchIdx = 1;
+                set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), matchSetsObj[setId]);
+                saveMatchSetsConfigToFirebase();
+                renderMatchSetPanels();
+                updateVsMatchDropdownOptions();
+                calculateAndDisplayScores();
+                alert("초기화되었습니다.");
             }
         };
 
@@ -218,6 +239,11 @@
                         document.getElementById('input-league-title').value = leagueTitleText;
                     }
 
+                    if(ms.scorePos) {
+                        document.getElementById('input-score-t1-pos').value = ms.scorePos.t1Pos || "";
+                        document.getElementById('input-score-t2-pos').value = ms.scorePos.t2Pos || "";
+                    }
+
                     if(ms.teamNames) {
                         team1Name = ms.teamNames.team1 || "1팀";
                         team2Name = ms.teamNames.team2 || "2팀";
@@ -231,7 +257,7 @@
                     }
 
                     if(ms.vsMatch && ms.vsMatch.t1) {
-                        updateVsPreview(ms.vsMatch.t1.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name, ms.vsMatch.t1?.pos, ms.vsMatch.t2?.pos);
+                        updateVsPreview(ms.vsMatch.t1.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name);
                     }
 
                     updateToggleButtonState('listVisible', 'btn-toggle-list', ms.listVisible);
@@ -550,7 +576,10 @@
                 panel.innerHTML = `
                     <div>
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-sm font-bold text-[#00FFA3]">${setObj.name} 상세 대진 설정</h3>
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-sm font-bold text-[#00FFA3]">${setObj.name} 상세 대진 설정</h3>
+                                <button onclick="resetMatchSetData(${setObj.id})" class="bg-[#2c2d33] hover:bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">🔄 세트 대진 초기화</button>
+                            </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-400">경기 수 조절:</span>
                                 <button onclick="adjustSetMatchesCount(${setObj.id}, -1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">-</button>
@@ -565,17 +594,15 @@
                                         <th class="p-1.5 pb-2">현재 경기</th>
                                         <th class="p-1.5 pb-2">경기</th>
                                         <th class="p-1.5 pb-2">${team1Name} 선수</th>
-                                        <th class="p-1.5 pb-2">위치</th>
                                         <th class="p-1.5 pb-2">맵</th>
                                         <th class="p-1.5 pb-2">${team2Name} 선수</th>
-                                        <th class="p-1.5 pb-2">위치</th>
                                     </tr>
                                 </thead>
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
                             </table>
                         </div>
                         <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
-                            🎯 ${setObj.name} 대진 및 현재 경기(스코어·VS) 반영하기
+                            🎯 ${setObj.name} 대진 및 현재 경기(스코어) 반영하기
                         </button>
                     </div>
                 `;
@@ -619,20 +646,18 @@
                         <td class="p-2"><input type="radio" name="active_match_set${setId}" value="${i}" ${isChecked?'checked':''} class="accent-[#00FFA3] cursor-pointer" title="현재 진행 중인 경기 지정"></td>
                         <td class="p-2 font-bold text-gray-400 whitespace-nowrap">${i}경기</td>
                         <td class="p-2 flex items-center justify-center gap-1">
-                            <select id="s${setId}-t1-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
+                            <select id="s${setId}-t1-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                             <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer">
                                 <input type="radio" name="winner_s${setId}_m${i}" value="t1" ${t1WinChecked?'checked':''} data-checked="${t1WinChecked}" onclick="handleWinnerClick(this)" class="accent-blue-500">승
                             </label>
                         </td>
-                        <td class="p-2"><input type="text" id="s${setId}-pos1-${i}" value="${m.t1Pos || ''}" placeholder="9" class="w-12 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
-                        <td class="p-2"><select id="s${setId}-map-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
+                        <td class="p-2"><select id="s${setId}-map-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
                         <td class="p-2 flex items-center justify-center gap-1">
                             <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer">
                                 <input type="radio" name="winner_s${setId}_m${i}" value="t2" ${t2WinChecked?'checked':''} data-checked="${t2WinChecked}" onclick="handleWinnerClick(this)" class="accent-red-500">승
                             </label>
-                            <select id="s${setId}-t2-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
+                            <select id="s${setId}-t2-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                         </td>
-                        <td class="p-2"><input type="text" id="s${setId}-pos2-${i}" value="${m.t2Pos || ''}" placeholder="3" class="w-12 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
                     `;
                     tbody.appendChild(tr);
 
@@ -686,7 +711,7 @@
             });
         }
 
-        function updateVsPreview(t1Name, t2Name, mapName, t1Pos, t2Pos) {
+        function updateVsPreview(t1Name, t2Name, mapName) {
             let p1Obj = allPlayers.find(p => p.name === t1Name) || { name: t1Name || "선수1", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P1" };
             let p2Obj = allPlayers.find(p => p.name === t2Name) || { name: t2Name || "선수2", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P2" };
             let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName || "맵", url: "https://placehold.co/100x100/1b1c20/FFF?text=Map" };
@@ -695,12 +720,12 @@
             let p2RaceClass = p2Obj.race === '프로토스' ? 'race-P-text' : (p2Obj.race === '테란' ? 'race-T-text' : 'race-Z-text');
 
             document.getElementById('prev-p1-img').src = p1Obj.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p1Obj.name) + ".png";
-            document.getElementById('prev-p1-name').innerText = p1Obj.name + (t1Pos ? " (" + t1Pos + ")" : "");
+            document.getElementById('prev-p1-name').innerText = p1Obj.name;
             document.getElementById('prev-p1-race').innerText = p1Obj.race;
             document.getElementById('prev-p1-race').className = "text-xs font-bold " + p1RaceClass;
 
             document.getElementById('prev-p2-img').src = p2Obj.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p2Obj.name) + ".png";
-            document.getElementById('prev-p2-name').innerText = p2Obj.name + (t2Pos ? " (" + t2Pos + ")" : "");
+            document.getElementById('prev-p2-name').innerText = p2Obj.name;
             document.getElementById('prev-p2-race').innerText = p2Obj.race;
             document.getElementById('prev-p2-race').className = "text-xs font-bold " + p2RaceClass;
 
@@ -731,8 +756,6 @@
                 let matchData = {
                     t1Player: t1El.value || "미정",
                     t2Player: document.getElementById('s' + setId + '-t2-' + i).value || "미정",
-                    t1Pos: document.getElementById('s' + setId + '-pos1-' + i).value || "",
-                    t2Pos: document.getElementById('s' + setId + '-pos2-' + i).value || "",
                     mapName: document.getElementById('s' + setId + '-map-' + i).value || "미정",
                     winner: winner
                 };
@@ -755,31 +778,19 @@
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
 
-            let activeMatch = matches[activeMatchIdx];
-            if (activeMatch && (activeMatch.t1Player !== "미정" || activeMatch.t2Player !== "미정")) {
-                let t1PlayerName = activeMatch.t1Player;
-                let t2PlayerName = activeMatch.t2Player;
-                let mapName = activeMatch.mapName;
-                let t1Pos = activeMatch.t1Pos;
-                let t2Pos = activeMatch.t2Pos;
-
-                let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
-                let t1Obj = allPlayers.find(p => p.name === t1PlayerName) || { name: t1PlayerName, race: "미정", img: githubBase + encodeURIComponent(t1PlayerName) + ".png" };
-                let t2Obj = allPlayers.find(p => p.name === t2PlayerName) || { name: t2PlayerName, race: "미정", img: githubBase + encodeURIComponent(t2PlayerName) + ".png" };
-                let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName, url: "" };
-
-                let vsData = {
-                    t1: { name: t1Obj.name, race: t1Obj.race, img: t1Obj.img, pos: t1Pos },
-                    t2: { name: t2Obj.name, race: t2Obj.race, img: t2Obj.img, pos: t2Pos },
-                    map: { name: mapObj.name, url: mapObj.url || "" }
-                };
-
-                set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
-                updateVsPreview(t1PlayerName, t2PlayerName, mapName, t1Pos, t2Pos);
-            }
-
+            // [변경점] 대진 반영 버튼을 누를 때 VS 매치업 화면이 자동으로 바뀌지 않고 스코어보드와 현재 경기 상태만 반영됨
             alert(s.name + " 대진이 반영되었으며, 현재 경기가 다음 경기로 자동 이동되었습니다!");
         };
+
+        function saveScorePosState() {
+            if (!currentRoomId) return;
+            let t1Pos = document.getElementById('input-score-t1-pos').value.trim();
+            let t2Pos = document.getElementById('input-score-t2-pos').value.trim();
+
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/scorePos"), { t1Pos, t2Pos }).then(() => {
+                alert("스코어보드 선수 위치가 적용되었습니다!");
+            });
+        }
 
         function calculateAndDisplayScores() {
             let p1TotalScore = 0;
@@ -848,8 +859,6 @@
             let t1PlayerName = m.t1Player;
             let t2PlayerName = m.t2Player;
             let mapName = m.mapName;
-            let t1Pos = m.t1Pos;
-            let t2Pos = m.t2Pos;
 
             let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
             let t1Obj = allPlayers.find(p => p.name === t1PlayerName) || { name: t1PlayerName, race: "미정", img: githubBase + encodeURIComponent(t1PlayerName) + ".png" };
@@ -857,13 +866,13 @@
             let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName, url: "" };
 
             let vsData = {
-                t1: { name: t1Obj.name, race: t1Obj.race, img: t1Obj.img, pos: t1Pos },
-                t2: { name: t2Obj.name, race: t2Obj.race, img: t2Obj.img, pos: t2Pos },
+                t1: { name: t1Obj.name, race: t1Obj.race, img: t1Obj.img },
+                t2: { name: t2Obj.name, race: t2Obj.race, img: t2Obj.img },
                 map: { name: mapObj.name, url: mapObj.url || "" }
             };
 
             set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
-            updateVsPreview(t1PlayerName, t2PlayerName, mapName, t1Pos, t2Pos);
+            updateVsPreview(t1PlayerName, t2PlayerName, mapName);
             alert("선택한 경기 정보가 VS 매치업 화면에 송출되었습니다!");
         }
 
@@ -930,10 +939,12 @@
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                     <div class="flex justify-between items-center mb-4 pb-3 border-b border-[#2c2d33]">
                         <h3 class="text-sm font-bold text-[#00FFA3]">팀 설정, 참가 선수 및 맵 풀 관리</h3>
-                        <button id="btn-reset-selection" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-red-500/30">🔄 선택 초기화</button>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-reset-players" class="bg-[#2c2d33] hover:bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-red-500/30">🔄 선수 선택 초기화</button>
+                            <button id="btn-reset-maps" class="bg-[#2c2d33] hover:bg-red-500/20 text-yellow-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-yellow-500/30">🔄 맵 풀 초기화</button>
+                        </div>
                     </div>
 
-                    <!-- 대회 이름 설정 칸 추가 -->
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-[#00FFA3] mb-2">스코어보드 대회/매치 이름 설정</h4>
                         <div class="flex gap-2 mb-2">
@@ -1009,22 +1020,36 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
-                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 (자동 집계)</h3>
-                        <div class="flex items-center gap-6">
-                            <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
-                                <span class="text-xs font-bold text-blue-400">P1 / Team 1</span>
-                                <span class="text-2xl font-black text-[#00FFA3]" id="p1Score">0</span>
+                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 (자동 집계)</h3>
+                            <div class="flex items-center gap-6">
+                                <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
+                                    <span class="text-xs font-bold text-blue-400">P1 / Team 1</span>
+                                    <span class="text-2xl font-black text-[#00FFA3]" id="p1Score">0</span>
+                                </div>
+                                <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
+                                    <span class="text-xs font-bold text-red-400">P2 / Team 2</span>
+                                    <span class="text-2xl font-black text-[#00FFA3]" id="p2Score">0</span>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
-                                <span class="text-xs font-bold text-red-400">P2 / Team 2</span>
-                                <span class="text-2xl font-black text-[#00FFA3]" id="p2Score">0</span>
+                            <div class="flex items-center gap-2">
+                                <button id="btn-toggle-score" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐</button>
+                                <input type="text" id="score-url-input" readonly class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                                <button id="btn-copy-score-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button id="btn-toggle-score" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐</button>
-                            <input type="text" id="score-url-input" readonly class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
-                            <button id="btn-copy-score-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
+
+                        <div class="flex items-center justify-between gap-2 bg-[#0b0c0e] p-3 rounded-xl border border-[#2c2d33] text-xs">
+                            <div class="flex items-center gap-2 flex-1">
+                                <span class="text-blue-400 font-bold whitespace-nowrap">P1(Team1) 위치:</span>
+                                <input type="text" id="input-score-t1-pos" placeholder="예: 9" class="w-20 bg-[#141518] border border-[#2c2d33] rounded p-1 text-center text-white">
+                            </div>
+                            <div class="flex items-center gap-2 flex-1">
+                                <span class="text-red-400 font-bold whitespace-nowrap">P2(Team2) 위치:</span>
+                                <input type="text" id="input-score-t2-pos" placeholder="예: 3" class="w-20 bg-[#141518] border border-[#2c2d33] rounded p-1 text-center text-white">
+                            </div>
+                            <button id="btn-save-score-pos" class="bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold px-4 py-1.5 rounded text-xs whitespace-nowrap cursor-pointer">위치 즉시 반영</button>
                         </div>
                     </div>
 
