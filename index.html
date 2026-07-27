@@ -116,6 +116,11 @@
 
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
 
+            // 오버레이 표시/숨김 토글 버튼 이벤트 바인딩
+            document.getElementById('btn-toggle-list').addEventListener('click', () => toggleOverlayVisibility('listVisible', 'btn-toggle-list'));
+            document.getElementById('btn-toggle-score').addEventListener('click', () => toggleOverlayVisibility('scoreVisible', 'btn-toggle-score'));
+            document.getElementById('btn-toggle-vs').addEventListener('click', () => toggleOverlayVisibility('vsVisible', 'btn-toggle-vs'));
+
             document.getElementById('btn-copy-url').addEventListener('click', () => copyUrl('overlay-url-input', 'btn-copy-url'));
             document.getElementById('btn-copy-score-url').addEventListener('click', () => copyUrl('score-url-input', 'btn-copy-score-url'));
             document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
@@ -194,6 +199,11 @@
                     if(ms.vsMatch) {
                         updateVsPreview(ms.vsMatch.t1?.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name);
                     }
+
+                    // 오버레이 가시성 버튼 상태 동기화
+                    updateToggleButtonState('listVisible', 'btn-toggle-list', ms.listVisible);
+                    updateToggleButtonState('scoreVisible', 'btn-toggle-score', ms.scoreVisible);
+                    updateToggleButtonState('vsVisible', 'btn-toggle-vs', ms.vsVisible);
                     
                     renderSelectionUI();
                     renderMatchSetTabs();
@@ -202,6 +212,31 @@
                     calculateAndDisplayScores();
                 }
             });
+        }
+
+        function toggleOverlayVisibility(visibleKey, btnId) {
+            if (!currentRoomId) return;
+            const btn = document.getElementById(btnId);
+            let currentState = btn.dataset.state === 'true';
+            let newState = !currentState;
+
+            set(ref(db, `rooms/${currentRoomId}/matchState/${visibleKey}`), newState).then(() => {
+                updateToggleButtonState(visibleKey, btnId, newState);
+            });
+        }
+
+        function updateToggleButtonState(visibleKey, btnId, state) {
+            const btn = document.getElementById(btnId);
+            // 기본값은 true (켜져있음)
+            let isVisible = state !== false; 
+            btn.dataset.state = isVisible;
+            if (isVisible) {
+                btn.innerText = "📺 화면 켜짐 (숨기기)";
+                btn.className = "bg-[#00FFA3] hover:bg-[#00e692] text-black px-3 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer";
+            } else {
+                btn.innerText = "💤 화면 꺼짐 (표시)";
+                btn.className = "bg-[#2c2d33] hover:bg-[#3c3d44] text-gray-400 px-3 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer";
+            }
         }
 
         function toggleTeamPanelByMode(mode) {
@@ -523,7 +558,7 @@
                 if(s.matchesCount < 1) s.matchesCount = 1;
                 if(s.matchesCount > 15) s.matchesCount = 15;
                 renderMatchSetPanels();
-                autoSaveMatchSetState(setId); // 경기 수 변경 시 즉시 저장
+                autoSaveMatchSetState(setId);
             }
         };
 
@@ -569,7 +604,6 @@
                     populatePlayerSelect(t2Select, "선수 선택", m.t2Player, activeTeam2List);
                     populateActiveMapSelect(mapSelect, "맵 선택", m.mapName);
 
-                    // [자동 싱크 바인딩] 셀렉터나 라디오 버튼을 건드릴 때마다 즉시 파이어베이스에 동기화
                     t1Select.onchange = () => autoSaveMatchSetState(setId);
                     t2Select.onchange = () => autoSaveMatchSetState(setId);
                     mapSelect.onchange = () => autoSaveMatchSetState(setId);
@@ -644,7 +678,6 @@
             document.getElementById('prev-map-name').innerText = mapObj.name;
         }
 
-        // [자동 저장 함수] 변경 즉시 파이어베이스로 전송 및 스코어 집계
         function autoSaveMatchSetState(setId) {
             if (!currentRoomId) return;
             let s = matchSetsObj[setId];
@@ -853,18 +886,25 @@
                     
                     <div class="flex items-center gap-2">
                         <button id="btn-add-match-set" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-3 py-1.5 rounded text-xs font-bold cursor-pointer whitespace-nowrap">+새 세트(묶음) 추가</button>
-                        <div class="flex gap-1.5 bg-[#141518] p-1 rounded-lg border border-[#2c2d33] items-center">
-                            <input type="text" id="overlay-url-input" readonly class="w-36 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
-                            <button id="btn-copy-url" class="bg-[#00FFA3] text-black px-2 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer">링크 복사</button>
-                        </div>
+                    </div>
+                </div>
+
+                <!-- 매치리스트 링크 및 토글 바 -->
+                <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-3">
+                    <span class="text-xs font-bold text-[#00FFA3]">📋 매치리스트 오버레이 제어</span>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-toggle-list" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐 (숨기기)</button>
+                        <input type="text" id="overlay-url-input" readonly class="w-36 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                        <button id="btn-copy-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
+                    <!-- 스코어보드 링크 및 토글 바 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 세트스코어 (자동 집계)</h3>
+                        <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 (자동 집계)</h3>
                         <div class="flex items-center gap-6">
                             <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
                                 <span class="text-xs font-bold text-blue-400">P1 / Team 1</span>
@@ -875,19 +915,21 @@
                                 <span class="text-2xl font-black text-[#00FFA3]" id="p2Score">0</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 max-w-[200px] w-full">
-                            <input type="text" id="score-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
-                            <button id="btn-copy-score-url" class="bg-[#00FFA3] text-black px-2 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer">스코어 링크</button>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-toggle-score" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐</button>
+                            <input type="text" id="score-url-input" readonly class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                            <button id="btn-copy-score-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                         </div>
                     </div>
 
+                    <!-- VS 매치업 링크 및 토글 바 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
                             <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-bold text-gray-300">🔗 링크</span>
-                                <input type="text" id="vs-url-input" readonly class="w-48 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
-                                <button id="btn-copy-vs-url" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">복사</button>
+                                <button id="btn-toggle-vs" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐</button>
+                                <input type="text" id="vs-url-input" readonly class="w-36 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                                <button id="btn-copy-vs-url" class="bg-[#2c2d33] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                             </div>
                         </div>
 
