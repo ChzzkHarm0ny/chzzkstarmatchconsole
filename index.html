@@ -28,7 +28,6 @@
         let userGasUrl = "";
 
         window.onload = function() {
-            // 브라우저에 저장된 방 이름이 있으면 자동 로그인 시도
             const savedRoom = localStorage.getItem('starcraft_room_id');
             if (savedRoom) {
                 enterRoom(savedRoom);
@@ -42,7 +41,6 @@
                     alert("방 이름(또는 닉네임)을 입력해주세요!");
                     return;
                 }
-                // 특수문자 제거 및 공백 정리
                 let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
                 localStorage.setItem('starcraft_room_id', roomId);
                 enterRoom(roomId);
@@ -239,7 +237,6 @@
         function generateOverlayUrls(roomId) {
             const currentUrl = window.location.href;
             const baseUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '');
-            // 오버레이 링크에 room 파라미터 포함
             document.getElementById('overlay-url-input').value = `${baseUrl}/overlay.html?room=${roomId}`;
             document.getElementById('vs-url-input').value = `${baseUrl}/vs-overlay.html?room=${roomId}`;
         }
@@ -268,7 +265,7 @@
 <body class="bg-[#0b0c0e] text-white p-6 font-sans">
     <div class="max-w-4xl mx-auto">
         
-        <!-- 🔑 자체 방 로그인 화면 -->
+        <!-- 🔑 방 입장 화면 -->
         <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
             <h1 class="text-2xl font-bold mb-2 text-[#00FFA3]">CHZZK STARCRAFT CONSOLE</h1>
             <p class="text-gray-400 text-sm mb-6">사용할 본인만의 <b>방 이름(또는 방송국 아이디)</b>을 입력하고 입장하세요.</p>
