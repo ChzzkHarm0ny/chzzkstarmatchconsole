@@ -5,6 +5,7 @@
     <title>CHZZK Multi-Set ProLeague Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
+        /* 뒤쪽 중계화면이 보이도록 배경을 완전 투명화 */
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
         .race-P { color: #FFE000; }
         .race-T { color: #00AFFF; }
@@ -12,11 +13,11 @@
         .player-loser { color: #4b5563 !important; opacity: 0.5; }
         #list-wrapper { transition: opacity 0.3s ease; }
         
-        /* 오버레이에서 현재 진행 중인 경기에 뜨는 네온 테두리 강조 스타일 */
+        /* 현재 진행 중인 경기 네온 테두리 강조 스타일 */
         .overlay-active-match {
             border: 2px solid #00FFA3 !important;
-            background-color: rgba(0, 255, 163, 0.12) !important;
-            box-shadow: 0 0 15px rgba(0, 255, 163, 0.4);
+            background-color: rgba(0, 255, 163, 0.15) !important;
+            box-shadow: 0 0 15px rgba(0, 255, 163, 0.5);
         }
     </style>
     <script type="module">
@@ -86,20 +87,21 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            card.className = "flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md w-96 shrink-0";
+                            // 가독성이 좋도록 오버레이 패널 폭을 420px로 약간 넓힘
+                            card.className = "flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md w-[420px] shrink-0";
                             
                             let headerHtml = `
-                                <div class="bg-[#141518] border-b border-[#2c2d33] py-3 text-center">
-                                    <div class="text-xs tracking-widest text-[#00FFA3] font-black mb-1.5">${setObj.name.toUpperCase()}</div>
-                                    <div class="grid grid-cols-5 text-base font-black items-center px-3">
-                                        <div class="col-span-2 py-1.5 px-2 rounded-lg truncate text-white shadow" style="background-color: ${team1Color};">${team1Name}</div>
-                                        <div class="col-span-1 flex items-center justify-center text-gray-400 text-sm">-</div>
-                                        <div class="col-span-2 py-1.5 px-2 rounded-lg truncate text-white shadow" style="background-color: ${team2Color};">${team2Name}</div>
+                                <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-3 text-center">
+                                    <div class="text-xs tracking-widest text-[#00FFA3] font-black mb-2">${setObj.name.toUpperCase()}</div>
+                                    <div class="grid grid-cols-5 text-base font-black items-center px-4">
+                                        <div class="col-span-2 py-2 px-3 rounded-lg truncate text-white shadow text-base" style="background-color: ${team1Color};">${team1Name}</div>
+                                        <div class="col-span-1 flex items-center justify-center text-gray-400 text-base">-</div>
+                                        <div class="col-span-2 py-2 px-3 rounded-lg truncate text-white shadow text-base" style="background-color: ${team2Color};">${team2Name}</div>
                                     </div>
                                 </div>
                             `;
 
-                            let bodyHtml = `<div class="p-3 flex flex-col gap-1.5 max-h-[450px] overflow-y-auto">`;
+                            let bodyHtml = `<div class="p-3 flex flex-col gap-2 max-h-[500px] overflow-y-auto">`;
                             let activeMatchIdx = setObj.activeMatchIdx || 1;
                             
                             for (let i = 1; i <= setObj.matchesCount; i++) {
@@ -121,16 +123,16 @@
                                     t1StyleClass = "player-loser";
                                 }
 
-                                // 현재 진행 중인 경기 행에만 테두리 강조 클래스 부여
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
-                                let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "border-[#2c2d33] bg-[#141518]/90";
+                                let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "border-[#2c2d33] bg-[#1b1c20]/90";
 
+                                // 선수 이름과 맵 이름 글씨 크기를 text-sm에서 text-base(또는 text-lg급)로 큼직하게 상향 조정
                                 bodyHtml += `
-                                    <div class="flex items-center justify-between px-3 py-2 rounded-xl border text-sm font-bold shadow-inner ${rowHighlightClass}">
-                                        <div class="w-8 text-center text-gray-400 font-black">${i}</div>
-                                        <div class="w-28 text-center truncate ${t1StyleClass}">${p1}</div>
-                                        <div class="w-32 text-center text-gray-300 font-medium truncate text-xs">${mapName}</div>
-                                        <div class="w-28 text-center truncate ${t2StyleClass}">${p2}</div>
+                                    <div class="flex items-center justify-between px-4 py-2.5 rounded-xl border text-base font-bold shadow-inner ${rowHighlightClass}">
+                                        <div class="w-8 text-center text-gray-400 font-black text-sm">${i}</div>
+                                        <div class="w-32 text-center truncate ${t1StyleClass} text-base">${p1}</div>
+                                        <div class="w-32 text-center text-gray-300 font-medium truncate text-sm">${mapName}</div>
+                                        <div class="w-32 text-center truncate ${t2StyleClass} text-base">${p2}</div>
                                     </div>
                                 `;
                             }
