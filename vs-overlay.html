@@ -41,9 +41,28 @@
             onValue(roomRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
+                    let team1Name = "1팀";
+                    let team2Name = "2팀";
+                    let team1Color = "#1d3557";
+                    let team2Color = "#6a1b1b";
+
                     if (data.teamNames) {
-                        document.getElementById('vs-t1-label').innerText = data.teamNames.team1;
-                        document.getElementById('vs-t2-label').innerText = data.teamNames.team2;
+                        team1Name = data.teamNames.team1 || "1팀";
+                        team2Name = data.teamNames.team2 || "2팀";
+                        if (data.teamNames.team1Color) team1Color = data.teamNames.team1Color;
+                        if (data.teamNames.team2Color) team2Color = data.teamNames.team2Color;
+                    }
+
+                    let elT1Label = document.getElementById('vs-t1-label');
+                    let elT2Label = document.getElementById('vs-t2-label');
+                    
+                    if(elT1Label) {
+                        elT1Label.innerText = team1Name;
+                        elT1Label.style.backgroundColor = team1Color;
+                    }
+                    if(elT2Label) {
+                        elT2Label.innerText = team2Name;
+                        elT2Label.style.backgroundColor = team2Color;
                     }
 
                     if (data.vsMatch) {
@@ -59,7 +78,10 @@
                         if(m.t2.img) document.getElementById('t2-img').src = m.t2.img;
 
                         document.getElementById('map-name').innerText = m.map.name;
-                        if(m.map.url) document.getElementById('map-img').src = m.map.url;
+                        
+                        // 맵 이미지 처리 (GitHub 맵 경로 자동 조합)
+                        let mapImgUrl = m.map.url ? m.map.url : `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/${encodeURIComponent(m.map.name)}.png`;
+                        document.getElementById('map-img').src = mapImgUrl;
                     }
                 }
             });
@@ -77,25 +99,30 @@
 </head>
 <body class="flex items-center justify-center h-screen p-8 font-sans">
     <div class="flex items-center gap-6 bg-[#0b0c0e]/95 text-white border border-[#2c2d33] p-6 rounded-2xl shadow-2xl backdrop-blur-md">
-        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64">
+        <!-- 팀 1 카드 -->
+        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64 relative overflow-hidden">
             <img id="t1-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P1" class="w-16 h-16 object-cover rounded-lg border border-[#2c2d33]" alt="P1">
-            <div>
-                <div id="vs-t1-label" class="text-[10px] text-blue-400 font-bold mb-0.5">1팀</div>
+            <div class="flex-1">
+                <div id="vs-t1-label" class="inline-block px-2 py-0.5 rounded text-[10px] text-white font-bold mb-1">1팀</div>
                 <div id="t1-name" class="text-base font-black truncate mb-1">선수 미정</div>
                 <span id="t1-race" class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700">종족</span>
             </div>
         </div>
+        
+        <!-- 중앙 VS 및 맵 -->
         <div class="flex flex-col items-center justify-center px-4">
             <div class="text-2xl font-black italic text-[#00FFA3] tracking-wider mb-2 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</div>
             <div class="flex items-center gap-2 bg-[#141518] px-3 py-1.5 rounded-lg border border-[#2c2d33]">
-                <img id="map-img" src="https://placehold.co/40x40/1b1c20/FFF?text=Map" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" alt="Map">
+                <img id="map-img" src="https://placehold.co/40x40/1b1c20/FFF?text=Map" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=Map'" alt="Map">
                 <span id="map-name" class="text-xs font-bold text-gray-300">맵 미정</span>
             </div>
         </div>
-        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64 flex-row-reverse text-right">
+
+        <!-- 팀 2 카드 -->
+        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64 flex-row-reverse text-right relative overflow-hidden">
             <img id="t2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-16 h-16 object-cover rounded-lg border border-[#2c2d33]" alt="P2">
-            <div>
-                <div id="vs-t2-label" class="text-[10px] text-red-400 font-bold mb-0.5">2팀</div>
+            <div class="flex-1">
+                <div id="vs-t2-label" class="inline-block px-2 py-0.5 rounded text-[10px] text-white font-bold mb-1">2팀</div>
                 <div id="t2-name" class="text-base font-black truncate mb-1">선수 미정</div>
                 <span id="t2-race" class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700">종족</span>
             </div>
