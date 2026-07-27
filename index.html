@@ -11,6 +11,11 @@
         .race-P-text { color: #FFE000; }
         .race-T-text { color: #00AFFF; }
         .race-Z-text { color: #FF4545; }
+        /* 현재 진행 중인 경기 행 강조 테두리 스타일 */
+        .active-match-row {
+            background-color: rgba(0, 255, 163, 0.08) !important;
+            border: 2px solid #00FFA3 !important;
+        }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -140,7 +145,6 @@
             saveTeamNames();
         };
 
-        // 라디오 버튼 클릭 시 이미 체크되어 있었다면 해제하는 로직
         window.handleWinnerClick = function(elem) {
             if (elem.dataset.checked === "true") {
                 elem.checked = false;
@@ -604,7 +608,8 @@
                     let t2WinChecked = (m.winner === 't2');
 
                     let tr = document.createElement('tr');
-                    tr.className = "border-b border-[#2c2d33] text-center";
+                    // 현재 진행 중인 경기 행에 테두리 강조 클래스 적용
+                    tr.className = "border-b border-[#2c2d33] text-center " + (isChecked ? "active-match-row" : "");
                     tr.innerHTML = `
                         <td class="p-2"><input type="radio" name="active_match_set${setId}" value="${i}" ${isChecked?'checked':''} class="accent-[#00FFA3] cursor-pointer" title="현재 진행 중인 경기 지정"></td>
                         <td class="p-2 font-bold text-gray-400 whitespace-nowrap">${i}경기</td>
@@ -730,6 +735,11 @@
                 matches[i] = matchData;
             }
 
+            let currentMatchData = matches[activeMatchIdx];
+            if (currentMatchData && currentMatchData.winner !== "" && activeMatchIdx < s.matchesCount) {
+                activeMatchIdx += 1;
+            }
+
             s.matches = matches;
             s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
@@ -763,7 +773,7 @@
                 updateVsPreview(t1PlayerName, t2PlayerName, mapName);
             }
 
-            alert(s.name + " 대진 및 현재 진행 경기(" + activeMatchIdx + "경기)가 스코어보드와 VS 매치업에 반영되었습니다!");
+            alert(s.name + " 대진이 반영되었으며, 현재 경기가 다음 경기로 자동 이동되었습니다!");
         };
 
         function calculateAndDisplayScores() {
