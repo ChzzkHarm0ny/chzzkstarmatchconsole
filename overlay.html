@@ -27,60 +27,73 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbybnHDjngVQxjsY-VEwPC2Jynqylhqy2m7x7Ft8SXZtw4PSK4pXi9EIU4OfMbdsRxUDrg/exec";
         let playerRaceMap = {};
 
         window.onload = async function() {
-            try {
-                let res = await fetch(GAS_URL + "?action=getData");
-                let data = await res.json();
-                if (data.players) {
-                    data.players.forEach(p => { playerRaceMap[p.name] = p.race; });
+            const urlParams = new URLSearchParams(window.location.search);
+            const uid = urlParams.get('uid');
+
+            if (!uid) {
+                document.body.innerHTML = "<div style='color:white; padding:20px;'>UID가 지정되지 않았습니다.</div>";
+                return;
+            }
+
+            // 1. 해당 사용자의 설정된 시트 URL을 가져와서 선수 종족 매핑 구성
+            const userRef = ref(db, `users/${uid}`);
+            onValue(userRef, async (snapshot) => {
+                const data = snapshot.val() || {};
+                
+                if (data.settings && data.settings.gasUrl) {
+                    try {
+                        let res = await fetch(data.settings.gasUrl + "?action=getData");
+                        let sheetData = await res.json();
+                        if (sheetData.players) {
+                            sheetData.players.forEach(p => { playerRaceMap[p.name] = p.race; });
+                        }
+                    } catch (e) { console.error("시트 데이터 로드 실패:", e); }
                 }
-            } catch (e) { console.error(e); }
-        };
 
-        onValue(ref(db, 'matchState'), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                if (data.teamNames) {
-                    document.getElementById('overlay-t1-name').innerText = data.teamNames.team1;
-                    document.getElementById('overlay-t2-name').innerText = data.teamNames.team2;
-                }
+                // 2. 대진표 및 스코어 렌더링
+                if (data.matchState) {
+                    let ms = data.matchState;
+                    if (ms.teamNames) {
+                        document.getElementById('overlay-t1-name').innerText = ms.teamNames.team1;
+                        document.getElementById('overlay-t2-name').innerText = ms.teamNames.team2;
+                    }
 
-                document.getElementById('overlay-p1-score').innerText = data.p1Score || 0;
-                document.getElementById('overlay-p2-score').innerText = data.p2Score || 0;
+                    document.getElementById('overlay-p1-score').innerText = ms.p1Score || 0;
+                    document.getElementById('overlay-p2-score').innerText = ms.p2Score || 0;
 
-                if (data.matches) {
-                    let container = document.getElementById('match-list-container');
-                    container.innerHTML = '';
+                    if (ms.matches) {
+                        let container = document.getElementById('match-list-container');
+                        container.innerHTML = '';
 
-                    for (let i = 1; i <= 7; i++) {
-                        let match = data.matches[i];
-                        if (!match) continue;
+                        for (let i = 1; i <= 7; i++) {
+                            let match = ms.matches[i];
+                            if (!match) continue;
 
-                        let t1Name = match.t1Player || "미정";
-                        let t2Name = match.t2Player || "미정";
-                        let mapName = match.mapName || "미정";
+                            let t1Name = match.t1Player || "미정";
+                            let t2Name = match.t2Player || "미정";
+                            let mapName = match.mapName || "미정";
 
-                        let t1RaceClass = getRaceClass(t1Name);
-                        let t2RaceClass = getRaceClass(t2Name);
-                        let isActive = (data.currentActiveSet == i);
-                        let rowBg = isActive ? "bg-[#1f2026] border-l-4 border-[#00FFA3]" : "bg-[#141518]/80";
+                            let t1RaceClass = getRaceClass(t1Name);
+                            let t2RaceClass = getRaceClass(t2Name);
+                            let isActive = (ms.currentActiveSet == i);
+                            let rowBg = isActive ? "bg-[#1f2026] border-l-4 border-[#00FFA3]" : "bg-[#141518]/80";
 
-                        container.innerHTML += `
-                            <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold ${rowBg}">
-                                <div class="w-6 text-center text-gray-400">${i}</div>
-                                <div class="w-24 text-center truncate ${t1RaceClass}">${t1Name}</div>
-                                <div class="w-28 text-center text-gray-300 font-normal truncate">${mapName}</div>
-                                <div class="w-24 text-center truncate ${t2RaceClass}">${t2Name}</div>
-                            </div>
-                        `;
+                            container.innerHTML += `
+                                <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold ${rowBg}">
+                                    <div class="w-6 text-center text-gray-400">${i}</div>
+                                    <div class="w-24 text-center truncate ${t1RaceClass}">${t1Name}</div>
+                                    <div class="w-28 text-center text-gray-300 font-normal truncate">${mapName}</div>
+                                    <div class="w-24 text-center truncate ${t2RaceClass}">${t2Name}</div>
+                                </div>
+                            `;
+                        }
                     }
                 }
-            }
-        });
+            });
+        };
 
         function getRaceClass(playerName) {
             let race = playerRaceMap[playerName];
