@@ -8,10 +8,13 @@
         .race-badge-P { background-color: #FFE000; color: #000; }
         .race-badge-T { background-color: #00AFFF; color: #000; }
         .race-badge-Z { background-color: #FF4545; color: #fff; }
+        .race-P-text { color: #FFE000; }
+        .race-T-text { color: #00AFFF; }
+        .race-Z-text { color: #FF4545; }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
@@ -85,6 +88,7 @@
                 renderMatchSetTabs();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
+                saveMatchSetsConfigToFirebase();
             });
 
             document.getElementById('btn-reset-selection').addEventListener('click', () => {
@@ -98,19 +102,16 @@
                 }
             });
 
-            // 누락되었던 [팀 설정, 참가 선수 및 맵 구성 저장하기] 버튼 이벤트 바인딩 추가
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
 
-            // VS 매치업 경기 리스트 선택 시 자동 바인딩 이벤트
+            // VS 매치업 경기 선택 시 미리보기 즉시 갱신
             document.getElementById('vs-match-select').addEventListener('change', (e) => {
                 let val = e.target.value;
                 if(!val) return;
                 let [setId, matchIdx] = val.split('-');
                 let matchData = matchSetsObj[setId]?.matches[matchIdx];
                 if(matchData) {
-                    document.getElementById('vs-t1-player').value = matchData.t1Player !== "미정" ? matchData.t1Player : "";
-                    document.getElementById('vs-t2-player').value = matchData.t2Player !== "미정" ? matchData.t2Player : "";
-                    document.getElementById('vs-map').value = matchData.mapName !== "미정" ? matchData.mapName : "";
+                    updateVsPreview(matchData.t1Player, matchData.t2Player, matchData.mapName);
                 }
             });
 
@@ -188,6 +189,10 @@
                         document.getElementById('input-team2-name').value = team2Name;
                         document.getElementById('input-team1-color').value = team1Color;
                         document.getElementById('input-team2-color').value = team2Color;
+                    }
+
+                    if(ms.vsMatch) {
+                        updateVsPreview(ms.vsMatch.t1?.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name);
                     }
                     
                     renderSelectionUI();
@@ -412,12 +417,49 @@
             container.innerHTML = '';
 
             Object.values(matchSetsObj).forEach((setObj) => {
+                let wrap = document.createElement('div');
+                wrap.className = "flex items-center gap-1 bg-[#1b1c20] rounded-lg border border-[#2c2d33] overflow-hidden";
+                
                 let btn = document.createElement('button');
-                btn.className = `px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${setObj.id === activeSetId ? 'bg-[#00FFA3] text-black' : 'bg-[#1b1c20] text-gray-300 border border-[#2c2d33]'}`;
+                btn.className = `px-4 py-2 text-xs font-bold cursor-pointer transition-all ${setObj.id === activeSetId ? 'bg-[#00FFA3] text-black' : 'text-gray-300'}`;
                 btn.innerText = `${setObj.name} (${setObj.matchesCount}경기)`;
                 btn.onclick = () => switchMatchSetTab(setObj.id);
-                container.appendChild(btn);
+                wrap.appendChild(btn);
+
+                if (setObj.id !== 1) {
+                    let delBtn = document.createElement('button');
+                    delBtn.className = "px-2 py-2 text-xs font-bold text-red-400 hover:bg-red-500/20 cursor-pointer";
+                    delBtn.innerText = "✕";
+                    delBtn.title = "세트 삭제";
+                    delBtn.onclick = () => removeMatchSet(setObj.id);
+                    wrap.appendChild(delBtn);
+                }
+
+                container.appendChild(wrap);
             });
+        }
+
+        function removeMatchSet(setId) {
+            if (confirm(`${setId}세트를 삭제하시겠습니까?`)) {
+                remove(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`));
+                delete matchSetsObj[setId];
+                
+                let keys = Object.keys(matchSetsObj);
+                if (activeSetId === setId && keys.length > 0) {
+                    activeSetId = Number(keys[0]);
+                }
+
+                saveMatchSetsConfigToFirebase();
+                renderMatchSetTabs();
+                renderMatchSetPanels();
+                updateVsMatchDropdownOptions();
+                calculateAndDisplayScores();
+            }
+        }
+
+        function saveMatchSetsConfigToFirebase() {
+            if (!currentRoomId) return;
+            set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsConfig`), matchSetsObj);
         }
 
         function switchMatchSetTab(setId) {
@@ -513,8 +555,11 @@
                     `;
                     tbody.appendChild(tr);
 
-                    populatePlayerSelect(document.getElementById(`s${setId}-t1-${i}`), "선수 선택", m.t1Player, team1Roster);
-                    populatePlayerSelect(document.getElementById(`s${setId}-t2-${i}`), "선수 선택", m.t2Player, team2Roster);
+                    let activeTeam1List = team1Roster.filter(name => selectedRoster.includes(name));
+                    let activeTeam2List = team2Roster.filter(name => selectedRoster.includes(name));
+
+                    populatePlayerSelect(document.getElementById(`s${setId}-t1-${i}`), "선수 선택", m.t1Player, activeTeam1List);
+                    populatePlayerSelect(document.getElementById(`s${setId}-t2-${i}`), "선수 선택", m.t2Player, activeTeam2List);
                     populateActiveMapSelect(document.getElementById(`s${setId}-map-${i}`), "맵 선택", m.mapName);
                 }
             }, { onlyOnce: true });
@@ -560,6 +605,29 @@
             });
         }
 
+        // VS 미리보기 화면 업데이트 함수
+        function updateVsPreview(t1Name, t2Name, mapName) {
+            let p1Obj = allPlayers.find(p => p.name === t1Name) || { name: t1Name || "선수1", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P1" };
+            let p2Obj = allPlayers.find(p => p.name === t2Name) || { name: t2Name || "선수2", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P2" };
+            let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName || "맵", url: "https://placehold.co/100x100/1b1c20/FFF?text=Map" };
+
+            let p1RaceClass = p1Obj.race === '프로토스' ? 'race-P-text' : (p1Obj.race === '테란' ? 'race-T-text' : 'race-Z-text');
+            let p2RaceClass = p2Obj.race === '프로토스' ? 'race-P-text' : (p2Obj.race === '테란' ? 'race-T-text' : 'race-Z-text');
+
+            document.getElementById('prev-p1-img').src = p1Obj.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(p1Obj.name)}.png`;
+            document.getElementById('prev-p1-name').innerText = p1Obj.name;
+            document.getElementById('prev-p1-race').innerText = p1Obj.race;
+            document.getElementById('prev-p1-race').className = `text-xs font-bold ${p1RaceClass}`;
+
+            document.getElementById('prev-p2-img').src = p2Obj.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(p2Obj.name)}.png`;
+            document.getElementById('prev-p2-name').innerText = p2Obj.name;
+            document.getElementById('prev-p2-race').innerText = p2Obj.race;
+            document.getElementById('prev-p2-race').className = `text-xs font-bold ${p2RaceClass}`;
+
+            document.getElementById('prev-map-img').src = mapObj.url || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/${encodeURIComponent(mapObj.name)}.png`;
+            document.getElementById('prev-map-name').innerText = mapObj.name;
+        }
+
         window.saveMatchSetState = function(setId) {
             if (!currentRoomId) return;
             let s = matchSetsObj[setId];
@@ -591,7 +659,7 @@
             matchSetsObj[setId] = s;
 
             set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`), s);
-            set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsConfig`), matchSetsObj);
+            saveMatchSetsConfigToFirebase();
 
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
@@ -613,6 +681,7 @@
                 };
 
                 set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
+                updateVsPreview(t1PlayerName, t2PlayerName, mapName);
             }
 
             alert(`${s.name} 대진 및 승리 스코어가 오버레이에 반영되었습니다!`);
@@ -688,6 +757,7 @@
             };
 
             set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
+            updateVsPreview(t1PlayerName, t2PlayerName, mapName);
             alert("선택한 경기 정보가 VS 매치업 오버레이에 송출되었습니다!");
         }
 
@@ -801,7 +871,6 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
-                    <!-- 스코어보드 세트스코어 자동 집계 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col sm:flex-row items-center justify-between gap-4">
                         <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 세트스코어 (자동 집계)</h3>
                         <div class="flex items-center gap-6">
@@ -820,7 +889,7 @@
                         </div>
                     </div>
 
-                    <!-- VS 매치업 화면 제어 -->
+                    <!-- VS 매치업 화면 제어 및 실시간 미니 미리보기 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
@@ -830,8 +899,31 @@
                                 <button id="btn-copy-vs-url" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">복사</button>
                             </div>
                         </div>
+
+                        <!-- 콘솔 전용 VS 미리보기 박스 -->
+                        <div class="mb-4 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3 flex-1 justify-end">
+                                <div class="text-right">
+                                    <div id="prev-p1-name" class="text-sm font-black text-white">선수1</div>
+                                    <div id="prev-p1-race" class="text-xs font-bold text-gray-400">종족</div>
+                                </div>
+                                <img id="prev-p1-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P1" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33]">
+                            </div>
+                            <div class="flex flex-col items-center px-2">
+                                <img id="prev-map-img" src="https://placehold.co/100x100/1b1c20/FFF?text=Map" class="w-10 h-10 object-cover rounded border border-[#2c2d33] mb-1">
+                                <span id="prev-map-name" class="text-[10px] text-gray-300 font-bold">맵 이름</span>
+                            </div>
+                            <div class="flex items-center gap-3 flex-1 justify-start">
+                                <img id="prev-p2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33]">
+                                <div class="text-left">
+                                    <div id="prev-p2-name" class="text-sm font-black text-white">선수2</div>
+                                    <div id="prev-p2-race" class="text-xs font-bold text-gray-400">종족</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <label class="block text-[10px] text-gray-400 mb-1">출전 경기 선택 (목록에서 고르면 아래 정보가 자동으로 세팅됩니다)</label>
+                            <label class="block text-[10px] text-gray-400 mb-1">출전 경기 선택 (목록에서 고르면 위 미리보기에 즉시 반영됩니다)</label>
                             <select id="vs-match-select" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-[#00FFA3] font-bold"></select>
                         </div>
                         <button id="btn-save-vs" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black py-2.5 rounded text-xs font-extrabold cursor-pointer">선택한 경기 VS 매치업 화면 송출하기</button>
