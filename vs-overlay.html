@@ -10,12 +10,11 @@
         .race-T { background-color: #00AFFF; color: #000; }
         .race-Z { background-color: #FF4545; color: #fff; }
         
-        /* 페이드아웃 애니메이션 효과 클래스 */
-        #vs-container {
+        #vs-wrapper {
             opacity: 0;
             transition: opacity 0.8s ease-in-out;
         }
-        #vs-container.active {
+        #vs-wrapper.active {
             opacity: 1;
         }
     </style>
@@ -38,6 +37,7 @@
         const db = getDatabase(app);
         
         let fadeTimer = null;
+        let lastVsDataStr = "";
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -52,21 +52,29 @@
             onValue(roomRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 let ms = data.matchState || {};
+
+                let wrapperEl = document.getElementById('vs-wrapper-outer');
+                if (ms.vsVisible === false) {
+                    wrapperEl.style.opacity = '0';
+                    wrapperEl.style.pointerEvents = 'none';
+                    return;
+                } else {
+                    wrapperEl.style.opacity = '1';
+                    wrapperEl.style.pointerEvents = 'auto';
+                }
+
                 let vs = ms.vsMatch;
                 let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
                 if (vs) {
-                    // 데이터 바인딩
+                    let currentVsStr = JSON.stringify(vs);
+
                     document.getElementById('p1-name').innerText = vs.t1?.name || "선수1";
                     document.getElementById('p2-name').innerText = vs.t2?.name || "선수2";
                     
-                    let p1Img = vs.t1?.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(vs.t1?.name)}.png`;
-                    let p2Img = vs.t2?.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(vs.t2?.name)}.png`;
+                    document.getElementById('p1-img').src = vs.t1?.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(vs.t1?.name)}.png`;
+                    document.getElementById('p2-img').src = vs.t2?.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(vs.t2?.name)}.png`;
                     
-                    document.getElementById('p1-img').src = p1Img;
-                    document.getElementById('p2-img').src = p2Img;
-
-                    // 종족 배지
                     let p1Race = vs.t1?.race || "미정";
                     let p2Race = vs.t2?.race || "미정";
                     let p1RaceEl = document.getElementById('p1-race');
@@ -78,13 +86,11 @@
                     p2RaceEl.innerText = p2Race;
                     p2RaceEl.className = `px-2 py-0.5 rounded text-xs font-black text-black ${p2Race==='프로토스'?'race-P':(p2Race==='테란'?'race-T':'race-Z')}`;
 
-                    // 팀 이름 및 색상
                     document.getElementById('p1-team').innerText = teamNames.team1;
                     document.getElementById('p1-team').style.backgroundColor = teamNames.team1Color;
                     document.getElementById('p2-team').innerText = teamNames.team2;
                     document.getElementById('p2-team').style.backgroundColor = teamNames.team2Color;
 
-                    // 맵 정보
                     if(vs.map) {
                         document.getElementById('map-name').innerText = vs.map.name || "맵 이름";
                         if(vs.map.url) {
@@ -92,19 +98,21 @@
                         }
                     }
 
-                    // [핵심] 송출 버튼을 누를 때마다(데이터가 갱신될 때마다) 화면에 나타났다가 6초 후 서서히 사라짐
-                    triggerFadeAnimation();
+                    // 데이터가 새로 송출될 때만 페이드 애니메이션 재실행
+                    if (currentVsStr !== lastVsDataStr) {
+                        lastVsDataStr = currentVsStr;
+                        triggerFadeAnimation();
+                    }
                 }
             });
         };
 
         function triggerFadeAnimation() {
-            let container = document.getElementById('vs-container');
-            container.classList.add('active'); // 화면에 나타남
+            let container = document.getElementById('vs-wrapper');
+            container.classList.add('active');
 
             if (fadeTimer) clearTimeout(fadeTimer);
 
-            // 6초 동안 유지된 후 자동으로 투명해짐 (원하시는 경우 시간 조절 가능)
             fadeTimer = setTimeout(() => {
                 container.classList.remove('active');
             }, 6000);
@@ -112,38 +120,36 @@
     </script>
 </head>
 <body class="flex items-center justify-center h-screen p-6">
-    <!-- 전체 매치업 컨테이너 (페이드인/아웃 적용) -->
-    <div id="vs-container" class="flex items-center justify-between bg-[#141518]/95 border border-[#2c2d33] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[850px]">
-        
-        <!-- P1 선수 카드 (왼쪽: 사진 크게, 오른쪽: 정보) -->
-        <div class="flex items-center gap-5 bg-[#0b0c0e] border border-[#2c2d33] rounded-xl p-4 w-[360px]">
-            <img id="p1-img" src="https://placehold.co/120x120/1b1c20/FFF?text=P1" class="w-24 h-24 object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
-            <div class="flex flex-col items-start">
-                <span id="p1-team" class="px-2 py-0.5 rounded text-[10px] font-black text-white mb-1 shadow">1팀</span>
-                <span id="p1-name" class="text-xl font-black text-white tracking-wider mb-2 truncate max-w-[200px]">선수1</span>
-                <span id="p1-race" class="px-2 py-0.5 rounded text-xs font-black text-black">종족</span>
+    <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease;">
+        <div id="vs-wrapper" class="flex items-center justify-between bg-[#141518]/95 border border-[#2c2d33] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[850px]">
+            
+            <div class="flex items-center gap-5 bg-[#0b0c0e] border border-[#2c2d33] rounded-xl p-4 w-[360px]">
+                <img id="p1-img" src="https://placehold.co/120x120/1b1c20/FFF?text=P1" class="w-24 h-24 object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
+                <div class="flex flex-col items-start">
+                    <span id="p1-team" class="px-2 py-0.5 rounded text-[10px] font-black text-white mb-1 shadow">1팀</span>
+                    <span id="p1-name" class="text-xl font-black text-white tracking-wider mb-2 truncate max-w-[200px]">선수1</span>
+                    <span id="p1-race" class="px-2 py-0.5 rounded text-xs font-black text-black">종족</span>
+                </div>
             </div>
-        </div>
 
-        <!-- 중앙 VS 및 맵 정보 -->
-        <div class="flex flex-col items-center justify-center px-4">
-            <span class="text-2xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</span>
-            <div class="flex flex-col items-center bg-[#0b0c0e] border border-[#2c2d33] p-2 rounded-xl">
-                <img id="map-img" src="https://placehold.co/60x60/1b1c20/FFF?text=Map" class="w-10 h-10 object-cover rounded-lg border border-[#2c2d33] mb-1" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=Map'">
-                <span id="map-name" class="text-[11px] font-bold text-gray-300 truncate max-w-[100px]">맵 이름</span>
+            <div class="flex flex-col items-center justify-center px-4">
+                <span class="text-2xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</span>
+                <div class="flex flex-col items-center bg-[#0b0c0e] border border-[#2c2d33] p-2 rounded-xl">
+                    <img id="map-img" src="https://placehold.co/60x60/1b1c20/FFF?text=Map" class="w-10 h-10 object-cover rounded-lg border border-[#2c2d33] mb-1" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=Map'">
+                    <span id="map-name" class="text-[11px] font-bold text-gray-300 truncate max-w-[100px]">맵 이름</span>
+                </div>
             </div>
-        </div>
 
-        <!-- P2 선수 카드 (왼쪽: 정보, 오른쪽: 사진 크게) -->
-        <div class="flex items-center justify-end gap-5 bg-[#0b0c0e] border border-[#2c2d33] rounded-xl p-4 w-[360px]">
-            <div class="flex flex-col items-end">
-                <span id="p2-team" class="px-2 py-0.5 rounded text-[10px] font-black text-white mb-1 shadow">2팀</span>
-                <span id="p2-name" class="text-xl font-black text-white tracking-wider mb-2 truncate max-w-[200px]">선수2</span>
-                <span id="p2-race" class="px-2 py-0.5 rounded text-xs font-black text-black">종족</span>
+            <div class="flex items-center justify-end gap-5 bg-[#0b0c0e] border border-[#2c2d33] rounded-xl p-4 w-[360px]">
+                <div class="flex flex-col items-end">
+                    <span id="p2-team" class="px-2 py-0.5 rounded text-[10px] font-black text-white mb-1 shadow">2팀</span>
+                    <span id="p2-name" class="text-xl font-black text-white tracking-wider mb-2 truncate max-w-[200px]">선수2</span>
+                    <span id="p2-race" class="px-2 py-0.5 rounded text-xs font-black text-black">종족</span>
+                </div>
+                <img id="p2-img" src="https://placehold.co/120x120/1b1c20/FFF?text=P2" class="w-24 h-24 object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
             </div>
-            <img id="p2-img" src="https://placehold.co/120x120/1b1c20/FFF?text=P2" class="w-24 h-24 object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
-        </div>
 
+        </div>
     </div>
 </body>
 </html>
