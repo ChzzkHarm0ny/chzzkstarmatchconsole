@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>StarCraft Minimap Match Scoreboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
+        
+        .minimap-scoreboard {
+            width: 420px;
+            background: #141518;
+            border: 3px solid #2a2c35;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            font-family: 'Malgun Gothic', sans-serif;
+            position: relative;
+        }
+
+        .minimap-scoreboard::after {
+            content: '';
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 25px;
+            background: rgba(0, 0, 0, 0);
+            clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+        }
+
+        .race-P { color: #FFE000; }
+        .race-T { color: #00AFFF; }
+        .race-Z { color: #FF4545; }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
+            authDomain: "starcraft-console.firebaseapp.com",
+            databaseURL: "https://starcraft-console-default-rtdb.firebaseio.com",
+            projectId: "starcraft-console",
+            storageBucket: "starcraft-console.firebasestorage.app",
+            messagingSenderId: "928203238966",
+            appId: "1:928203238966:web:4c5333274ffb3255ff3297",
+            measurementId: "G-8KXBQ9J2MT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let playerRaceMap = {};
+
+        window.onload = async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+
+            if (!roomId) {
+                document.body.innerHTML = "<div style='color:white; padding:20px;'>방(room) 정보가 없습니다.</div>";
+                return;
+            }
+
+            const roomRef = ref(db, `rooms/${roomId}`);
+            onValue(roomRef, async (snapshot) => {
+                const data = snapshot.val() || {};
+                
+                if (data.settings && data.settings.gasUrl) {
+                    try {
+                        let res = await fetch(data.settings.gasUrl + "?action=getData");
+                        let sheetData = await res.json();
+                        if (sheetData.players) {
+                            sheetData.players.forEach(p => { playerRaceMap[p.name] = p.race; });
+                        }
+                    } catch (e) { console.error("시트 로드 실패:", e); }
+                }
+
+                if (data.matchState) {
+                    let ms = data.matchState;
+                    let activeSet = ms.currentActiveSet || 1;
+                    let isSoloMode = (ms.matchMode === 'solo');
+
+                    let currentMatch = (ms.matches && ms.matches[activeSet]) ? ms.matches[activeSet] : {};
+                    let t1Name = currentMatch.t1Player || "선수1";
+                    let t2Name = currentMatch.t2Player || "선수2";
+
+                    let team1Label = isSoloMode ? t1Name : (ms.teamNames ? ms.teamNames.team1 : "1팀");
+                    let team2Label = isSoloMode ? t2Name : (ms.teamNames ? ms.teamNames.team2 : "2팀");
+                    let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
+                    let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
+
+                    let elTeam1 = document.getElementById('lbl-team1');
+                    let elTeam2 = document.getElementById('lbl-team2');
+                    let elPlayerT1 = document.getElementById('player-t1-name');
+                    let elPlayerT2 = document.getElementById('player-t2-name');
+
+                    elTeam1.innerText = team1Label;
+                    elTeam2.innerText = team2Label;
+                    elTeam1.style.backgroundColor = team1Color;
+                    elPlayerT1.style.backgroundColor = team1Color;
+
+                    elTeam2.style.backgroundColor = team2Color;
+                    elPlayerT2.style.backgroundColor = team2Color;
+
+                    document.getElementById('score-t1').innerText = ms.p1Score || 0;
+                    document.getElementById('score-t2').innerText = ms.p2Score || 0;
+
+                    let t1Race = getRaceLetter(t1Name);
+                    let t2Race = getRaceLetter(t2Name);
+
+                    document.getElementById('header-set-info').innerHTML = `
+                        <span class="text-[#00FFA3]">[${activeSet}세트]</span> 
+                        <span class="${getRaceColorClass(t1Race)}">${t1Name}${t1Race}</span> 
+                        <span class="text-gray-400 mx-1">vs</span> 
+                        <span class="${getRaceColorClass(t2Race)}">${t2Name}${t2Race}</span>
+                    `;
+
+                    document.getElementById('player-t1-name').innerText = t1Name;
+                    document.getElementById('player-t2-name').innerText = t2Name;
+
+                    document.getElementById('footer-t1-info').innerText = `${t1Race}12`;
+                    document.getElementById('footer-t2-info').innerText = `${t2Race}12`;
+                }
+            });
+        };
+
+        function getRaceLetter(playerName) {
+            let race = playerRaceMap[playerName];
+            if (race === "프로토스") return "P";
+            if (race === "테란") return "T";
+            if (race === "저그") return "Z";
+            return "";
+        }
+
+        function getRaceColorClass(raceLetter) {
+            if (raceLetter === "P") return "race-P";
+            if (raceLetter === "T") return "race-T";
+            if (raceLetter === "Z") return "race-Z";
+            return "text-white";
+        }
+    </script>
+</head>
+<body class="flex items-start justify-start p-4">
+    <div class="minimap-scoreboard text-white">
+        <div id="header-set-info" class="bg-[#1b1c23] border-b border-[#2a2c35] py-1.5 px-3 text-center text-xs font-bold truncate">
+            <span class="text-[#00FFA3]">[1세트]</span> 선수 대진 정보 로딩중...
+        </div>
+
+        <div class="grid grid-cols-4 text-center font-bold text-xs">
+            <div id="lbl-team1" class="col-span-1 py-2 px-1 truncate border-r border-[#2a2c35] flex items-center justify-center">P1</div>
+            <div id="score-t1" class="col-span-1 bg-[#263850] py-2 text-base font-black text-white flex items-center justify-center">0</div>
+            <div id="score-t2" class="col-span-1 bg-[#3a1818] py-2 text-base font-black text-white flex items-center justify-center border-l border-[#2a2c35]">0</div>
+            <div id="lbl-team2" class="col-span-1 py-2 px-1 truncate flex items-center justify-center">P2</div>
+        </div>
+
+        <div class="grid grid-cols-2 text-center text-xs font-bold">
+            <div id="player-t1-name" class="py-1.5 truncate px-2 border-t border-[#2a2c35]">선수 1</div>
+            <div id="player-t2-name" class="py-1.5 truncate px-2 border-t border-[#2a2c35]">선수 2</div>
+        </div>
+
+        <div class="flex justify-between px-4 py-1 bg-[#0e0f12] text-[11px] font-black tracking-widest border-t border-[#2a2c35]">
+            <span id="footer-t1-info" class="race-P">P12</span>
+            <span id="footer-t2-info" class="race-Z">Z12</span>
+        </div>
+    </div>
+</body>
+</html>
