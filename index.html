@@ -84,7 +84,7 @@
                     return;
                 }
                 let newId = Math.max(...keys.map(Number)) + 1;
-                matchSetsObj[newId] = { id: newId, name: `${newId}세트 (매치)`, matchesCount: 7, matches: {} };
+                matchSetsObj[newId] = { id: newId, name: newId + "세트 (매치)", matchesCount: 7, matches: {} };
                 renderMatchSetTabs();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
@@ -107,7 +107,9 @@
             document.getElementById('vs-match-select').addEventListener('change', (e) => {
                 let val = e.target.value;
                 if(!val) return;
-                let [setId, matchIdx] = val.split('-');
+                let parts = val.split('-');
+                let setId = parts[0];
+                let matchIdx = parts[1];
                 let matchData = matchSetsObj[setId]?.matches[matchIdx];
                 if(matchData) {
                     updateVsPreview(matchData.t1Player, matchData.t2Player, matchData.mapName);
@@ -136,7 +138,7 @@
                 el.classList.add('bg-[#1b1c20]', 'text-gray-300');
             });
 
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
             const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
             if(activeBtn) {
                 activeBtn.classList.add('bg-[#00FFA3]', 'text-black', 'font-bold');
@@ -153,14 +155,14 @@
             currentRoomId = roomId;
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('console-main-content').classList.remove('hidden');
-            document.getElementById('room-display-name').innerText = `현재 방: [ ${roomId} ]`;
+            document.getElementById('room-display-name').innerText = "현재 방: [ " + roomId + " ]";
 
             generateOverlayUrls(roomId);
             loadRoomData(roomId);
         }
 
         function loadRoomData(roomId) {
-            const roomRef = ref(db, `rooms/${roomId}`);
+            const roomRef = ref(db, "rooms/" + roomId);
             onValue(roomRef, async (snapshot) => {
                 const data = snapshot.val() || {};
                 
@@ -195,8 +197,8 @@
                         document.getElementById('input-team2-color').value = team2Color;
                     }
 
-                    if(ms.vsMatch) {
-                        updateVsPreview(ms.vsMatch.t1?.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name);
+                    if(ms.vsMatch && ms.vsMatch.t1) {
+                        updateVsPreview(ms.vsMatch.t1.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name);
                     }
 
                     updateToggleButtonState('listVisible', 'btn-toggle-list', ms.listVisible);
@@ -218,7 +220,7 @@
             let currentState = btn.dataset.state === 'true';
             let newState = !currentState;
 
-            set(ref(db, `rooms/${currentRoomId}/matchState/${visibleKey}`), newState).then(() => {
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/" + visibleKey), newState).then(() => {
                 updateToggleButtonState(visibleKey, btnId, newState);
             });
         }
@@ -288,7 +290,7 @@
 
             let checkSection = document.createElement('div');
             checkSection.className = "bg-[#0b0c0e] p-3 rounded-xl border border-[#2c2d33]";
-            checkSection.innerHTML = `<h4 class="text-xs font-bold text-[#00FFA3] mb-2">1. 이번 경기 참가 선수 체크</h4>`;
+            checkSection.innerHTML = '<h4 class="text-xs font-bold text-[#00FFA3] mb-2">1. 이번 경기 참가 선수 체크</h4>';
             
             let checkGrid = document.createElement('div');
             checkGrid.className = "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2";
@@ -296,10 +298,10 @@
             allPlayers.forEach(p => {
                 let isChecked = selectedRoster.includes(p.name);
                 let card = document.createElement('div');
-                card.className = `border rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all ${isChecked ? 'bg-[#1b2a24] border-[#00FFA3]' : 'bg-[#141518] border-[#2c2d33] opacity-40'}`;
+                card.className = "border rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#141518] border-[#2c2d33] opacity-40");
                 card.onclick = () => togglePlayerParticipation(p.name);
 
-                let imgSrc = p.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(p.name)}.png`;
+                let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
                 let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
 
                 card.innerHTML = `
@@ -342,10 +344,10 @@
                 }
 
                 let card = document.createElement('div');
-                card.className = `border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all ${inTeam1 ? 'bg-[#142233] border-blue-500/50' : 'bg-[#331414] border-red-500/50'}`;
+                card.className = "border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all " + (inTeam1 ? "bg-[#142233] border-blue-500/50" : "bg-[#331414] border-red-500/50");
                 card.onclick = () => togglePlayerTeam(name);
 
-                let imgSrc = p.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(p.name)}.png`;
+                let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
                 let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
 
                 card.innerHTML = `
@@ -406,10 +408,10 @@
             allMaps.forEach(m => {
                 let isChecked = selectedMapPool.includes(m.name);
                 let card = document.createElement('div');
-                card.className = `border rounded-lg p-2.5 flex items-center gap-2.5 cursor-pointer transition-all ${isChecked ? 'bg-[#1b2a24] border-[#00FFA3]' : 'bg-[#0b0c0e] border-[#2c2d33] opacity-50'}`;
+                card.className = "border rounded-lg p-2.5 flex items-center gap-2.5 cursor-pointer transition-all " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#0b0c0e] border-[#2c2d33] opacity-50");
                 card.onclick = () => toggleMapSelection(m.name);
 
-                let mapImgUrl = m.url || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/${encodeURIComponent(m.name)}.png`;
+                let mapImgUrl = m.url || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/" + encodeURIComponent(m.name) + ".png";
                 card.innerHTML = `
                     <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
                     <img src="${mapImgUrl}" class="w-8 h-8 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=Map'" alt="${m.name}">
@@ -432,10 +434,10 @@
 
         function saveSelectionConfig() {
             if (!currentRoomId) return;
-            set(ref(db, `rooms/${currentRoomId}/matchState/selectedRoster`), selectedRoster);
-            set(ref(db, `rooms/${currentRoomId}/matchState/team1Roster`), team1Roster);
-            set(ref(db, `rooms/${currentRoomId}/matchState/team2Roster`), team2Roster);
-            set(ref(db, `rooms/${currentRoomId}/matchState/selectedMapPool`), selectedMapPool).then(() => {
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/selectedRoster"), selectedRoster);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/team1Roster"), team1Roster);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/team2Roster"), team2Roster);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/selectedMapPool"), selectedMapPool).then(() => {
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
                 alert("팀 설정, 참가 선수 및 맵 구성이 저장되었습니다!");
@@ -453,8 +455,8 @@
                 wrap.className = "flex items-center gap-1 bg-[#1b1c20] rounded-lg border border-[#2c2d33] overflow-hidden";
                 
                 let btn = document.createElement('button');
-                btn.className = `px-4 py-2 text-xs font-bold cursor-pointer transition-all ${setObj.id === activeSetId ? 'bg-[#00FFA3] text-black' : 'text-gray-300'}`;
-                btn.innerText = `${setObj.name} (${setObj.matchesCount}경기)`;
+                btn.className = "px-4 py-2 text-xs font-bold cursor-pointer transition-all " + (setObj.id === activeSetId ? "bg-[#00FFA3] text-black" : "text-gray-300");
+                btn.innerText = setObj.name + " (" + setObj.matchesCount + "경기)";
                 btn.onclick = () => switchMatchSetTab(setObj.id);
                 wrap.appendChild(btn);
 
@@ -472,8 +474,8 @@
         }
 
         function removeMatchSet(setId) {
-            if (confirm(`${setId}세트를 삭제하시겠습니까?`)) {
-                remove(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`));
+            if (confirm(setId + "세트를 삭제하시겠습니까?")) {
+                remove(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId));
                 delete matchSetsObj[setId];
                 
                 let keys = Object.keys(matchSetsObj);
@@ -491,13 +493,13 @@
 
         function saveMatchSetsConfigToFirebase() {
             if (!currentRoomId) return;
-            set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsConfig`), matchSetsObj);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsConfig"), matchSetsObj);
         }
 
         function switchMatchSetTab(setId) {
             activeSetId = setId;
             document.querySelectorAll('.match-set-panel').forEach(el => el.classList.add('hidden'));
-            let target = document.getElementById(`match-set-panel-${setId}`);
+            let target = document.getElementById('match-set-panel-' + setId);
             if(target) target.classList.remove('hidden');
             renderMatchSetTabs();
         }
@@ -509,8 +511,8 @@
 
             Object.values(matchSetsObj).forEach(setObj => {
                 let panel = document.createElement('div');
-                panel.id = `match-set-panel-${setObj.id}`;
-                panel.className = `match-set-panel ${setObj.id === activeSetId ? '' : 'hidden'} bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col justify-between h-full`;
+                panel.id = 'match-set-panel-' + setObj.id;
+                panel.className = "match-set-panel " + (setObj.id === activeSetId ? "" : "hidden") + " bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col justify-between h-full";
                 
                 panel.innerHTML = `
                     <div>
@@ -560,10 +562,10 @@
         };
 
         function fillMatchTableRows(setId, count) {
-            const tbody = document.getElementById(`set-tbody-${setId}`);
+            const tbody = document.getElementById('set-tbody-' + setId);
             if(!tbody) return;
 
-            const roomRef = ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`);
+            const roomRef = ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId);
             onValue(roomRef, (snapshot) => {
                 let setData = snapshot.val() || {};
                 let matchesData = setData.matches || {};
@@ -606,7 +608,7 @@
         }
 
         function populatePlayerSelect(selectElement, defaultText, selectedValue, teamList) {
-            selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+            selectElement.innerHTML = '<option value="">' + defaultText + '</option>';
             let targetPlayers = allPlayers.filter(p => teamList.includes(p.name));
             targetPlayers.forEach(p => {
                 let opt = new Option(p.name, p.name);
@@ -616,7 +618,7 @@
         }
 
         function populateActiveMapSelect(selectElement, defaultText, selectedValue) {
-            selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+            selectElement.innerHTML = '<option value="">' + defaultText + '</option>';
             let activeMaps = allMaps.filter(m => selectedMapPool.includes(m.name));
             activeMaps.forEach(m => {
                 let opt = new Option(m.name, m.name);
@@ -638,7 +640,7 @@
                         let t1 = m.t1Player || "미정";
                         let t2 = m.t2Player || "미정";
                         let map = m.mapName || "미정";
-                        let opt = new Option(`${setObj.name} - ${i}경기 [ ${t1} vs ${t2} / ${map} ]`, `${setObj.id}-${i}`);
+                        let opt = new Option(setObj.name + " - " + i + "경기 [ " + t1 + " vs " + t2 + " / " + map + " ]", setObj.id + "-" + i);
                         vsSelect.appendChild(opt);
                     }
                 }
@@ -653,17 +655,17 @@
             let p1RaceClass = p1Obj.race === '프로토스' ? 'race-P-text' : (p1Obj.race === '테란' ? 'race-T-text' : 'race-Z-text');
             let p2RaceClass = p2Obj.race === '프로토스' ? 'race-P-text' : (p2Obj.race === '테란' ? 'race-T-text' : 'race-Z-text');
 
-            document.getElementById('prev-p1-img').src = p1Obj.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(p1Obj.name)}.png`;
+            document.getElementById('prev-p1-img').src = p1Obj.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p1Obj.name) + ".png";
             document.getElementById('prev-p1-name').innerText = p1Obj.name;
             document.getElementById('prev-p1-race').innerText = p1Obj.race;
-            document.getElementById('prev-p1-race').className = `text-xs font-bold ${p1RaceClass}`;
+            document.getElementById('prev-p1-race').className = "text-xs font-bold " + p1RaceClass;
 
-            document.getElementById('prev-p2-img').src = p2Obj.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(p2Obj.name)}.png`;
+            document.getElementById('prev-p2-img').src = p2Obj.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p2Obj.name) + ".png";
             document.getElementById('prev-p2-name').innerText = p2Obj.name;
             document.getElementById('prev-p2-race').innerText = p2Obj.race;
-            document.getElementById('prev-p2-race').className = `text-xs font-bold ${p2RaceClass}`;
+            document.getElementById('prev-p2-race').className = "text-xs font-bold " + p2RaceClass;
 
-            document.getElementById('prev-map-img').src = mapObj.url || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/${encodeURIComponent(mapObj.name)}.png`;
+            document.getElementById('prev-map-img').src = mapObj.url || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/" + encodeURIComponent(mapObj.name) + ".png";
             document.getElementById('prev-map-name').innerText = mapObj.name;
         }
 
@@ -674,23 +676,23 @@
             let matches = {};
             let activeMatchIdx = 1;
 
-            let activeRadios = document.getElementsByName(`active_match_set${setId}`);
+            let activeRadios = document.getElementsByName('active_match_set' + setId);
             for(let ar of activeRadios) {
                 if(ar.checked) activeMatchIdx = parseInt(ar.value);
             }
 
             for (let i = 1; i <= s.matchesCount; i++) {
-                let t1El = document.getElementById(`s${setId}-t1-${i}`);
+                let t1El = document.getElementById('s' + setId + '-t1-' + i);
                 if (!t1El) continue;
 
                 let winner = "";
-                let radios = document.getElementsByName(`winner_s${setId}_m${i}`);
+                let radios = document.getElementsByName('winner_s' + setId + '_m' + i);
                 for(let r of radios) { if(r.checked) winner = r.value; }
 
                 let matchData = {
                     t1Player: t1El.value || "미정",
-                    t2Player: document.getElementById(`s${setId}-t2-${i}`).value || "미정",
-                    mapName: document.getElementById(`s${setId}-map-${i}`).value || "미정",
+                    t2Player: document.getElementById('s' + setId + '-t2-' + i).value || "미정",
+                    mapName: document.getElementById('s' + setId + '-map-' + i).value || "미정",
                     winner: winner
                 };
 
@@ -701,7 +703,7 @@
             s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
 
-            set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`), s);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s);
             saveMatchSetsConfigToFirebase();
 
             calculateAndDisplayScores();
@@ -724,11 +726,11 @@
                     map: { name: mapObj.name, url: mapObj.url || "" }
                 };
 
-                set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
+                set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
                 updateVsPreview(t1PlayerName, t2PlayerName, mapName);
             }
 
-            alert(`${s.name} 대진 및 현재 진행 경기(${activeMatchIdx}경기)가 스코어보드와 VS 매치업에 반영되었습니다!`);
+            alert(s.name + " 대진 및 현재 진행 경기(" + activeMatchIdx + "경기)가 스코어보드와 VS 매치업에 반영되었습니다!");
         };
 
         function calculateAndDisplayScores() {
@@ -750,8 +752,8 @@
             document.getElementById('p2Score').innerText = p2TotalScore;
 
             if (currentRoomId) {
-                set(ref(db, `rooms/${currentRoomId}/matchState/p1Score`), p1TotalScore);
-                set(ref(db, `rooms/${currentRoomId}/matchState/p2Score`), p2TotalScore);
+                set(ref(db, "rooms/" + currentRoomId + "/matchState/p1Score"), p1TotalScore);
+                set(ref(db, "rooms/" + currentRoomId + "/matchState/p2Score"), p2TotalScore);
             }
         }
 
@@ -762,7 +764,7 @@
             team1Color = document.getElementById('input-team1-color').value || "#1d3557";
             team2Color = document.getElementById('input-team2-color').value || "#6a1b1b";
 
-            set(ref(db, `rooms/${currentRoomId}/matchState/teamNames`), { 
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/teamNames"), { 
                 team1: team1Name, team2: team2Name, team1Color, team2Color
             }).then(() => {
                 renderPlayerSelectionGrid();
@@ -774,14 +776,16 @@
         function saveMatchMode() {
             if (!currentRoomId) return;
             let mode = document.getElementById('select-match-mode').value;
-            set(ref(db, `rooms/${currentRoomId}/matchState/matchMode`), mode);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchMode"), mode);
         }
 
         function saveVsMatchState() {
             if (!currentRoomId) return;
             let val = document.getElementById('vs-match-select').value;
             if(!val) { alert("목록에서 경기를 먼저 선택해주세요!"); return; }
-            let [setId, matchIdx] = val.split('-');
+            let parts = val.split('-');
+            let setId = parts[0];
+            let matchIdx = parts[1];
             let m = matchSetsObj[setId]?.matches[matchIdx];
             if(!m) return;
 
@@ -800,7 +804,7 @@
                 map: { name: mapObj.name, url: mapObj.url || "" }
             };
 
-            set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
             updateVsPreview(t1PlayerName, t2PlayerName, mapName);
             alert("선택한 경기 정보가 VS 매치업 화면에 송출되었습니다!");
         }
@@ -809,7 +813,7 @@
             if (!currentRoomId) return;
             let urlInput = document.getElementById('input-user-gas-url').value.trim();
             if (!urlInput) { alert("URL을 입력해주세요."); return; }
-            set(ref(db, `rooms/${currentRoomId}/settings/gasUrl`), urlInput).then(() => {
+            set(ref(db, "rooms/" + currentRoomId + "/settings/gasUrl"), urlInput).then(() => {
                 alert("구글 시트 URL이 저장되었습니다!");
                 fetchSpreadsheetData(urlInput);
             });
@@ -818,9 +822,9 @@
         function generateOverlayUrls(roomId) {
             const currentUrl = window.location.href;
             const baseUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '');
-            document.getElementById('overlay-url-input').value = `${baseUrl}/overlay.html?room=${roomId}`;
-            document.getElementById('score-url-input').value = `${baseUrl}/score-overlay.html?room=${roomId}`;
-            document.getElementById('vs-url-input').value = `${baseUrl}/vs-overlay.html?room=${roomId}`;
+            document.getElementById('overlay-url-input').value = baseUrl + "/overlay.html?room=" + roomId;
+            document.getElementById('score-url-input').value = baseUrl + "/score-overlay.html?room=" + roomId;
+            document.getElementById('vs-url-input').value = baseUrl + "/vs-overlay.html?room=" + roomId;
         }
 
         function copyUrl(inputId, btnId) {
