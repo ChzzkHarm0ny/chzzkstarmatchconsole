@@ -57,7 +57,7 @@
             document.getElementById('btn-p2-minus').addEventListener('click', () => updateScore('p2Score', -1));
         };
 
-        // 7세트 대진표 표 동적 생성
+        // 7세트 대진표 표 동적 생성 (안내 문구 1팀 / 2팀으로 변경)
         function initMatchTable() {
             const tbody = document.getElementById('match-table-body');
             tbody.innerHTML = '';
@@ -70,7 +70,7 @@
                     <td class="p-2 font-bold text-gray-400">${i}세트</td>
                     <td class="p-2">
                         <select id="t1-player-${i}" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white">
-                            <option value="">재호팀 선수 선택</option>
+                            <option value="">1팀 선수 선택</option>
                         </select>
                     </td>
                     <td class="p-2">
@@ -80,7 +80,7 @@
                     </td>
                     <td class="p-2">
                         <select id="t2-player-${i}" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-white">
-                            <option value="">상대팀 선수 선택</option>
+                            <option value="">2팀 선수 선택</option>
                         </select>
                     </td>
                 `;
@@ -143,8 +143,8 @@
             let activeSet = document.getElementById('active-set').value;
 
             set(ref(db, 'matchState'), {
-                p1Score: parseInt(document.getElementById('p1Score').innerText),
-                p2Score: parseInt(document.getElementById('p2Score').innerText),
+                p1Score: parseInt(document.getElementById('p1Score').innerText) || 0,
+                p2Score: parseInt(document.getElementById('p2Score').innerText) || 0,
                 currentActiveSet: activeSet,
                 matches: matches
             });
@@ -193,6 +193,7 @@
             const scoreDisplay = document.getElementById(targetField);
             let currentScore = parseInt(scoreDisplay.innerText) + delta;
             if (currentScore < 0) currentScore = 0;
+            scoreDisplay.innerText = currentScore;
             set(ref(db, 'matchState/' + targetField), currentScore);
         }
 
@@ -205,6 +206,10 @@
                     if(document.getElementById('input-team1-name').value === "1팀") document.getElementById('input-team1-name').value = data.teamNames.team1;
                     if(document.getElementById('input-team2-name').value === "2팀") document.getElementById('input-team2-name').value = data.teamNames.team2;
                 }
+            } else {
+                // 초기값 0대0 명시
+                document.getElementById('p1Score').innerText = "0";
+                document.getElementById('p2Score').innerText = "0";
             }
         });
     </script>
