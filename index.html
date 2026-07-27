@@ -11,7 +11,6 @@
         .race-P-text { color: #FFE000; }
         .race-T-text { color: #00AFFF; }
         .race-Z-text { color: #FF4545; }
-        /* 현재 진행 중인 경기 행 강조 테두리 스타일 */
         .active-match-row {
             background-color: rgba(0, 255, 163, 0.08) !important;
             border: 2px solid #00FFA3 !important;
@@ -51,6 +50,7 @@
         let team2Name = "2팀";
         let team1Color = "#1d3557";
         let team2Color = "#6a1b1b";
+        let leagueTitleText = "스타크래프트 프로리그";
 
         window.onload = function() {
             const savedRoom = localStorage.getItem('starcraft_room_id');
@@ -117,11 +117,12 @@
                 let matchIdx = parts[1];
                 let matchData = matchSetsObj[setId]?.matches[matchIdx];
                 if(matchData) {
-                    updateVsPreview(matchData.t1Player, matchData.t2Player, matchData.mapName);
+                    updateLiveScoreboardAndVs(setId, matchIdx);
                 }
             });
 
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
+            document.getElementById('btn-save-league-title').addEventListener('click', saveLeagueTitle);
 
             document.getElementById('btn-toggle-list').addEventListener('click', () => toggleOverlayVisibility('listVisible', 'btn-toggle-list'));
             document.getElementById('btn-toggle-score').addEventListener('click', () => toggleOverlayVisibility('scoreVisible', 'btn-toggle-score'));
@@ -212,6 +213,11 @@
                     if(ms.selectedMapPool) selectedMapPool = ms.selectedMapPool;
                     if(ms.matchSetsObj) matchSetsObj = ms.matchSetsObj;
 
+                    if(ms.leagueTitle) {
+                        leagueTitleText = ms.leagueTitle;
+                        document.getElementById('input-league-title').value = leagueTitleText;
+                    }
+
                     if(ms.teamNames) {
                         team1Name = ms.teamNames.team1 || "1팀";
                         team2Name = ms.teamNames.team2 || "2팀";
@@ -225,7 +231,7 @@
                     }
 
                     if(ms.vsMatch && ms.vsMatch.t1) {
-                        updateVsPreview(ms.vsMatch.t1.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name);
+                        updateVsPreview(ms.vsMatch.t1.name, ms.vsMatch.t2?.name, ms.vsMatch.map?.name, ms.vsMatch.t1?.pos, ms.vsMatch.t2?.pos);
                     }
 
                     updateToggleButtonState('listVisible', 'btn-toggle-list', ms.listVisible);
@@ -559,10 +565,10 @@
                                         <th class="p-1.5 pb-2">현재 경기</th>
                                         <th class="p-1.5 pb-2">경기</th>
                                         <th class="p-1.5 pb-2">${team1Name} 선수</th>
-                                        <th class="p-1.5 pb-2">위치(진영)</th>
+                                        <th class="p-1.5 pb-2">위치</th>
                                         <th class="p-1.5 pb-2">맵</th>
                                         <th class="p-1.5 pb-2">${team2Name} 선수</th>
-                                        <th class="p-1.5 pb-2">위치(진영)</th>
+                                        <th class="p-1.5 pb-2">위치</th>
                                     </tr>
                                 </thead>
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
@@ -608,7 +614,6 @@
                     let t2WinChecked = (m.winner === 't2');
 
                     let tr = document.createElement('tr');
-                    // 현재 진행 중인 경기 행에 테두리 강조 클래스 적용
                     tr.className = "border-b border-[#2c2d33] text-center " + (isChecked ? "active-match-row" : "");
                     tr.innerHTML = `
                         <td class="p-2"><input type="radio" name="active_match_set${setId}" value="${i}" ${isChecked?'checked':''} class="accent-[#00FFA3] cursor-pointer" title="현재 진행 중인 경기 지정"></td>
@@ -619,7 +624,7 @@
                                 <input type="radio" name="winner_s${setId}_m${i}" value="t1" ${t1WinChecked?'checked':''} data-checked="${t1WinChecked}" onclick="handleWinnerClick(this)" class="accent-blue-500">승
                             </label>
                         </td>
-                        <td class="p-2"><input type="text" id="s${setId}-pos1-${i}" value="${m.t1Pos || ''}" placeholder="예: 9시" class="w-16 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
+                        <td class="p-2"><input type="text" id="s${setId}-pos1-${i}" value="${m.t1Pos || ''}" placeholder="9" class="w-12 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
                         <td class="p-2"><select id="s${setId}-map-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
                         <td class="p-2 flex items-center justify-center gap-1">
                             <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer">
@@ -627,7 +632,7 @@
                             </label>
                             <select id="s${setId}-t2-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                         </td>
-                        <td class="p-2"><input type="text" id="s${setId}-pos2-${i}" value="${m.t2Pos || ''}" placeholder="예: 3시" class="w-16 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
+                        <td class="p-2"><input type="text" id="s${setId}-pos2-${i}" value="${m.t2Pos || ''}" placeholder="3" class="w-12 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
                     `;
                     tbody.appendChild(tr);
 
@@ -681,7 +686,7 @@
             });
         }
 
-        function updateVsPreview(t1Name, t2Name, mapName) {
+        function updateVsPreview(t1Name, t2Name, mapName, t1Pos, t2Pos) {
             let p1Obj = allPlayers.find(p => p.name === t1Name) || { name: t1Name || "선수1", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P1" };
             let p2Obj = allPlayers.find(p => p.name === t2Name) || { name: t2Name || "선수2", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P2" };
             let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName || "맵", url: "https://placehold.co/100x100/1b1c20/FFF?text=Map" };
@@ -690,12 +695,12 @@
             let p2RaceClass = p2Obj.race === '프로토스' ? 'race-P-text' : (p2Obj.race === '테란' ? 'race-T-text' : 'race-Z-text');
 
             document.getElementById('prev-p1-img').src = p1Obj.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p1Obj.name) + ".png";
-            document.getElementById('prev-p1-name').innerText = p1Obj.name;
+            document.getElementById('prev-p1-name').innerText = p1Obj.name + (t1Pos ? " (" + t1Pos + ")" : "");
             document.getElementById('prev-p1-race').innerText = p1Obj.race;
             document.getElementById('prev-p1-race').className = "text-xs font-bold " + p1RaceClass;
 
             document.getElementById('prev-p2-img').src = p2Obj.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p2Obj.name) + ".png";
-            document.getElementById('prev-p2-name').innerText = p2Obj.name;
+            document.getElementById('prev-p2-name').innerText = p2Obj.name + (t2Pos ? " (" + t2Pos + ")" : "");
             document.getElementById('prev-p2-race').innerText = p2Obj.race;
             document.getElementById('prev-p2-race').className = "text-xs font-bold " + p2RaceClass;
 
@@ -770,7 +775,7 @@
                 };
 
                 set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
-                updateVsPreview(t1PlayerName, t2PlayerName, mapName);
+                updateVsPreview(t1PlayerName, t2PlayerName, mapName, t1Pos, t2Pos);
             }
 
             alert(s.name + " 대진이 반영되었으며, 현재 경기가 다음 경기로 자동 이동되었습니다!");
@@ -798,6 +803,14 @@
                 set(ref(db, "rooms/" + currentRoomId + "/matchState/p1Score"), p1TotalScore);
                 set(ref(db, "rooms/" + currentRoomId + "/matchState/p2Score"), p2TotalScore);
             }
+        }
+
+        function saveLeagueTitle() {
+            if (!currentRoomId) return;
+            leagueTitleText = document.getElementById('input-league-title').value.trim() || "스타크래프트 프로리그";
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/leagueTitle"), leagueTitleText).then(() => {
+                alert("대회 이름이 적용되었습니다!");
+            });
         }
 
         function saveTeamNames() {
@@ -850,7 +863,7 @@
             };
 
             set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
-            updateVsPreview(t1PlayerName, t2PlayerName, mapName);
+            updateVsPreview(t1PlayerName, t2PlayerName, mapName, t1Pos, t2Pos);
             alert("선택한 경기 정보가 VS 매치업 화면에 송출되었습니다!");
         }
 
@@ -918,6 +931,15 @@
                     <div class="flex justify-between items-center mb-4 pb-3 border-b border-[#2c2d33]">
                         <h3 class="text-sm font-bold text-[#00FFA3]">팀 설정, 참가 선수 및 맵 풀 관리</h3>
                         <button id="btn-reset-selection" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-red-500/30">🔄 선택 초기화</button>
+                    </div>
+
+                    <!-- 대회 이름 설정 칸 추가 -->
+                    <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
+                        <h4 class="text-xs font-bold text-[#00FFA3] mb-2">스코어보드 대회/매치 이름 설정</h4>
+                        <div class="flex gap-2 mb-2">
+                            <input type="text" id="input-league-title" value="스타크래프트 프로리그" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white" placeholder="예: 씨나인 대학리그 starcraft">
+                            <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">대회명 적용</button>
+                        </div>
                     </div>
 
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
