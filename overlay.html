@@ -2,16 +2,18 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK Style Overlay</title>
+    <title>CHZZK ProLeague Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
+        .race-P { color: #FFE000; }
+        .race-T { color: #00AFFF; }
+        .race-Z { color: #FF4545; }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // 🔥 본인의 파이어베이스 설정 정보
         const firebaseConfig = {
             apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
             authDomain: "starcraft-console.firebaseapp.com",
@@ -26,69 +28,82 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 실시간 상태 반영
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbybnHDjngVQxjsY-VEwPC2Jynqylhqy2m7x7Ft8SXZtw4PSK4pXi9EIU4OfMbdsRxUDrg/exec";
+        let playerRaceMap = {};
+
+        window.onload = async function() {
+            try {
+                let res = await fetch(GAS_URL + "?action=getData");
+                let data = await res.json();
+                if (data.players) {
+                    data.players.forEach(p => { playerRaceMap[p.name] = p.race; });
+                }
+            } catch (e) { console.error(e); }
+        };
+
         onValue(ref(db, 'matchState'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // 세트 스코어
+                if (data.teamNames) {
+                    document.getElementById('overlay-t1-name').innerText = data.teamNames.team1;
+                    document.getElementById('overlay-t2-name').innerText = data.teamNames.team2;
+                }
+
                 document.getElementById('overlay-p1-score').innerText = data.p1Score || 0;
                 document.getElementById('overlay-p2-score').innerText = data.p2Score || 0;
 
-                // 현재 송출 중인 대진표 (선수 및 맵)
-                if (data.currentMatch) {
-                    document.getElementById('overlay-set-title').innerText = `${data.currentMatch.activeSet}세트 경기`;
-                    document.getElementById('overlay-p1-player').innerText = data.currentMatch.t1Player;
-                    document.getElementById('overlay-p2-player').innerText = data.currentMatch.t2Player;
-                    document.getElementById('overlay-map-name').innerText = data.currentMatch.mapName;
+                if (data.matches) {
+                    let container = document.getElementById('match-list-container');
+                    container.innerHTML = '';
 
-                    // 맵 이미지 로드
-                    const mapImg = document.getElementById('overlay-map-img');
-                    if (data.currentMatch.mapUrl) {
-                        mapImg.src = data.currentMatch.mapUrl;
-                        mapImg.style.display = 'block';
-                    } else {
-                        mapImg.style.display = 'none';
+                    for (let i = 1; i <= 7; i++) {
+                        let match = data.matches[i];
+                        if (!match) continue;
+
+                        let t1Name = match.t1Player || "미정";
+                        let t2Name = match.t2Player || "미정";
+                        let mapName = match.mapName || "미정";
+
+                        let t1RaceClass = getRaceClass(t1Name);
+                        let t2RaceClass = getRaceClass(t2Name);
+                        let isActive = (data.currentActiveSet == i);
+                        let rowBg = isActive ? "bg-[#1f2026] border-l-4 border-[#00FFA3]" : "bg-[#141518]/80";
+
+                        container.innerHTML += `
+                            <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold ${rowBg}">
+                                <div class="w-6 text-center text-gray-400">${i}</div>
+                                <div class="w-24 text-center truncate ${t1RaceClass}">${t1Name}</div>
+                                <div class="w-28 text-center text-gray-300 font-normal truncate">${mapName}</div>
+                                <div class="w-24 text-center truncate ${t2RaceClass}">${t2Name}</div>
+                            </div>
+                        `;
                     }
                 }
             }
         });
+
+        function getRaceClass(playerName) {
+            let race = playerRaceMap[playerName];
+            if (race === "프로토스") return "race-P";
+            if (race === "테란") return "race-T";
+            if (race === "저그") return "race-Z";
+            return "text-white";
+        }
     </script>
 </head>
-<body class="flex items-start justify-start p-4">
-    <!-- 방송용 오버레이 본체 (치지직 다크 테마) -->
-    <div class="flex flex-col bg-[#0b0c0e]/90 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
-        <!-- 상단: 현재 세트 안내 -->
-        <div id="overlay-set-title" class="bg-[#141518] text-center text-xs font-bold text-[#00FFA3] py-1 border-b border-[#2c2d33]">
-            1세트 경기
-        </div>
-
-        <!-- 중앙: 선수 & 맵 정보 -->
-        <div class="flex items-center px-4 py-3 gap-4">
-            <!-- 팀 1 선수 -->
-            <div class="text-center">
-                <div class="text-xs text-gray-400 font-bold">재호팀</div>
-                <div id="overlay-p1-player" class="text-sm font-black text-white">선수 미정</div>
-            </div>
-
-            <!-- 스코어보드 -->
-            <div class="flex items-center bg-[#141518] px-3 py-1 rounded-lg border border-[#2c2d33]">
-                <span id="overlay-p1-score" class="text-xl font-black text-[#00FFA3]">0</span>
-                <span class="text-gray-600 mx-2">:</span>
-                <span id="overlay-p2-score" class="text-xl font-black text-[#00FFA3]">0</span>
-            </div>
-
-            <!-- 팀 2 선수 -->
-            <div class="text-center">
-                <div class="text-xs text-gray-400 font-bold">상대팀</div>
-                <div id="overlay-p2-player" class="text-sm font-black text-white">선수 미정</div>
+<body class="flex items-start justify-start p-4 font-sans">
+    <div class="flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md w-80">
+        <div class="bg-[#141518] border-b border-[#2c2d33] py-2 text-center">
+            <div class="text-[10px] tracking-widest text-gray-400 font-bold mb-0.5">PROLEAGUE 7SET</div>
+            <div class="flex items-center justify-center gap-3 text-sm font-black">
+                <span id="overlay-t1-name" class="text-blue-400">1팀</span>
+                <span class="text-[#00FFA3] text-base" id="overlay-p1-score">0</span>
+                <span class="text-gray-600">:</span>
+                <span class="text-[#00FFA3] text-base" id="overlay-p2-score">0</span>
+                <span id="overlay-t2-name" class="text-red-400">2팀</span>
             </div>
         </div>
-
-        <!-- 하단: 맵 정보 및 이미지 -->
-        <div class="flex items-center justify-between px-4 py-2 bg-[#141518]/60 border-t border-[#2c2d33] text-xs">
-            <span class="text-gray-400">맵: <strong id="overlay-map-name" class="text-white">미정</strong></span>
-            <img id="overlay-map-img" src="" alt="Map" class="w-8 h-8 object-cover rounded border border-[#2c2d33] hidden">
-        </div>
+        <div id="match-list-container" class="p-2 flex flex-col gap-0.5 max-h-80 overflow-y-auto"></div>
     </div>
 </body>
 </html>
