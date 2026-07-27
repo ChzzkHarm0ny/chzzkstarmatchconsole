@@ -778,8 +778,25 @@
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
 
-            // [변경점] 대진 반영 버튼을 누를 때 VS 매치업 화면이 자동으로 바뀌지 않고 스코어보드와 현재 경기 상태만 반영됨
-            alert(s.name + " 대진이 반영되었으며, 현재 경기가 다음 경기로 자동 이동되었습니다!");
+            // [핵심 수정] 대진 반영 시 콘솔 내의 VS 미리보기와 드롭다운 선택은 현재 경기로 갱신되되, 오버레이 송출은 건드리지 않음
+            let activeMatch = matches[activeMatchIdx];
+            if (activeMatch && (activeMatch.t1Player !== "미정" || activeMatch.t2Player !== "미정")) {
+                updateVsPreview(activeMatch.t1Player, activeMatch.t2Player, activeMatch.mapName);
+                
+                // 드롭다운도 해당 세트/경기로 자동 선택되게 연동
+                let vsSelect = document.getElementById('vs-match-select');
+                if(vsSelect) {
+                    let targetVal = setId + "-" + activeMatchIdx;
+                    for(let opt of vsSelect.options) {
+                        if(opt.value === targetVal) {
+                            vsSelect.value = targetVal;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            alert(s.name + " 대진 및 스코어가 반영되었습니다! (VS 화면은 수동 송출 버튼을 눌러야 오버레이에 반영됩니다)");
         };
 
         function saveScorePosState() {
