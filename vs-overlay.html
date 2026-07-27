@@ -30,14 +30,15 @@
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const uid = urlParams.get('uid');
+            const roomId = urlParams.get('room');
 
-            if (!uid) {
-                document.body.innerHTML = "<div style='color:white; padding:20px;'>UID가 지정되지 않았습니다.</div>";
+            if (!roomId) {
+                document.body.innerHTML = "<div style='color:white; padding:20px;'>방(room) 정보가 지정되지 않았습니다.</div>";
                 return;
             }
 
-            onValue(ref(db, `users/${uid}/matchState`), (snapshot) => {
+            const roomRef = ref(db, `rooms/${roomId}/matchState`);
+            onValue(roomRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     if (data.teamNames) {
