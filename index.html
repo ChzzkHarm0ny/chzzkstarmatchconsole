@@ -104,7 +104,6 @@
 
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
 
-            // VS 매치업 경기 선택 시 미리보기 즉시 갱신
             document.getElementById('vs-match-select').addEventListener('change', (e) => {
                 let val = e.target.value;
                 if(!val) return;
@@ -115,6 +114,9 @@
                 }
             });
 
+            // 누락되었던 VS 송출 버튼 이벤트 바인딩 추가
+            document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
+
             document.getElementById('btn-copy-url').addEventListener('click', () => copyUrl('overlay-url-input', 'btn-copy-url'));
             document.getElementById('btn-copy-score-url').addEventListener('click', () => copyUrl('score-url-input', 'btn-copy-score-url'));
             document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
@@ -122,7 +124,6 @@
             document.getElementById('btn-save-gas-url').addEventListener('click', saveUserGasUrl);
             document.getElementById('btn-save-match-mode').addEventListener('click', saveMatchMode);
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
-            document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
         };
 
         function switchTab(tabId) {
@@ -237,7 +238,7 @@
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
             } catch (e) {
-                console.error("스프레드시트 데이터 로드 실패:", e);
+                console.error("시트 데이터 로드 실패:", e);
             }
         }
 
@@ -605,7 +606,6 @@
             });
         }
 
-        // VS 미리보기 화면 업데이트 함수
         function updateVsPreview(t1Name, t2Name, mapName) {
             let p1Obj = allPlayers.find(p => p.name === t1Name) || { name: t1Name || "선수1", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P1" };
             let p2Obj = allPlayers.find(p => p.name === t2Name) || { name: t2Name || "선수2", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P2" };
@@ -889,7 +889,6 @@
                         </div>
                     </div>
 
-                    <!-- VS 매치업 화면 제어 및 실시간 미니 미리보기 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
@@ -900,7 +899,6 @@
                             </div>
                         </div>
 
-                        <!-- 콘솔 전용 VS 미리보기 박스 -->
                         <div class="mb-4 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-4">
                             <div class="flex items-center gap-3 flex-1 justify-end">
                                 <div class="text-right">
