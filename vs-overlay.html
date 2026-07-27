@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>CHZZK VS Matchup Overlay</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
+        .race-badge-P { background-color: #FFE000; color: #000; }
+        .race-badge-T { background-color: #00AFFF; color: #000; }
+        .race-badge-Z { background-color: #FF4545; color: #fff; }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
+            authDomain: "starcraft-console.firebaseapp.com",
+            databaseURL: "https://starcraft-console-default-rtdb.firebaseio.com",
+            projectId: "starcraft-console",
+            storageBucket: "starcraft-console.firebasestorage.app",
+            messagingSenderId: "928203238966",
+            appId: "1:928203238966:web:4c5333274ffb3255ff3297",
+            measurementId: "G-8KXBQ9J2MT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'matchState'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if (data.teamNames) {
+                    document.getElementById('vs-t1-label').innerText = data.teamNames.team1;
+                    document.getElementById('vs-t2-label').innerText = data.teamNames.team2;
+                }
+
+                if (data.vsMatch) {
+                    let m = data.vsMatch;
+                    document.getElementById('t1-name').innerText = m.t1.name;
+                    document.getElementById('t1-race').innerText = m.t1.race;
+                    setRaceBadge('t1-race', m.t1.race);
+                    if(m.t1.img) document.getElementById('t1-img').src = m.t1.img;
+
+                    document.getElementById('t2-name').innerText = m.t2.name;
+                    document.getElementById('t2-race').innerText = m.t2.race;
+                    setRaceBadge('t2-race', m.t2.race);
+                    if(m.t2.img) document.getElementById('t2-img').src = m.t2.img;
+
+                    document.getElementById('map-name').innerText = m.map.name;
+                    if(m.map.url) document.getElementById('map-img').src = m.map.url;
+                }
+            }
+        });
+
+        function setRaceBadge(elementId, race) {
+            let el = document.getElementById(elementId);
+            el.className = "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ";
+            if (race === "프로토스") el.classList.add("race-badge-P");
+            else if (race === "테란") el.classList.add("race-badge-T");
+            else if (race === "저그") el.classList.add("race-badge-Z");
+            else el.classList.add("bg-gray-700", "text-white");
+        }
+    </script>
+</head>
+<body class="flex items-center justify-center h-screen p-8 font-sans">
+    <div class="flex items-center gap-6 bg-[#0b0c0e]/95 text-white border border-[#2c2d33] p-6 rounded-2xl shadow-2xl backdrop-blur-md">
+        
+        <!-- Player 1 카드 -->
+        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64">
+            <img id="t1-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P1" class="w-16 h-16 object-cover rounded-lg border border-[#2c2d33]" alt="P1">
+            <div>
+                <div id="vs-t1-label" class="text-[10px] text-blue-400 font-bold mb-0.5">1팀</div>
+                <div id="t1-name" class="text-base font-black truncate mb-1">선수 미정</div>
+                <span id="t1-race" class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700">종족</span>
+            </div>
+        </div>
+
+        <!-- 중앙 VS 및 맵 -->
+        <div class="flex flex-col items-center justify-center px-4">
+            <div class="text-2xl font-black italic text-[#00FFA3] tracking-wider mb-2 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</div>
+            <div class="flex items-center gap-2 bg-[#141518] px-3 py-1.5 rounded-lg border border-[#2c2d33]">
+                <img id="map-img" src="https://placehold.co/40x40/1b1c20/FFF?text=Map" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" alt="Map">
+                <span id="map-name" class="text-xs font-bold text-gray-300">맵 미정</span>
+            </div>
+        </div>
+
+        <!-- Player 2 카드 -->
+        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64 flex-row-reverse text-right">
+            <img id="t2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-16 h-16 object-cover rounded-lg border border-[#2c2d33]" alt="P2">
+            <div>
+                <div id="vs-t2-label" class="text-[10px] text-red-400 font-bold mb-0.5">2팀</div>
+                <div id="t2-name" class="text-base font-black truncate mb-1">선수 미정</div>
+                <span id="t2-race" class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700">종족</span>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
