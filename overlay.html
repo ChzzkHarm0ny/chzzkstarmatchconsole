@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK ProLeague Overlay</title>
+    <title>CHZZK Multi-Set ProLeague Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
@@ -56,57 +56,65 @@
                     let ms = data.matchState;
                     let isSoloMode = (ms.matchMode === 'solo');
 
-                    let activeSet = ms.currentActiveSet || 1;
-                    let currentMatch = (ms.matches && ms.matches[activeSet]) ? ms.matches[activeSet] : {};
-                    let t1Name = currentMatch.t1Player || "선수1";
-                    let t2Name = currentMatch.t2Player || "선수2";
-
-                    let team1Label = isSoloMode ? t1Name : (ms.teamNames ? ms.teamNames.team1 : "1팀");
-                    let team2Label = isSoloMode ? t2Name : (ms.teamNames ? ms.teamNames.team2 : "2팀");
+                    let team1Name = isSoloMode ? "P1" : (ms.teamNames ? ms.teamNames.team1 : "1팀");
+                    let team2Name = isSoloMode ? "P2" : (ms.teamNames ? ms.teamNames.team2 : "2팀");
                     let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
                     let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
-
-                    let elT1Box = document.getElementById('overlay-t1-box');
-                    let elT2Box = document.getElementById('overlay-t2-box');
-                    
-                    elT1Box.innerText = team1Label;
-                    elT1Box.style.backgroundColor = team1Color;
-                    elT2Box.innerText = team2Label;
-                    elT2Box.style.backgroundColor = team2Color;
 
                     document.getElementById('overlay-p1-score').innerText = ms.p1Score || 0;
                     document.getElementById('overlay-p2-score').innerText = ms.p2Score || 0;
 
-                    if (ms.matches) {
-                        let container = document.getElementById('match-list-container');
-                        container.innerHTML = '';
+                    // 등록된 모든 세트(묶음) 대진표를 오른쪽에 동적으로 나란히 생성
+                    if (ms.matchSetsList) {
+                        let wrapper = document.getElementById('sets-wrapper');
+                        wrapper.innerHTML = '';
 
-                        for (let i = 1; i <= 7; i++) {
-                            let match = ms.matches[i];
-                            if (!match) continue;
-
-                            let p1 = match.t1Player || "미정";
-                            let p2 = match.t2Player || "미정";
-                            let mapName = match.mapName || "미정";
-                            let winner = match.winner || "";
-
-                            let t1RaceClass = getRaceClass(p1);
-                            let t2RaceClass = getRaceClass(p2);
-                            let isActive = (ms.currentActiveSet == i);
-                            let rowBg = isActive ? "bg-[#1f2026] border-l-4 border-[#00FFA3]" : "bg-[#141518]/80";
-
-                            let t1WinMark = (winner === "t1") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
-                            let t2WinMark = (winner === "t2") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
-
-                            container.innerHTML += `
-                                <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold ${rowBg}">
-                                    <div class="w-6 text-center text-gray-400">${i}</div>
-                                    <div class="w-24 text-center truncate ${t1RaceClass}">${p1}${t1WinMark}</div>
-                                    <div class="w-28 text-center text-gray-300 font-normal truncate">${mapName}</div>
-                                    <div class="w-24 text-center truncate ${t2RaceClass}">${p2}${t2WinMark}</div>
+                        ms.matchSetsList.forEach(setObj => {
+                            let card = document.createElement('div');
+                            card.className = "flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md w-80 shrink-0";
+                            
+                            // 세트별 상단 스코어 / 헤더
+                            let headerHtml = `
+                                <div class="bg-[#141518] border-b border-[#2c2d33] py-2 text-center">
+                                    <div class="text-[10px] tracking-widest text-[#00FFA3] font-bold mb-1">${setObj.name.toUpperCase()}</div>
+                                    <div class="grid grid-cols-5 text-sm font-black items-center px-2">
+                                        <div class="col-span-2 py-1 px-1 rounded truncate text-white" style="background-color: ${team1Color};">${team1Name}</div>
+                                        <div class="col-span-1 flex items-center justify-center text-gray-400 text-xs">-</div>
+                                        <div class="col-span-2 py-1 px-1 rounded truncate text-white" style="background-color: ${team2Color};">${team2Name}</div>
+                                    </div>
                                 </div>
                             `;
-                        }
+
+                            // 해당 세트의 경기(라운드) 목록 바디
+                            let bodyHtml = `<div class="p-2 flex flex-col gap-0.5 max-h-80 overflow-y-auto">`;
+                            
+                            for (let i = 1; i <= setObj.matchesCount; i++) {
+                                let match = (setObj.matches && setObj.matches[i]) ? setObj.matches[i] : {};
+                                let p1 = match.t1Player || "미정";
+                                let p2 = match.t2Player || "미정";
+                                let mapName = match.mapName || "미정";
+                                let winner = match.winner || "";
+
+                                let t1RaceClass = getRaceClass(p1);
+                                let t2RaceClass = getRaceClass(p2);
+
+                                let t1WinMark = (winner === "t1") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
+                                let t2WinMark = (winner === "t2") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
+
+                                bodyHtml += `
+                                    <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold bg-[#141518]/80">
+                                        <div class="w-6 text-center text-gray-400">${i}</div>
+                                        <div class="w-24 text-center truncate ${t1RaceClass}">${p1}${t1WinMark}</div>
+                                        <div class="w-28 text-center text-gray-300 font-normal truncate">${mapName}</div>
+                                        <div class="w-24 text-center truncate ${t2RaceClass}">${p2}${t2WinMark}</div>
+                                    </div>
+                                `;
+                            }
+                            bodyHtml += `</div>`;
+
+                            card.innerHTML = headerHtml + bodyHtml;
+                            wrapper.appendChild(card);
+                        });
                     }
                 }
             });
@@ -122,20 +130,7 @@
     </script>
 </head>
 <body class="flex items-start justify-start p-4 font-sans">
-    <div class="flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md w-80">
-        <div class="bg-[#141518] border-b border-[#2c2d33] py-2 text-center">
-            <div class="text-[10px] tracking-widest text-gray-400 font-bold mb-1">STARCRAFT MATCH</div>
-            <div class="grid grid-cols-5 text-sm font-black items-center px-2">
-                <div id="overlay-t1-box" class="col-span-2 py-1 px-1 rounded truncate text-white">P1</div>
-                <div class="col-span-1 flex items-center justify-center gap-1">
-                    <span class="text-[#00FFA3] text-base" id="overlay-p1-score">0</span>
-                    <span class="text-gray-500">:</span>
-                    <span class="text-[#00FFA3] text-base" id="overlay-p2-score">0</span>
-                </div>
-                <div id="overlay-t2-box" class="col-span-2 py-1 px-1 rounded truncate text-white">P2</div>
-            </div>
-        </div>
-        <div id="match-list-container" class="p-2 flex flex-col gap-0.5 max-h-80 overflow-y-auto"></div>
-    </div>
+    <!-- 세트가 추가될 때마다 오른쪽에 새로운 대진표 카드가 가로로 확장됩니다 -->
+    <div id="sets-wrapper" class="flex items-start gap-4 overflow-x-auto"></div>
 </body>
 </html>
