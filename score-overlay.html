@@ -96,10 +96,10 @@
                     scoreboardEl.style.pointerEvents = 'auto';
                 }
 
-                let leagueTitle = ms.leagueTitle || "스진퉁 내전";
-                let teamNames = ms.teamNames || { team1: "카루하", team2: "하늘루틴", team1Color: "#1d3557", team2Color: "#6a1b1b" };
-                let t1Name = teamNames.team1 || "카루하";
-                let t2Name = teamNames.team2 || "하늘루틴";
+                let leagueTitle = ms.leagueTitle || "대회이름";
+                let teamNames = ms.teamNames || { team1: "선수1", team2: "선수2", team1Color: "#1d3557", team2Color: "#6a1b1b" };
+                let t1Name = teamNames.team1 || "선수1";
+                let t2Name = teamNames.team2 || "선수2";
                 let t1Color = teamNames.team1Color || "#1d3557";
                 let t2Color = teamNames.team2Color || "#6a1b1b";
 
@@ -153,13 +153,13 @@
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans">
         <!-- 상단 대회/매치 이름 바 -->
         <div class="bg-[#141518] border-b border-[#2c2d33] py-0.5 px-2 text-center">
-            <span id="league-title" class="text-[#00FFA3] text-xs font-black tracking-wider">스진퉁 내전</span>
+            <span id="league-title" class="text-[#00FFA3] text-xs font-black tracking-wider">대회이름</span>
         </div>
 
         <!-- 팀 이름 및 스코어 바 -->
         <div class="grid grid-cols-5 text-sm font-black text-center items-center h-8">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
-                <span id="t1-name" class="truncate text-xs font-black">카루하</span>
+                <span id="t1-name" class="truncate text-xs font-black">선수1</span>
             </div>
             <div class="col-span-1 bg-[#1b1c20] text-[#00FFA3] text-sm font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
                 <span id="p1Score">0</span>
@@ -167,7 +167,7 @@
                 <span id="p2Score">0</span>
             </div>
             <div id="t2-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #6a1b1b;">
-                <span id="t2-name" class="truncate text-xs font-black">하늘루틴</span>
+                <span id="t2-name" class="truncate text-xs font-black">선수2</span>
             </div>
         </div>
 
