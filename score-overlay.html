@@ -7,29 +7,29 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 박스 전체 크기 및 중앙 하단이 사다리꼴로 뻥 뚫리도록(투명하게) 파내는 클리핑 마스크 */
+        /* 중앙 하단 빈 공간(시간초 영역)의 간격을 훨씬 넓게 벌린 사다리꼴 클리핑 디자인 */
         .minimap-scoreboard {
-            width: 320px;
+            width: 360px;
             height: 95px;
             background: rgba(15, 17, 21, 0.95);
             border: 2px solid #2c2d33;
             box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-            /* 핵심: 상단은 채우고, 중앙 하단(시간초 영역)을 사다리꼴 모양으로 뻥 뚫어 아래가 보이게 함 */
+            /* 중앙 하단 사다리꼴 파인 공간의 폭을 넓게 확장 */
             clip-path: polygon(
                 0 0, 
                 100% 0, 
                 100% 100%, 
-                60% 100%, 
-                56% calc(100% - 32px), 
-                44% calc(100% - 32px), 
-                40% 100%, 
+                65% 100%, 
+                59% calc(100% - 32px), 
+                41% calc(100% - 32px), 
+                35% 100%, 
                 0 100%
             );
             position: relative;
             transition: opacity 0.3s ease;
         }
 
-        /* 뚫린 사다리꼴 양옆 밑바닥에 걸쳐지는 선수 이름 영역 */
+        /* 넓어진 좌우 밑바닥에 걸쳐지는 선수 이름 영역 */
         .player-footer {
             position: absolute;
             bottom: 2px;
@@ -38,7 +38,7 @@
             height: 26px;
             display: flex;
             justify-content: space-between;
-            padding: 0 12px;
+            padding: 0 16px;
             font-size: 11px;
             font-weight: bold;
         }
@@ -149,12 +149,12 @@
             </div>
         </div>
 
-        <!-- 중앙 하단이 뚫린 좌우 밑바닥에 걸쳐지는 선수 이름 영역 -->
+        <!-- 넓어진 사다리꼴 빈 공간의 양옆 밑바닥에 걸쳐지는 선수 이름 영역 -->
         <div class="player-footer">
-            <div class="w-28 text-left truncate text-blue-300 pl-1">
+            <div class="w-32 text-left truncate text-blue-300 pl-1">
                 <span id="t1-player">홍길동</span>
             </div>
-            <div class="w-28 text-right truncate text-red-300 pr-1">
+            <div class="w-32 text-right truncate text-red-300 pr-1">
                 <span id="t2-player">홍길동</span>
             </div>
         </div>
