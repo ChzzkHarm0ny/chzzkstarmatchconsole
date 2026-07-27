@@ -35,7 +35,6 @@
         let team1Roster = [];
         let team2Roster = [];
         let selectedMapPool = [];
-        // 객체 기반 세트 맵 구조로 변경하여 데이터 꼬임 방지
         let matchSetsObj = {
             1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {} }
         };
@@ -85,6 +84,7 @@
                 matchSetsObj[newId] = { id: newId, name: `${newId}세트 (매치)`, matchesCount: 7, matches: {} };
                 renderMatchSetTabs();
                 renderMatchSetPanels();
+                updateVsMatchDropdownOptions();
             });
 
             document.getElementById('btn-reset-selection').addEventListener('click', () => {
@@ -98,6 +98,19 @@
                 }
             });
 
+            // VS 매치업 경기 리스트 선택 시 자동 바인딩 이벤트
+            document.getElementById('vs-match-select').addEventListener('change', (e) => {
+                let val = e.target.value;
+                if(!val) return;
+                let [setId, matchIdx] = val.split('-');
+                let matchData = matchSetsObj[setId]?.matches[matchIdx];
+                if(matchData) {
+                    document.getElementById('vs-t1-player').value = matchData.t1Player !== "미정" ? matchData.t1Player : "";
+                    document.getElementById('vs-t2-player').value = matchData.t2Player !== "미정" ? matchData.t2Player : "";
+                    document.getElementById('vs-map').value = matchData.mapName !== "미정" ? matchData.mapName : "";
+                }
+            });
+
             document.getElementById('btn-copy-url').addEventListener('click', () => copyUrl('overlay-url-input', 'btn-copy-url'));
             document.getElementById('btn-copy-score-url').addEventListener('click', () => copyUrl('score-url-input', 'btn-copy-score-url'));
             document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
@@ -107,11 +120,6 @@
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
-
-            document.getElementById('btn-p1-plus').addEventListener('click', () => updateScore('p1Score', 1));
-            document.getElementById('btn-p1-minus').addEventListener('click', () => updateScore('p1Score', -1));
-            document.getElementById('btn-p2-plus').addEventListener('click', () => updateScore('p2Score', 1));
-            document.getElementById('btn-p2-minus').addEventListener('click', () => updateScore('p2Score', -1));
         };
 
         function switchTab(tabId) {
@@ -168,8 +176,6 @@
                     if(ms.selectedMapPool) selectedMapPool = ms.selectedMapPool;
                     if(ms.matchSetsObj) matchSetsObj = ms.matchSetsObj;
 
-                    if(ms.p1Score !== undefined) document.getElementById('p1Score').innerText = ms.p1Score;
-                    if(ms.p2Score !== undefined) document.getElementById('p2Score').innerText = ms.p2Score;
                     if(ms.teamNames) {
                         team1Name = ms.teamNames.team1 || "1팀";
                         team2Name = ms.teamNames.team2 || "2팀";
@@ -185,7 +191,8 @@
                     renderSelectionUI();
                     renderMatchSetTabs();
                     renderMatchSetPanels();
-                    initVsSelectors();
+                    updateVsMatchDropdownOptions();
+                    calculateAndDisplayScores();
                 }
             });
         }
@@ -221,7 +228,7 @@
                 renderSelectionUI();
                 renderMatchSetTabs();
                 renderMatchSetPanels();
-                initVsSelectors();
+                updateVsMatchDropdownOptions();
             } catch (e) {
                 console.error("스프레드시트 데이터 로드 실패:", e);
             }
@@ -391,7 +398,7 @@
             set(ref(db, `rooms/${currentRoomId}/matchState/team2Roster`), team2Roster);
             set(ref(db, `rooms/${currentRoomId}/matchState/selectedMapPool`), selectedMapPool).then(() => {
                 renderMatchSetPanels();
-                initVsSelectors();
+                updateVsMatchDropdownOptions();
                 alert("팀 설정, 참가 선수 및 맵 구성이 저장되었습니다!");
                 switchTab('match');
             });
@@ -490,11 +497,15 @@
                         <td class="p-2 font-bold text-gray-400 whitespace-nowrap">${i}경기</td>
                         <td class="p-2 flex items-center justify-center gap-1">
                             <select id="s${setId}-t1-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
-                            <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer"><input type="radio" name="s${setId}-winner-${i}" value="t1" ${m.winner==='t1'?'checked':''} class="accent-blue-500">승</label>
+                            <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer">
+                                <input type="radio" name="winner_s${setId}_m${i}" value="t1" ${m.winner==='t1'?'checked':''} class="accent-blue-500">승
+                            </label>
                         </td>
                         <td class="p-2"><select id="s${setId}-map-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
                         <td class="p-2 flex items-center justify-center gap-1">
-                            <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer"><input type="radio" name="s${setId}-winner-${i}" value="t2" ${m.winner==='t2'?'checked':''} class="accent-red-500">승</label>
+                            <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer">
+                                <input type="radio" name="winner_s${setId}_m${i}" value="t2" ${m.winner==='t2'?'checked':''} class="accent-red-500">승
+                            </label>
                             <select id="s${setId}-t2-${i}" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                         </td>
                     `;
@@ -527,15 +538,25 @@
             });
         }
 
-        function initVsSelectors() {
-            let vsT1 = document.getElementById('vs-t1-player');
-            let vsT2 = document.getElementById('vs-t2-player');
-            let vsMap = document.getElementById('vs-map');
-            if(!vsT1) return;
+        // VS 매치업 제어부에 제작된 경기 리스트 드롭다운 채우기
+        function updateVsMatchDropdownOptions() {
+            let vsSelect = document.getElementById('vs-match-select');
+            if(!vsSelect) return;
+            vsSelect.innerHTML = '<option value="">-- 제작된 경기 목록에서 선택 --</option>';
 
-            populatePlayerSelect(vsT1, "선수 선택", "", team1Roster);
-            populatePlayerSelect(vsT2, "선수 선택", "", team2Roster);
-            populateActiveMapSelect(vsMap, "맵 선택", "");
+            Object.values(matchSetsObj).forEach(setObj => {
+                let matches = setObj.matches || {};
+                for(let i=1; i<=setObj.matchesCount; i++) {
+                    let m = matches[i];
+                    if(m && (m.t1Player && m.t1Player !== "미정" || m.t2Player && m.t2Player !== "미정")) {
+                        let t1 = m.t1Player || "미정";
+                        let t2 = m.t2Player || "미정";
+                        let map = m.mapName || "미정";
+                        let opt = new Option(`${setObj.name} - ${i}경기 [ ${t1} vs ${t2} / ${map} ]`, `${setObj.id}-${i}`);
+                        vsSelect.appendChild(opt);
+                    }
+                }
+            });
         }
 
         window.saveMatchSetState = function(setId) {
@@ -549,7 +570,7 @@
                 if (!t1El) continue;
 
                 let winner = "";
-                let radios = document.getElementsByName(`s${setId}-winner-${i}`);
+                let radios = document.getElementsByName(`winner_s${setId}_m${i}`);
                 for(let r of radios) { if(r.checked) winner = r.value; }
 
                 let matchData = {
@@ -565,16 +586,18 @@
                 }
             }
 
-            let setData = {
-                id: s.id,
-                name: s.name,
-                matchesCount: s.matchesCount,
-                matches: matches
-            };
+            s.matches = matches;
+            matchSetsObj[setId] = s;
 
-            // 객체 구조로 파이어베이스에 명확히 저장
-            set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`), setData);
+            // 1. 대진 상태 및 세트 설정 저장
+            set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsObj/${setId}`), s);
             set(ref(db, `rooms/${currentRoomId}/matchState/matchSetsConfig`), matchSetsObj);
+
+            // 2. [자동] 세트스코어 계산 및 실시간 반영
+            calculateAndDisplayScores();
+
+            // 3. VS 매치업 드롭다운 리스트 갱신
+            updateVsMatchDropdownOptions();
 
             if (lastActiveMatch) {
                 let t1PlayerName = lastActiveMatch.t1Player;
@@ -593,13 +616,35 @@
                 };
 
                 set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
-                document.getElementById('vs-t1-player').value = t1PlayerName;
-                document.getElementById('vs-t2-player').value = t2PlayerName;
-                document.getElementById('vs-map').value = mapName;
             }
 
-            alert(`${s.name} 대진이 통합 오버레이 및 VS 매치업 화면에 반영되었습니다!`);
+            alert(`${s.name} 대진 및 승리 스코어가 오버레이에 반영되었습니다!`);
         };
+
+        // 상세 대진에서 체크된 승리 개수를 합산하여 스코어 자동 계산 및 저장
+        function calculateAndDisplayScores() {
+            let p1TotalScore = 0;
+            let p2TotalScore = 0;
+
+            Object.values(matchSetsObj).forEach(setObj => {
+                let matches = setObj.matches || {};
+                for (let i = 1; i <= setObj.matchesCount; i++) {
+                    let m = matches[i];
+                    if (m) {
+                        if (m.winner === 't1') p1TotalScore++;
+                        if (m.winner === 't2') p2TotalScore++;
+                    }
+                }
+            });
+
+            document.getElementById('p1Score').innerText = p1TotalScore;
+            document.getElementById('p2Score').innerText = p2TotalScore;
+
+            if (currentRoomId) {
+                set(ref(db, `rooms/${currentRoomId}/matchState/p1Score`), p1TotalScore);
+                set(ref(db, `rooms/${currentRoomId}/matchState/p2Score`), p2TotalScore);
+            }
+        }
 
         function saveTeamNames() {
             if (!currentRoomId) return;
@@ -621,6 +666,33 @@
             if (!currentRoomId) return;
             let mode = document.getElementById('select-match-mode').value;
             set(ref(db, `rooms/${currentRoomId}/matchState/matchMode`), mode);
+        }
+
+        function saveVsMatchState() {
+            if (!currentRoomId) return;
+            let val = document.getElementById('vs-match-select').value;
+            if(!val) { alert("목록에서 경기를 먼저 선택해주세요!"); return; }
+            let [setId, matchIdx] = val.split('-');
+            let m = matchSetsObj[setId]?.matches[matchIdx];
+            if(!m) return;
+
+            let t1PlayerName = m.t1Player;
+            let t2PlayerName = m.t2Player;
+            let mapName = m.mapName;
+
+            let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
+            let t1Obj = allPlayers.find(p => p.name === t1PlayerName) || { name: t1PlayerName, race: "미정", img: githubBase + encodeURIComponent(t1PlayerName) + ".png" };
+            let t2Obj = allPlayers.find(p => p.name === t2PlayerName) || { name: t2PlayerName, race: "미정", img: githubBase + encodeURIComponent(t2PlayerName) + ".png" };
+            let mapObj = allMaps.find(m => m.name === mapName) || { name: mapName, url: "" };
+
+            let vsData = {
+                t1: { name: t1Obj.name, race: t1Obj.race, img: t1Obj.img },
+                t2: { name: t2Obj.name, race: t2Obj.race, img: t2Obj.img },
+                map: { name: mapObj.name, url: mapObj.url || "" }
+            };
+
+            set(ref(db, `rooms/${currentRoomId}/matchState/vsMatch`), vsData);
+            alert("선택한 경기 정보가 VS 매치업 오버레이에 송출되었습니다!");
         }
 
         function saveUserGasUrl() {
@@ -650,15 +722,6 @@
                 btn.innerText = '복사 완료!';
                 setTimeout(() => btn.innerText = originalText, 2000);
             });
-        }
-
-        function updateScore(targetField, delta) {
-            if (!currentRoomId) return;
-            const scoreDisplay = document.getElementById(targetField);
-            let currentScore = parseInt(scoreDisplay.innerText) + delta;
-            if (currentScore < 0) currentScore = 0;
-            scoreDisplay.innerText = currentScore;
-            set(ref(db, `rooms/${currentRoomId}/matchState/${targetField}`), currentScore);
         }
     </script>
 </head>
@@ -742,30 +805,46 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
+                    <!-- [자동 연동형] 스코어보드 세트스코어 제어 파트 (수동 조작 불가, 상세 대진 체크 연동) -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 세트스코어 제어</h3>
+                        <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 세트스코어 (자동 집계)</h3>
                         <div class="flex items-center gap-6">
                             <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
                                 <span class="text-xs font-bold text-blue-400">P1 / Team 1</span>
                                 <span class="text-2xl font-black text-[#00FFA3]" id="p1Score">0</span>
-                                <div class="flex gap-1">
-                                    <button id="btn-p1-plus" class="bg-[#00FFA3] text-black px-2 py-0.5 rounded font-bold cursor-pointer">+</button>
-                                    <button id="btn-p1-minus" class="bg-[#2c2d33] text-white px-2 py-0.5 rounded font-bold cursor-pointer">-</button>
-                                </div>
                             </div>
                             <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
                                 <span class="text-xs font-bold text-red-400">P2 / Team 2</span>
                                 <span class="text-2xl font-black text-[#00FFA3]" id="p2Score">0</span>
-                                <div class="flex gap-1">
-                                    <button id="btn-p2-plus" class="bg-[#00FFA3] text-black px-2 py-0.5 rounded font-bold cursor-pointer">+</button>
-                                    <button id="btn-p2-minus" class="bg-[#2c2d33] text-white px-2 py-0.5 rounded font-bold cursor-pointer">-</button>
-                                </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-2 max-w-[200px] w-full">
                             <input type="text" id="score-url-input" readonly class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
                             <button id="btn-copy-score-url" class="bg-[#00FFA3] text-black px-2 py-1 rounded text-[11px] font-bold whitespace-nowrap cursor-pointer">스코어 링크</button>
                         </div>
+                    </div>
+
+                    <!-- [경기 리스트 연동형] VS 매치업 화면 제어 파트 -->
+                    <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-bold text-gray-300">🔗 링크</span>
+                                <input type="text" id="vs-url-input" readonly class="w-48 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                                <button id="btn-copy-vs-url" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">복사</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-[10px] text-gray-400 mb-1">출전 경기 선택 (목록에서 고르면 아래 정보가 자동으로 세팅됩니다)</label>
+                            <select id="vs-match-select" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-[#00FFA3] font-bold"></select>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mb-3 hidden">
+                            <!-- 내부 연동용 숨김 필드 -->
+                            <input type="text" id="vs-t1-player">
+                            <input type="text" id="vs-map">
+                            <input type="text" id="vs-t2-player">
+                        </div>
+                        <button id="btn-save-vs" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black py-2.5 rounded text-xs font-extrabold cursor-pointer">선택한 경기 VS 매치업 화면 송출하기</button>
                     </div>
                 </div>
             </div>
