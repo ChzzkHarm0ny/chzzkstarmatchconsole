@@ -7,35 +7,37 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
+        /* 스크린샷 미니맵 상단 UI 비율과 완벽히 일치하는 크기 및 사다리꼴 클리핑 */
         .minimap-scoreboard {
-            width: 390px;
-            height: 105px;
-            background: rgba(15, 17, 21, 0.95);
-            border: 2px solid #2c2d33;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            width: 275px;
+            height: 98px;
+            background: rgba(15, 17, 21, 0.98);
+            border: 2px solid #3c3d44;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            /* 중앙 하단(시간초 영역)이 뻥 뚫리도록 정밀 조정된 사다리꼴 패스 */
             clip-path: polygon(
                 0 0, 
                 100% 0, 
                 100% 100%, 
-                66% 100%, 
-                60% calc(100% - 34px), 
-                40% calc(100% - 34px), 
-                34% 100%, 
+                62% 100%, 
+                56% calc(100% - 30px), 
+                44% calc(100% - 30px), 
+                38% 100%, 
                 0 100%
             );
             position: relative;
-            transition: opacity 0.3s ease;
         }
 
+        /* 뚫린 사다리꼴 양옆 밑바닥에 걸쳐지는 선수 이름 영역 (글씨 대폭 확대) */
         .player-footer {
             position: absolute;
             bottom: 2px;
             left: 0;
             right: 0;
-            height: 28px;
+            height: 26px;
             display: flex;
             justify-content: space-between;
-            padding: 0 14px;
+            padding: 0 10px;
             font-size: 13px;
             font-weight: 900;
         }
@@ -94,10 +96,10 @@
                     scoreboardEl.style.pointerEvents = 'auto';
                 }
 
-                let leagueTitle = ms.leagueTitle || "스타크래프트 프로리그";
-                let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
-                let t1Name = teamNames.team1 || "1팀";
-                let t2Name = teamNames.team2 || "2팀";
+                let leagueTitle = ms.leagueTitle || "스진퉁 내전";
+                let teamNames = ms.teamNames || { team1: "카루하", team2: "하늘루틴", team1Color: "#1d3557", team2Color: "#6a1b1b" };
+                let t1Name = teamNames.team1 || "카루하";
+                let t2Name = teamNames.team2 || "하늘루틴";
                 let t1Color = teamNames.team1Color || "#1d3557";
                 let t2Color = teamNames.team2Color || "#6a1b1b";
 
@@ -132,7 +134,6 @@
 
                 let scorePos = ms.scorePos || { t1Pos: "", t2Pos: "" };
 
-                document.getElementById('set-title').innerText = "[" + activeSetName + " - " + activeIdx + "경기]";
                 document.getElementById('t1-player').innerText = formatPlayerDisplay(currentP1Player, scorePos.t1Pos);
                 document.getElementById('t2-player').innerText = formatPlayerDisplay(currentP2Player, scorePos.t2Pos);
             });
@@ -147,34 +148,36 @@
         }
     </script>
 </head>
-<body class="flex items-start justify-start p-2">
+<body class="flex items-start justify-start p-0">
     
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans">
-        <div class="bg-[#141518] border-b border-[#2c2d33] py-1 px-2 text-center flex items-center justify-center gap-2">
-            <span id="set-title" class="text-[#00FFA3] text-xs font-black tracking-wider">[1세트 - 1경기]</span>
-            <span id="league-title" class="text-gray-200 text-xs font-bold truncate">스타크래프트 프로리그</span>
+        <!-- 상단 대회/매치 이름 바 (스크린샷 참고 컴팩트 디자인) -->
+        <div class="bg-[#141518] border-b border-[#2c2d33] py-0.5 px-2 text-center">
+            <span id="league-title" class="text-[#00FFA3] text-xs font-black tracking-wider">스진퉁 내전</span>
         </div>
 
-        <div class="grid grid-cols-5 text-sm font-black text-center items-center h-9">
+        <!-- 팀 이름 및 스코어 바 (글씨 크기 및 가독성 극대화) -->
+        <div class="grid grid-cols-5 text-sm font-black text-center items-center h-8">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
-                <span id="t1-name" class="truncate text-base font-black">TEAM 이름</span>
+                <span id="t1-name" class="truncate text-xs font-black">카루하</span>
             </div>
-            <div class="col-span-1 bg-[#1b1c20] text-[#00FFA3] text-lg font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
+            <div class="col-span-1 bg-[#1b1c20] text-[#00FFA3] text-sm font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
                 <span id="p1Score">0</span>
-                <span class="text-gray-500 mx-1">:</span>
+                <span class="text-gray-500 mx-0.5">-</span>
                 <span id="p2Score">0</span>
             </div>
             <div id="t2-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #6a1b1b;">
-                <span id="t2-name" class="truncate text-base font-black">TEAM 이름</span>
+                <span id="t2-name" class="truncate text-xs font-black">하늘루틴</span>
             </div>
         </div>
 
+        <!-- 하단 사다리꼴 빈 공간 양옆에 큼직하게 배치되는 선수 이름 영역 -->
         <div class="player-footer">
-            <div class="w-36 text-left truncate text-blue-300 pl-1">
-                <span id="t1-player">홍길동</span>
+            <div class="w-24 text-left truncate text-blue-300 pl-1">
+                <span id="t1-player">-</span>
             </div>
-            <div class="w-36 text-right truncate text-red-300 pr-1">
-                <span id="t2-player">홍길동</span>
+            <div class="w-24 text-right truncate text-red-300 pr-1">
+                <span id="t2-player">-</span>
             </div>
         </div>
     </div>
