@@ -61,9 +61,6 @@
                     let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
                     let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
 
-                    document.getElementById('overlay-p1-score').innerText = ms.p1Score || 0;
-                    document.getElementById('overlay-p2-score').innerText = ms.p2Score || 0;
-
                     // 등록된 모든 세트(묶음) 대진표를 오른쪽에 동적으로 나란히 생성
                     if (ms.matchSetsList) {
                         let wrapper = document.getElementById('sets-wrapper');
@@ -73,7 +70,6 @@
                             let card = document.createElement('div');
                             card.className = "flex flex-col bg-[#0b0c0e]/95 text-white border border-[#2c2d33] rounded-xl overflow-hidden shadow-2xl backdrop-blur-md w-80 shrink-0";
                             
-                            // 세트별 상단 스코어 / 헤더
                             let headerHtml = `
                                 <div class="bg-[#141518] border-b border-[#2c2d33] py-2 text-center">
                                     <div class="text-[10px] tracking-widest text-[#00FFA3] font-bold mb-1">${setObj.name.toUpperCase()}</div>
@@ -85,7 +81,6 @@
                                 </div>
                             `;
 
-                            // 해당 세트의 경기(라운드) 목록 바디
                             let bodyHtml = `<div class="p-2 flex flex-col gap-0.5 max-h-80 overflow-y-auto">`;
                             
                             for (let i = 1; i <= setObj.matchesCount; i++) {
@@ -130,7 +125,6 @@
     </script>
 </head>
 <body class="flex items-start justify-start p-4 font-sans">
-    <!-- 세트가 추가될 때마다 오른쪽에 새로운 대진표 카드가 가로로 확장됩니다 -->
     <div id="sets-wrapper" class="flex items-start gap-4 overflow-x-auto"></div>
 </body>
 </html>
