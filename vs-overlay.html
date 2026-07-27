@@ -6,9 +6,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
-        .race-badge-P { background-color: #FFE000; color: #000; }
-        .race-badge-T { background-color: #00AFFF; color: #000; }
-        .race-badge-Z { background-color: #FF4545; color: #fff; }
+        .race-P { background-color: #FFE000; color: #000; }
+        .race-T { background-color: #00AFFF; color: #000; }
+        .race-Z { background-color: #FF4545; color: #fff; }
+        
+        /* 페이드아웃 애니메이션 효과 클래스 */
+        #vs-container {
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+        #vs-container.active {
+            opacity: 1;
+        }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -27,6 +36,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        
+        let fadeTimer = null;
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -37,96 +48,102 @@
                 return;
             }
 
-            const roomRef = ref(db, `rooms/${roomId}/matchState`);
+            const roomRef = ref(db, `rooms/${roomId}`);
             onValue(roomRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    let team1Name = "1팀";
-                    let team2Name = "2팀";
-                    let team1Color = "#1d3557";
-                    let team2Color = "#6a1b1b";
+                const data = snapshot.val() || {};
+                let ms = data.matchState || {};
+                let vs = ms.vsMatch;
+                let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                    if (data.teamNames) {
-                        team1Name = data.teamNames.team1 || "1팀";
-                        team2Name = data.teamNames.team2 || "2팀";
-                        if (data.teamNames.team1Color) team1Color = data.teamNames.team1Color;
-                        if (data.teamNames.team2Color) team2Color = data.teamNames.team2Color;
-                    }
-
-                    let elT1Label = document.getElementById('vs-t1-label');
-                    let elT2Label = document.getElementById('vs-t2-label');
+                if (vs) {
+                    // 데이터 바인딩
+                    document.getElementById('p1-name').innerText = vs.t1?.name || "선수1";
+                    document.getElementById('p2-name').innerText = vs.t2?.name || "선수2";
                     
-                    if(elT1Label) {
-                        elT1Label.innerText = team1Name;
-                        elT1Label.style.backgroundColor = team1Color;
-                    }
-                    if(elT2Label) {
-                        elT2Label.innerText = team2Name;
-                        elT2Label.style.backgroundColor = team2Color;
+                    let p1Img = vs.t1?.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(vs.t1?.name)}.png`;
+                    let p2Img = vs.t2?.img || `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/${encodeURIComponent(vs.t2?.name)}.png`;
+                    
+                    document.getElementById('p1-img').src = p1Img;
+                    document.getElementById('p2-img').src = p2Img;
+
+                    // 종족 배지
+                    let p1Race = vs.t1?.race || "미정";
+                    let p2Race = vs.t2?.race || "미정";
+                    let p1RaceEl = document.getElementById('p1-race');
+                    let p2RaceEl = document.getElementById('p2-race');
+
+                    p1RaceEl.innerText = p1Race;
+                    p1RaceEl.className = `px-2 py-0.5 rounded text-xs font-black text-black ${p1Race==='프로토스'?'race-P':(p1Race==='테란'?'race-T':'race-Z')}`;
+                    
+                    p2RaceEl.innerText = p2Race;
+                    p2RaceEl.className = `px-2 py-0.5 rounded text-xs font-black text-black ${p2Race==='프로토스'?'race-P':(p2Race==='테란'?'race-T':'race-Z')}`;
+
+                    // 팀 이름 및 색상
+                    document.getElementById('p1-team').innerText = teamNames.team1;
+                    document.getElementById('p1-team').style.backgroundColor = teamNames.team1Color;
+                    document.getElementById('p2-team').innerText = teamNames.team2;
+                    document.getElementById('p2-team').style.backgroundColor = teamNames.team2Color;
+
+                    // 맵 정보
+                    if(vs.map) {
+                        document.getElementById('map-name').innerText = vs.map.name || "맵 이름";
+                        if(vs.map.url) {
+                            document.getElementById('map-img').src = vs.map.url;
+                        }
                     }
 
-                    if (data.vsMatch) {
-                        let m = data.vsMatch;
-                        document.getElementById('t1-name').innerText = m.t1.name;
-                        document.getElementById('t1-race').innerText = m.t1.race;
-                        setRaceBadge('t1-race', m.t1.race);
-                        if(m.t1.img) document.getElementById('t1-img').src = m.t1.img;
-
-                        document.getElementById('t2-name').innerText = m.t2.name;
-                        document.getElementById('t2-race').innerText = m.t2.race;
-                        setRaceBadge('t2-race', m.t2.race);
-                        if(m.t2.img) document.getElementById('t2-img').src = m.t2.img;
-
-                        document.getElementById('map-name').innerText = m.map.name;
-                        
-                        // 맵 이미지 처리 (GitHub 맵 경로 자동 조합)
-                        let mapImgUrl = m.map.url ? m.map.url : `https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/${encodeURIComponent(m.map.name)}.png`;
-                        document.getElementById('map-img').src = mapImgUrl;
-                    }
+                    // [핵심] 송출 버튼을 누를 때마다(데이터가 갱신될 때마다) 화면에 나타났다가 6초 후 서서히 사라짐
+                    triggerFadeAnimation();
                 }
             });
         };
 
-        function setRaceBadge(elementId, race) {
-            let el = document.getElementById(elementId);
-            el.className = "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ";
-            if (race === "프로토스") el.classList.add("race-badge-P");
-            else if (race === "테란") el.classList.add("race-badge-T");
-            else if (race === "저그") el.classList.add("race-badge-Z");
-            else el.classList.add("bg-gray-700", "text-white");
+        function triggerFadeAnimation() {
+            let container = document.getElementById('vs-container');
+            container.classList.add('active'); // 화면에 나타남
+
+            if (fadeTimer) clearTimeout(fadeTimer);
+
+            // 6초 동안 유지된 후 자동으로 투명해짐 (원하시는 경우 시간 조절 가능)
+            fadeTimer = setTimeout(() => {
+                container.classList.remove('active');
+            }, 6000);
         }
     </script>
 </head>
-<body class="flex items-center justify-center h-screen p-8 font-sans">
-    <div class="flex items-center gap-6 bg-[#0b0c0e]/95 text-white border border-[#2c2d33] p-6 rounded-2xl shadow-2xl backdrop-blur-md">
-        <!-- 팀 1 카드 -->
-        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64 relative overflow-hidden">
-            <img id="t1-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P1" class="w-16 h-16 object-cover rounded-lg border border-[#2c2d33]" alt="P1">
-            <div class="flex-1">
-                <div id="vs-t1-label" class="inline-block px-2 py-0.5 rounded text-[10px] text-white font-bold mb-1">1팀</div>
-                <div id="t1-name" class="text-base font-black truncate mb-1">선수 미정</div>
-                <span id="t1-race" class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700">종족</span>
-            </div>
-        </div>
+<body class="flex items-center justify-center h-screen p-6">
+    <!-- 전체 매치업 컨테이너 (페이드인/아웃 적용) -->
+    <div id="vs-container" class="flex items-center justify-between bg-[#141518]/95 border border-[#2c2d33] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[850px]">
         
-        <!-- 중앙 VS 및 맵 -->
-        <div class="flex flex-col items-center justify-center px-4">
-            <div class="text-2xl font-black italic text-[#00FFA3] tracking-wider mb-2 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</div>
-            <div class="flex items-center gap-2 bg-[#141518] px-3 py-1.5 rounded-lg border border-[#2c2d33]">
-                <img id="map-img" src="https://placehold.co/40x40/1b1c20/FFF?text=Map" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=Map'" alt="Map">
-                <span id="map-name" class="text-xs font-bold text-gray-300">맵 미정</span>
+        <!-- P1 선수 카드 (왼쪽: 사진 크게, 오른쪽: 정보) -->
+        <div class="flex items-center gap-5 bg-[#0b0c0e] border border-[#2c2d33] rounded-xl p-4 w-[360px]">
+            <img id="p1-img" src="https://placehold.co/120x120/1b1c20/FFF?text=P1" class="w-24 h-24 object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
+            <div class="flex flex-col items-start">
+                <span id="p1-team" class="px-2 py-0.5 rounded text-[10px] font-black text-white mb-1 shadow">1팀</span>
+                <span id="p1-name" class="text-xl font-black text-white tracking-wider mb-2 truncate max-w-[200px]">선수1</span>
+                <span id="p1-race" class="px-2 py-0.5 rounded text-xs font-black text-black">종족</span>
             </div>
         </div>
 
-        <!-- 팀 2 카드 -->
-        <div class="flex items-center gap-4 bg-[#141518] p-4 rounded-xl border border-[#2c2d33] w-64 flex-row-reverse text-right relative overflow-hidden">
-            <img id="t2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-16 h-16 object-cover rounded-lg border border-[#2c2d33]" alt="P2">
-            <div class="flex-1">
-                <div id="vs-t2-label" class="inline-block px-2 py-0.5 rounded text-[10px] text-white font-bold mb-1">2팀</div>
-                <div id="t2-name" class="text-base font-black truncate mb-1">선수 미정</div>
-                <span id="t2-race" class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700">종족</span>
+        <!-- 중앙 VS 및 맵 정보 -->
+        <div class="flex flex-col items-center justify-center px-4">
+            <span class="text-2xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</span>
+            <div class="flex flex-col items-center bg-[#0b0c0e] border border-[#2c2d33] p-2 rounded-xl">
+                <img id="map-img" src="https://placehold.co/60x60/1b1c20/FFF?text=Map" class="w-10 h-10 object-cover rounded-lg border border-[#2c2d33] mb-1" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=Map'">
+                <span id="map-name" class="text-[11px] font-bold text-gray-300 truncate max-w-[100px]">맵 이름</span>
             </div>
         </div>
+
+        <!-- P2 선수 카드 (왼쪽: 정보, 오른쪽: 사진 크게) -->
+        <div class="flex items-center justify-end gap-5 bg-[#0b0c0e] border border-[#2c2d33] rounded-xl p-4 w-[360px]">
+            <div class="flex flex-col items-end">
+                <span id="p2-team" class="px-2 py-0.5 rounded text-[10px] font-black text-white mb-1 shadow">2팀</span>
+                <span id="p2-name" class="text-xl font-black text-white tracking-wider mb-2 truncate max-w-[200px]">선수2</span>
+                <span id="p2-race" class="px-2 py-0.5 rounded text-xs font-black text-black">종족</span>
+            </div>
+            <img id="p2-img" src="https://placehold.co/120x120/1b1c20/FFF?text=P2" class="w-24 h-24 object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
+        </div>
+
     </div>
 </body>
 </html>
