@@ -7,40 +7,38 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 중앙 하단 빈 공간(시간초 영역)의 간격을 훨씬 넓게 벌린 사다리꼴 클리핑 디자인 */
+        /* 글씨가 잘 보이도록 전체 스코어보드 크기를 키우고 여유 공간 확보 */
         .minimap-scoreboard {
-            width: 360px;
-            height: 95px;
+            width: 390px;
+            height: 105px;
             background: rgba(15, 17, 21, 0.95);
             border: 2px solid #2c2d33;
             box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-            /* 중앙 하단 사다리꼴 파인 공간의 폭을 넓게 확장 */
             clip-path: polygon(
                 0 0, 
                 100% 0, 
                 100% 100%, 
-                65% 100%, 
-                59% calc(100% - 32px), 
-                41% calc(100% - 32px), 
-                35% 100%, 
+                66% 100%, 
+                60% calc(100% - 34px), 
+                40% calc(100% - 34px), 
+                34% 100%, 
                 0 100%
             );
             position: relative;
             transition: opacity 0.3s ease;
         }
 
-        /* 넓어진 좌우 밑바닥에 걸쳐지는 선수 이름 영역 */
         .player-footer {
             position: absolute;
             bottom: 2px;
             left: 0;
             right: 0;
-            height: 26px;
+            height: 28px;
             display: flex;
             justify-content: space-between;
-            padding: 0 16px;
-            font-size: 11px;
-            font-weight: bold;
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: 900;
         }
     </style>
     <script type="module">
@@ -60,6 +58,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let playerRaceMap = {};
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -71,8 +70,19 @@
             }
 
             const roomRef = ref(db, "rooms/" + roomId);
-            onValue(roomRef, (snapshot) => {
+            onValue(roomRef, async (snapshot) => {
                 const data = snapshot.val() || {};
+                
+                if (data.settings && data.settings.gasUrl) {
+                    try {
+                        let res = await fetch(data.settings.gasUrl + "?action=getData");
+                        let sheetData = await res.json();
+                        if (sheetData.players) {
+                            sheetData.players.forEach(p => { playerRaceMap[p.name] = p.race; });
+                        }
+                    } catch (e) { console.error("시트 데이터 로드 실패:", e); }
+                }
+
                 let ms = data.matchState || {};
                 
                 let scoreboardEl = document.getElementById('scoreboard-wrapper');
@@ -85,12 +95,14 @@
                     scoreboardEl.style.pointerEvents = 'auto';
                 }
 
+                let leagueTitle = ms.leagueTitle || "스타크래프트 프로리그";
                 let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
                 let t1Name = teamNames.team1 || "1팀";
                 let t2Name = teamNames.team2 || "2팀";
                 let t1Color = teamNames.team1Color || "#1d3557";
                 let t2Color = teamNames.team2Color || "#6a1b1b";
 
+                document.getElementById('league-title').innerText = leagueTitle;
                 document.getElementById('t1-name').innerText = t1Name;
                 document.getElementById('t2-name').innerText = t2Name;
                 document.getElementById('t1-box').style.backgroundColor = t1Color;
@@ -100,61 +112,76 @@
                 document.getElementById('p2Score').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
 
                 let activeSetName = "1세트";
+                let activeIdx = 1;
                 let currentP1Player = "-";
                 let currentP2Player = "-";
+                let t1Pos = "";
+                let t2Pos = "";
 
                 if (ms.matchSetsObj) {
                     let setsArray = Object.values(ms.matchSetsObj);
                     if (setsArray.length > 0) {
                         let targetSet = setsArray[0];
                         activeSetName = targetSet.name.replace(" (매치)", "");
+                        activeIdx = targetSet.activeMatchIdx || 1;
                         
-                        let activeIdx = targetSet.activeMatchIdx || 1;
                         if (targetSet.matches && targetSet.matches[activeIdx]) {
                             let activeMatch = targetSet.matches[activeIdx];
                             currentP1Player = activeMatch.t1Player && activeMatch.t1Player !== "미정" ? activeMatch.t1Player : "-";
                             currentP2Player = activeMatch.t2Player && activeMatch.t2Player !== "미정" ? activeMatch.t2Player : "-";
+                            t1Pos = activeMatch.t1Pos || "";
+                            t2Pos = activeMatch.t2Pos || "";
                         }
                     }
                 }
 
-                document.getElementById('set-title').innerText = "[" + activeSetName + "]";
-                document.getElementById('t1-player').innerText = currentP1Player;
-                document.getElementById('t2-player').innerText = currentP2Player;
+                document.getElementById('set-title').innerText = "[" + activeSetName + " - " + activeIdx + "경기]";
+                
+                // 위치와 종족 조합 표기 (예: 9T, 3Z)
+                document.getElementById('t1-player').innerText = formatPlayerDisplay(currentP1Player, t1Pos);
+                document.getElementById('t2-player').innerText = formatPlayerDisplay(currentP2Player, t2Pos);
             });
         };
+
+        function formatPlayerDisplay(name, pos) {
+            if (name === "-") return "-";
+            let raceFull = playerRaceMap[name] || "";
+            let raceInitial = raceFull === "프로토스" ? "P" : (raceFull === "테란" ? "T" : (raceFull === "저그" ? "Z" : ""));
+            let badge = (pos ? pos : "") + raceInitial;
+            return badge ? `${name} (${badge})` : name;
+        }
     </script>
 </head>
 <body class="flex items-start justify-start p-2">
     
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans">
-        <!-- 상단 세트 정보 타이틀 바 -->
-        <div class="bg-[#141518] border-b border-[#2c2d33] py-1 text-center flex items-center justify-center gap-2">
-            <span id="set-title" class="text-[#00FFA3] text-xs font-black tracking-wider">[1세트]</span>
-            <span class="text-gray-300 text-[11px] font-bold">스타크래프트 프로리그</span>
+        <!-- 상단 세트 및 대회 이름 타이틀 바 (폰트 크기 확대) -->
+        <div class="bg-[#141518] border-b border-[#2c2d33] py-1 px-2 text-center flex items-center justify-center gap-2">
+            <span id="set-title" class="text-[#00FFA3] text-xs font-black tracking-wider">[1세트 - 1경기]</span>
+            <span id="league-title" class="text-gray-200 text-xs font-bold truncate">스타크래프트 프로리그</span>
         </div>
 
-        <!-- 팀 이름 및 스코어 영역 -->
-        <div class="grid grid-cols-5 text-xs font-black text-center items-center h-8">
+        <!-- 팀 이름 및 스코어 영역 (폰트 크기 및 높이 확대) -->
+        <div class="grid grid-cols-5 text-sm font-black text-center items-center h-9">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
-                <span id="t1-name" class="truncate">TEAM 이름</span>
+                <span id="t1-name" class="truncate text-base font-black">TEAM 이름</span>
             </div>
-            <div class="col-span-1 bg-[#1b1c20] text-[#00FFA3] text-sm font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
+            <div class="col-span-1 bg-[#1b1c20] text-[#00FFA3] text-lg font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
                 <span id="p1Score">0</span>
-                <span class="text-gray-500 mx-0.5">:</span>
+                <span class="text-gray-500 mx-1">:</span>
                 <span id="p2Score">0</span>
             </div>
             <div id="t2-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #6a1b1b;">
-                <span id="t2-name" class="truncate">TEAM 이름</span>
+                <span id="t2-name" class="truncate text-base font-black">TEAM 이름</span>
             </div>
         </div>
 
-        <!-- 넓어진 사다리꼴 빈 공간의 양옆 밑바닥에 걸쳐지는 선수 이름 영역 -->
+        <!-- 선수 이름 영역 (글씨 크기 키움) -->
         <div class="player-footer">
-            <div class="w-32 text-left truncate text-blue-300 pl-1">
+            <div class="w-36 text-left truncate text-blue-300 pl-1">
                 <span id="t1-player">홍길동</span>
             </div>
-            <div class="w-32 text-right truncate text-red-300 pr-1">
+            <div class="w-36 text-right truncate text-red-300 pr-1">
                 <span id="t2-player">홍길동</span>
             </div>
         </div>
