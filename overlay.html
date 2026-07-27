@@ -61,7 +61,7 @@
                     let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
                     let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
 
-                    // 등록된 모든 세트(묶음) 대진표를 오른쪽에 동적으로 나란히 생성
+                    // 등록된 모든 세트(묶음) 대진표를 우측으로 나란히 생성 및 갱신
                     if (ms.matchSetsList) {
                         let wrapper = document.getElementById('sets-wrapper');
                         wrapper.innerHTML = '';
@@ -93,8 +93,9 @@
                                 let t1RaceClass = getRaceClass(p1);
                                 let t2RaceClass = getRaceClass(p2);
 
+                                // 승리 시 [승] 표시 적용
                                 let t1WinMark = (winner === "t1") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
-                                let t2WinMark = (winner === "t2") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
+                                let t2WinMark = (winner === "winner" || winner === "t2") ? "<span class='text-[#00FFA3] ml-1 font-black'>[승]</span>" : "";
 
                                 bodyHtml += `
                                     <div class="flex items-center justify-between px-3 py-1.5 mb-1 rounded border border-[#2c2d33] text-xs font-bold bg-[#141518]/80">
