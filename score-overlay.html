@@ -7,15 +7,14 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 하단 좌우가 사다리꼴 모양으로 빗겨 파인 클리핑 마스크 및 디자인 */
         .minimap-scoreboard {
             width: 320px;
             background: rgba(15, 17, 21, 0.92);
             border: 2px solid #2c2d33;
             box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-            /* 하단 좌우 코너를 사다리꼴 형태로 깎아냄 */
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), calc(100% - 35px) 100%, 35px 100%, 0 calc(100% - 28px));
             position: relative;
+            transition: opacity 0.3s ease;
         }
     </style>
     <script type="module">
@@ -50,7 +49,17 @@
                 const data = snapshot.val() || {};
                 let ms = data.matchState || {};
                 
-                // 1. 팀 이름 및 컬러
+                // [표시 토글 제어] 콘솔에서 숨김으로 지정하면 오버레이 전체를 투명하게 만듦
+                let scoreboardEl = document.getElementById('scoreboard-wrapper');
+                if (ms.scoreVisible === false) {
+                    scoreboardEl.style.opacity = '0';
+                    scoreboardEl.style.pointerEvents = 'none';
+                    return;
+                } else {
+                    scoreboardEl.style.opacity = '1';
+                    scoreboardEl.style.pointerEvents = 'auto';
+                }
+
                 let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
                 let t1Name = teamNames.team1 || "1팀";
                 let t2Name = teamNames.team2 || "2팀";
@@ -62,23 +71,19 @@
                 document.getElementById('t1-box').style.backgroundColor = t1Color;
                 document.getElementById('t2-box').style.backgroundColor = t2Color;
 
-                // 2. 스코어 자동 반영
                 document.getElementById('p1Score').innerText = ms.p1Score !== undefined ? ms.p1Score : 0;
                 document.getElementById('p2Score').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
 
-                // 3. 현재 활성화된 세트 및 출전 선수 찾기
                 let activeSetName = "1세트";
                 let currentP1Player = "-";
                 let currentP2Player = "-";
 
                 if (ms.matchSetsObj) {
-                    // 가장 최근에 입력되었거나 첫 번째로 진행 중인 세트의 첫 번째 경기(또는 활성 경기) 정보를 매칭
                     let setsArray = Object.values(ms.matchSetsObj);
                     if (setsArray.length > 0) {
-                        let targetSet = setsArray[0]; // 예시로 첫 세트 기준 (원하시는 세트로 확장 가능)
+                        let targetSet = setsArray[0];
                         activeSetName = targetSet.name.replace(" (매치)", "");
                         
-                        // 대진표에서 첫 번째로 선수가 지정된 경기를 현재 매치로 표시
                         if (targetSet.matches) {
                             let matchEntries = Object.values(targetSet.matches);
                             let activeMatch = matchEntries.find(m => m.t1Player && m.t1Player !== "미정") || matchEntries[0];
@@ -99,16 +104,12 @@
 </head>
 <body class="flex items-start justify-start p-2">
     
-    <!-- 미니맵 맞춤형 사다리꼴 스코어보드 프레임 -->
-    <div class="minimap-scoreboard flex flex-col text-white font-sans overflow-hidden">
-        
-        <!-- 상단 세트 정보 타이틀 바 -->
+    <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans overflow-hidden">
         <div class="bg-[#141518] border-b border-[#2c2d33] py-1 text-center flex items-center justify-center gap-2">
             <span id="set-title" class="text-[#00FFA3] text-xs font-black tracking-wider">[1세트]</span>
             <span class="text-gray-300 text-[11px] font-bold">스타크래프트 프로리그</span>
         </div>
 
-        <!-- 팀 이름 및 스코어 영역 -->
         <div class="grid grid-cols-5 text-xs font-black text-center items-center h-8">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
                 <span id="t1-name" class="truncate">TEAM 이름</span>
@@ -123,7 +124,6 @@
             </div>
         </div>
 
-        <!-- 하단 현재 출전 선수 이름 영역 -->
         <div class="grid grid-cols-2 text-xs font-bold text-center items-center h-7 bg-[#0b0c0e] border-t border-[#2c2d33]">
             <div class="h-full flex items-center justify-center px-1 truncate text-blue-300 border-r border-[#2c2d33]">
                 <span id="t1-player" class="truncate">홍길동</span>
@@ -132,7 +132,6 @@
                 <span id="t2-player" class="truncate">홍길동</span>
             </div>
         </div>
-
     </div>
 
 </body>
