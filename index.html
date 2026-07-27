@@ -131,6 +131,16 @@
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
         };
 
+        // 색상 템플릿 프리셋 적용 함수
+        window.setTeamColorPreset = function(targetTeam, hexCode) {
+            if (targetTeam === 1) {
+                document.getElementById('input-team1-color').value = hexCode;
+            } else {
+                document.getElementById('input-team2-color').value = hexCode;
+            }
+            saveTeamNames();
+        };
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
@@ -532,8 +542,10 @@
                                         <th class="p-1.5 pb-2">현재 경기</th>
                                         <th class="p-1.5 pb-2">경기</th>
                                         <th class="p-1.5 pb-2">${team1Name} 선수</th>
+                                        <th class="p-1.5 pb-2">위치(진영)</th>
                                         <th class="p-1.5 pb-2">맵</th>
                                         <th class="p-1.5 pb-2">${team2Name} 선수</th>
+                                        <th class="p-1.5 pb-2">위치(진영)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
@@ -582,18 +594,20 @@
                         <td class="p-2"><input type="radio" name="active_match_set${setId}" value="${i}" ${isChecked?'checked':''} class="accent-[#00FFA3] cursor-pointer" title="현재 진행 중인 경기 지정"></td>
                         <td class="p-2 font-bold text-gray-400 whitespace-nowrap">${i}경기</td>
                         <td class="p-2 flex items-center justify-center gap-1">
-                            <select id="s${setId}-t1-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
+                            <select id="s${setId}-t1-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                             <label class="text-[10px] text-blue-400 flex items-center gap-0.5 cursor-pointer">
                                 <input type="radio" name="winner_s${setId}_m${i}" value="t1" ${m.winner==='t1'?'checked':''} class="accent-blue-500">승
                             </label>
                         </td>
+                        <td class="p-2"><input type="text" id="s${setId}-pos1-${i}" value="${m.t1Pos || ''}" placeholder="예: 1시" class="w-16 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
                         <td class="p-2"><select id="s${setId}-map-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select></td>
                         <td class="p-2 flex items-center justify-center gap-1">
                             <label class="text-[10px] text-red-400 flex items-center gap-0.5 cursor-pointer">
                                 <input type="radio" name="winner_s${setId}_m${i}" value="t2" ${m.winner==='t2'?'checked':''} class="accent-red-500">승
                             </label>
-                            <select id="s${setId}-t2-${i}" class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
+                            <select id="s${setId}-t2-${i}" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1.5 text-xs text-white"></select>
                         </td>
+                        <td class="p-2"><input type="text" id="s${setId}-pos2-${i}" value="${m.t2Pos || ''}" placeholder="예: 7시" class="w-16 bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-xs text-center text-white"></td>
                     `;
                     tbody.appendChild(tr);
 
@@ -692,6 +706,8 @@
                 let matchData = {
                     t1Player: t1El.value || "미정",
                     t2Player: document.getElementById('s' + setId + '-t2-' + i).value || "미정",
+                    t1Pos: document.getElementById('s' + setId + '-pos1-' + i).value || "",
+                    t2Pos: document.getElementById('s' + setId + '-pos2-' + i).value || "",
                     mapName: document.getElementById('s' + setId + '-map-' + i).value || "미정",
                     winner: winner
                 };
@@ -876,15 +892,35 @@
                     </div>
 
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
-                        <h4 class="text-xs font-bold text-gray-300 mb-2">팀 이름 및 색상 설정</h4>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                            <div class="flex items-center gap-2">
-                                <input type="color" id="input-team1-color" value="#1d3557" class="w-8 h-8 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
-                                <input type="text" id="input-team1-name" value="1팀" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white">
+                        <h4 class="text-xs font-bold text-gray-300 mb-2">팀 이름 및 색상 설정 (템플릿 선택 가능)</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                            <!-- 1팀 설정 -->
+                            <div class="flex flex-col gap-2 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="input-team1-color" value="#1d3557" class="w-8 h-8 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
+                                    <input type="text" id="input-team1-name" value="1팀" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-white">
+                                </div>
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="text-[10px] text-gray-400 self-center mr-1">템플릿:</span>
+                                    <button onclick="setTeamColorPreset(1, '#1d3557')" class="px-2 py-0.5 bg-blue-900 text-white rounded text-[10px] cursor-pointer">블루</button>
+                                    <button onclick="setTeamColorPreset(1, '#6a1b1b')" class="px-2 py-0.5 bg-red-900 text-white rounded text-[10px] cursor-pointer">레드</button>
+                                    <button onclick="setTeamColorPreset(1, '#1e4620')" class="px-2 py-0.5 bg-green-900 text-white rounded text-[10px] cursor-pointer">그린</button>
+                                    <button onclick="setTeamColorPreset(1, '#b7791f')" class="px-2 py-0.5 bg-yellow-700 text-white rounded text-[10px] cursor-pointer">골드</button>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <input type="color" id="input-team2-color" value="#6a1b1b" class="w-8 h-8 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
-                                <input type="text" id="input-team2-name" value="2팀" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white">
+                            <!-- 2팀 설정 -->
+                            <div class="flex flex-col gap-2 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="input-team2-color" value="#6a1b1b" class="w-8 h-8 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
+                                    <input type="text" id="input-team2-name" value="2팀" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-white">
+                                </div>
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="text-[10px] text-gray-400 self-center mr-1">템플릿:</span>
+                                    <button onclick="setTeamColorPreset(2, '#1d3557')" class="px-2 py-0.5 bg-blue-900 text-white rounded text-[10px] cursor-pointer">블루</button>
+                                    <button onclick="setTeamColorPreset(2, '#6a1b1b')" class="px-2 py-0.5 bg-red-900 text-white rounded text-[10px] cursor-pointer">레드</button>
+                                    <button onclick="setTeamColorPreset(2, '#1e4620')" class="px-2 py-0.5 bg-green-900 text-white rounded text-[10px] cursor-pointer">그린</button>
+                                    <button onclick="setTeamColorPreset(2, '#553c9a')" class="px-2 py-0.5 bg-purple-900 text-white rounded text-[10px] cursor-pointer">퍼플</button>
+                                </div>
                             </div>
                         </div>
                         <button id="btn-save-teams" class="w-full bg-[#2c2d33] hover:bg-[#3c3d44] text-white font-bold py-1.5 rounded-lg text-xs cursor-pointer">팀 정보 반영하기</button>
