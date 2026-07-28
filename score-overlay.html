@@ -9,26 +9,31 @@
         
         .minimap-scoreboard {
             width: 320px;
-            background: transparent;
+            background: #1b1c20;
             border: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
             position: relative;
         }
+
+        /* 꺼진 요소가 완전히 자리를 비우도록 처리 */
+        .row-hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="flex items-start justify-start p-0">
-    <div id="scoreboard-wrapper" class="minimap-scoreboard text-white font-sans bg-[#1b1c20]">
+    <div id="scoreboard-wrapper" class="minimap-scoreboard text-white font-sans">
         
         <!-- 1. 대회/경기 네임 (공지) -->
         <div id="row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0 overflow-hidden">
             <span id="text-title" class="text-[#00FFA3] font-black tracking-wider drop-shadow-md origin-center transition-all">[1세트]</span>
         </div>
         
-        <!-- 2. 팀이름 및 스코어 -->
-        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
-            <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-white" style="background-color: #1d3557;">
+        <!-- 2. 팀이름 및 스코어 (팀 로우) -->
+        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden">
+            <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white" style="background-color: #1d3557;">
                 <span id="text-team1" class="relative z-10 font-black drop-shadow-md origin-center transition-all">1팀</span>
             </div>
             <div id="bg-score-t1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]" style="background-color: #1d3557;">
@@ -39,14 +44,14 @@
                 <div class="absolute inset-0 bg-black/30"></div>
                 <span id="score-team2" class="relative z-10 text-white text-[14px] font-black drop-shadow-md">0</span>
             </div>
-            <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-white" style="background-color: #6a1b1b;">
+            <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white" style="background-color: #6a1b1b;">
                 <span id="text-team2" class="relative z-10 font-black drop-shadow-md origin-center transition-all">2팀</span>
             </div>
         </div>
 
-        <!-- 3. 선수이름 및 스코어 -->
-        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
-            <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-gray-200" style="background-color: #1d3557;">
+        <!-- 3. 선수이름 및 스코어 (선수 로우) -->
+        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden">
+            <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-gray-200" style="background-color: #1d3557;">
                 <div class="absolute inset-0 bg-black/30"></div>
                 <span id="text-player1" class="relative z-10 font-black drop-shadow-md origin-center transition-all">선수1</span>
             </div>
@@ -58,14 +63,14 @@
                 <div class="absolute inset-0 bg-black/50"></div>
                 <span id="score-player2" class="relative z-10 text-gray-100 text-[13px] font-black drop-shadow-md">0</span>
             </div>
-            <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-gray-200" style="background-color: #6a1b1b;">
+            <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-gray-200" style="background-color: #6a1b1b;">
                 <div class="absolute inset-0 bg-black/30"></div>
                 <span id="text-player2" class="relative z-10 font-black drop-shadow-md origin-center transition-all">선수2</span>
             </div>
         </div>
         
         <!-- 4. 위치표시 (하단 파인 다리 공간) -->
-        <div id="row-bottom" class="h-[35px] shrink-0 relative bg-[#0b0c0e] flex justify-between items-end px-2 pb-1" style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 76% 100%, 68% 0%, 32% 0%, 24% 100%, 0% 100%);">
+        <div id="row-bottom" class="h-[32px] shrink-0 relative bg-[#0b0c0e] flex justify-between items-end px-2 pb-1 overflow-hidden" style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 76% 100%, 68% 0%, 32% 0%, 24% 100%, 0% 100%);">
             <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;">P12</div>
             <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
         </div>
@@ -136,7 +141,7 @@
                 }
 
                 let manual = data.manualScore || {
-                    showTitle: true, showTeam: true, showTeamScore: true, showPlayer: true, showPlayerScore: true, showBottom: true,
+                    showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
                     title: "[1세트]", 
                     t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
                     p1Name: "선수1", p1Score: 0, p2Score: 0, p2Name: "선수2",
@@ -145,91 +150,35 @@
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                // 1. 공지 표시 여부
+                // 1. 공지 (Title Row)
                 let rowTitle = document.getElementById('row-title');
-                if (rowTitle) rowTitle.style.display = manual.showTitle ? 'flex' : 'none';
+                if (rowTitle) {
+                    if (manual.showTitle === false) rowTitle.classList.add('row-hidden');
+                    else rowTitle.classList.remove('row-hidden');
+                }
 
-                // 2. 팀 로우 전체 표시 여부 (팀명과 팀 점수가 모두 꺼졌거나 showTeam이 false면 행을 통째로 숨김)
+                // 2. 팀 로우 (Team Row) - showTeam 체크박스로 완전히 토글
                 let rowTeam = document.getElementById('row-team');
                 if (rowTeam) {
-                    if (manual.showTeam === false && manual.showTeamScore === false) {
-                        rowTeam.style.display = 'none';
-                    } else {
-                        rowTeam.style.display = 'grid';
-                        let bgT1 = document.getElementById('bg-team1');
-                        let bgT2 = document.getElementById('bg-team2');
-                        let bgScoreT1 = document.getElementById('bg-score-t1');
-                        let bgScoreT2 = document.getElementById('bg-score-t2');
-
-                        if (manual.showTeam === false) {
-                            if (bgT1) bgT1.style.display = 'none';
-                            if (bgT2) bgT2.style.display = 'none';
-                        } else {
-                            if (bgT1) bgT1.style.display = 'flex';
-                            if (bgT2) bgT2.style.display = 'flex';
-                        }
-
-                        if (manual.showTeamScore === false) {
-                            if (bgScoreT1) bgScoreT1.style.display = 'none';
-                            if (bgScoreT2) bgScoreT2.style.display = 'none';
-                        } else {
-                            if (bgScoreT1) bgScoreT1.style.display = 'flex';
-                            if (bgScoreT2) bgScoreT2.style.display = 'flex';
-                        }
-
-                        // 가로 칸 비율 동적 조정
-                        if (manual.showTeam === false && manual.showTeamScore !== false) {
-                            rowTeam.style.gridTemplateColumns = '0px 32px 32px 0px';
-                        } else if (manual.showTeamScore === false && manual.showTeam !== false) {
-                            rowTeam.style.gridTemplateColumns = '1fr 0px 0px 1fr';
-                        } else {
-                            rowTeam.style.gridTemplateColumns = '1fr 32px 32px 1fr';
-                        }
-                    }
+                    if (manual.showTeam === false) rowTeam.classList.add('row-hidden');
+                    else rowTeam.classList.remove('row-hidden');
                 }
 
-                // 3. 선수 로우 전체 표시 여부
+                // 3. 선수 로우 (Player Row) - showPlayer 체크박스로 완전히 토글
                 let rowPlayer = document.getElementById('row-player');
                 if (rowPlayer) {
-                    if (manual.showPlayer === false && manual.showPlayerScore === false) {
-                        rowPlayer.style.display = 'none';
-                    } else {
-                        rowPlayer.style.display = 'grid';
-                        let bgP1 = document.getElementById('bg-player1');
-                        let bgP2 = document.getElementById('bg-player2');
-                        let bgScoreP1 = document.getElementById('bg-score-p1');
-                        let bgScoreP2 = document.getElementById('bg-score-p2');
-
-                        if (manual.showPlayer === false) {
-                            if (bgP1) bgP1.style.display = 'none';
-                            if (bgP2) bgP2.style.display = 'none';
-                        } else {
-                            if (bgP1) bgP1.style.display = 'flex';
-                            if (bgP2) bgP2.style.display = 'flex';
-                        }
-
-                        if (manual.showPlayerScore === false) {
-                            if (bgScoreP1) bgScoreP1.style.display = 'none';
-                            if (bgScoreP2) bgScoreP2.style.display = 'none';
-                        } else {
-                            if (bgScoreP1) bgScoreP1.style.display = 'flex';
-                            if (bgScoreP2) bgScoreP2.style.display = 'flex';
-                        }
-
-                        if (manual.showPlayer === false && manual.showPlayerScore !== false) {
-                            rowPlayer.style.gridTemplateColumns = '0px 32px 32px 0px';
-                        } else if (manual.showPlayerScore === false && manual.showPlayer !== false) {
-                            rowPlayer.style.gridTemplateColumns = '1fr 0px 0px 1fr';
-                        } else {
-                            rowPlayer.style.gridTemplateColumns = '1fr 32px 32px 1fr';
-                        }
-                    }
+                    if (manual.showPlayer === false) rowPlayer.classList.add('row-hidden');
+                    else rowPlayer.classList.remove('row-hidden');
                 }
 
-                // 4. 하단 위치 표시 여부
+                // 4. 위치 로우 (Bottom Row)
                 let rowBottom = document.getElementById('row-bottom');
-                if (rowBottom) rowBottom.style.display = manual.showBottom ? 'flex' : 'none';
+                if (rowBottom) {
+                    if (manual.showBottom === false) rowBottom.classList.add('row-hidden');
+                    else rowBottom.classList.remove('row-hidden');
+                }
 
+                // 배경색 반영
                 ['bg-team1', 'bg-team2', 'bg-score-t1', 'bg-score-t2', 'bg-player1', 'bg-player2', 'bg-score-p1', 'bg-score-p2'].forEach(id => {
                     let el = document.getElementById(id);
                     if (el) {
@@ -237,6 +186,7 @@
                     }
                 });
 
+                // 텍스트 반영
                 renderTextFit('text-title', manual.title || "", 11);
                 renderTextFit('text-team1', manual.t1Name || "", 12);
                 let scT1 = document.getElementById('score-team1');
