@@ -1242,24 +1242,36 @@
                     </div>
 
                     <div class="border-t border-[#2c2d33] pt-4">
-                        <h3 class="text-sm font-bold text-yellow-400 mb-2">1단계: 구글 시트 DB 연동 및 웹 앱 배포</h3>
-                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">1단계: 구글 시트 DB 생성 및 작성 방법</h3>
+                        <ul class="list-disc pl-5 space-y-1.5 text-gray-300">
                             <li><b>시트 사본 생성:</b> <b>[⚙️ 3. 기본 설정]</b> 탭에서 <b>[📋 DB용 구글시트 초기버전 만들기]</b> 버튼을 눌러 본인 계정에 선수/맵 데이터 시트 사본을 생성합니다.</li>
-                            <li><b>Apps Script 편집기 열기:</b> 생성된 구글 시트 상단 메뉴에서 <b>[확장 프로그램] ➔ [Apps Script]</b>를 클릭합니다.</li>
-                            <li><b>웹 앱 배포하기:</b>
-                                <ol class="list-decimal pl-5 mt-1 space-y-0.5 text-gray-400">
-                                    <li>Apps Script 화면 우측 상단의 <b>[배포] ➔ [새 배포]</b>를 클릭합니다.</li>
-                                    <li>왼쪽 상단 톱니바퀴(유형 선택) 아이콘을 눌러 <b>[웹 앱]</b>을 선택합니다.</li>
-                                    <li>설명은 간단히 적고, <b>액세스 권한 있는 사용자</b>를 반드시 <b>[모든 사용자(Anyone)]</b>로 설정한 뒤 하단의 <b>[배포]</b> 버튼을 누릅니다. (권한 검토 창이 뜨면 본인 계정 선택 ➔ [고급] ➔ [안전하지 않음으로 이동]을 눌러 허용)</li>
-                                </ol>
+                            <li><b>시트 내용 채우기 (`players` 및 `maps` 탭):</b>
+                                <ul class="list-disc pl-5 mt-1 space-y-1 text-gray-400">
+                                    <li><b>선수(`players`):</b> 선수의 이름, 종족(프로토스/테란/저그), 이미지 주소(`img`) 칸을 채웁니다.</li>
+                                    <li><b>맵(`maps`):</b> 맵 이름과 맵 이미지 주소(`url`) 칸을 채웁니다.</li>
+                                    <li><b>💡 중요 (이미지 등록 방법):</b> 선수 프로필 사진이나 맵 이미지는 컴퓨터에 있는 파일을 바로 넣을 수 없습니다. <b>이미지를 웹(블로그, 이미지 호스팅, GitHub 등)에 업로드한 뒤 생성된 이미지 주소(URL)를 시트의 이미지 칸에 입력</b>해야 콘솔과 오버레이에 정상적으로 출력됩니다.</li>
+                                </ul>
                             </li>
-                            <li><b>URL 복사 및 연동:</b> 배포 완료 후 발급되는 <b>[웹 앱 URL]</b>(끝이 `/exec`로 끝나는 주소)을 복사합니다.</li>
-                            <li>콘솔창의 <b>[⚙️ 3. 기본 설정]</b> 탭으로 돌아와 <b>'내 구글 스프레드시트 연동 설정'</b> 칸에 해당 URL을 붙여넣고 <b>[URL 저장]</b>을 누르면 연동이 완료됩니다.</li>
                         </ul>
                     </div>
 
                     <div class="border-t border-[#2c2d33] pt-4">
-                        <h3 class="text-sm font-bold text-yellow-400 mb-2">2단계: 선수 및 맵 풀 구성</h3>
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">2단계: 구글 시트 웹 앱 배포 및 연동</h3>
+                        <ul class="list-disc pl-5 space-y-1.5 text-gray-300">
+                            <li><b>Apps Script 열기:</b> 생성된 구글 시트 상단 메뉴에서 <b>[확장 프로그램] ➔ [Apps Script]</b>를 클릭합니다.</li>
+                            <li><b>웹 앱 배포하기:</b>
+                                <ol class="list-decimal pl-5 mt-1 space-y-0.5 text-gray-400">
+                                    <li>우측 상단의 <b>[배포] ➔ [새 배포]</b>를 클릭합니다.</li>
+                                    <li>왼쪽 상단 톱니바퀴(유형 선택) 아이콘을 눌러 <b>[웹 앱]</b>을 선택합니다.</li>
+                                    <li>설명은 간단히 적고, <b>액세스 권한 있는 사용자</b>를 반드시 <b>[모든 사용자(Anyone)]</b>로 설정한 뒤 하단의 <b>[배포]</b> 버튼을 누릅니다. (권한 검토 창이 뜨면 본인 계정 선택 ➔ [고급] ➔ [안전하지 않음으로 이동]을 눌러 허용)</li>
+                                </ol>
+                            </li>
+                            <li><b>URL 복사 및 저장:</b> 배포 완료 후 발급되는 <b>[웹 앱 URL]</b>(끝이 `/exec`로 끝나는 주소)을 복사합니다. 콘솔의 <b>[⚙️ 3. 기본 설정]</b> 탭으로 돌아와 <b>'내 구글 스프레드시트 연동 설정'</b> 칸에 붙여넣고 [URL 저장]을 누릅니다.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">3단계: 선수 및 맵 풀 구성</h3>
                         <ul class="list-disc pl-5 space-y-1 text-gray-300">
                             <li><b>[👥 1. 선수 및 맵 선택]</b> 탭으로 이동합니다.</li>
                             <li>프로토스, 테란, 저그 종족별 구획으로 정돈된 선수 목록에서 이번 경기에 참가할 선수를 체크합니다.</li>
@@ -1269,7 +1281,7 @@
                     </div>
 
                     <div class="border-t border-[#2c2d33] pt-4">
-                        <h3 class="text-sm font-bold text-yellow-400 mb-2">3단계: 세트별 대진 설정 및 중계 진행</h3>
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">4단계: 세트별 대진 설정 및 중계 진행</h3>
                         <ul class="list-disc pl-5 space-y-1 text-gray-300">
                             <li><b>[⚔️ 2. 중계 대시보드]</b> 탭으로 이동합니다.</li>
                             <li>각 세트별(1세트, 2세트 등) 상세 대진 표에서 선수와 맵을 지정합니다.</li>
@@ -1279,7 +1291,7 @@
                     </div>
 
                     <div class="border-t border-[#2c2d33] pt-4">
-                        <h3 class="text-sm font-bold text-yellow-400 mb-2">4단계: OBS 스튜디오 오버레이 링크 연동</h3>
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">5단계: OBS 스튜디오 오버레이 링크 연동</h3>
                         <ul class="list-disc pl-5 space-y-1 text-gray-300">
                             <li>중계 대시보드 상단 및 각 제어부에 있는 <b>[링크 복사]</b> 버튼을 이용해 URL을 복사합니다.</li>
                             <li>OBS 스튜디오에서 <b>'브라우저 소스'</b>를 추가하고 복사한 URL을 붙여넣어 화면에 배치합니다.</li>
