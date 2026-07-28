@@ -7,7 +7,7 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 사다리꼴 파임 디자인을 박스 전체 최하단에 고정 적용 */
+        /* 스코어보드 전체 박스는 직사각형 유지 */
         .minimap-scoreboard {
             width: 320px;
             background: #1b1c20;
@@ -16,15 +16,19 @@
             display: flex;
             flex-direction: column;
             position: relative;
+        }
+
+        /* 하단 파츠 내부에서만 사다리꼴 빈 공간(Cutout)이 파이도록 설정 */
+        .bottom-cutout {
             clip-path: polygon(
                 0% 0%, 
                 100% 0%, 
-                100% calc(100% - 32px), 
-                76% calc(100% - 32px), 
-                68% 100%, 
-                32% 100%, 
-                24% calc(100% - 32px), 
-                0% calc(100% - 32px)
+                100% 100%, 
+                76% 100%, 
+                68% 0%, 
+                32% 0%, 
+                24% 100%, 
+                0% 100%
             );
         }
 
@@ -80,8 +84,8 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (하단 다리 공간) -->
-        <div id="row-bottom" class="h-[32px] shrink-0 relative bg-[#0b0c0e] flex justify-between items-end px-2 pb-1 overflow-hidden">
+        <!-- 4. 위치표시 (하단 파인 다리 공간에 사다리꼴 컷아웃 적용) -->
+        <div id="row-bottom" class="h-[35px] shrink-0 relative bg-[#0b0c0e] flex justify-between items-end px-2 pb-1 overflow-hidden bottom-cutout">
             <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;">P12</div>
             <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
         </div>
