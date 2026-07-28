@@ -53,13 +53,20 @@
         let leagueTitleText = "스타크래프트 프로리그";
 
         window.onload = function() {
-            const savedRoom = localStorage.getItem('starcraft_room_id');
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlRoom = urlParams.get('room');
             const savedPin = localStorage.getItem('starcraft_room_pin') || "";
             
-            if (savedRoom) {
-                verifyAndEnterRoom(savedRoom, savedPin, true);
+            if (urlRoom) {
+                document.getElementById('input-room-id').value = urlRoom;
+                verifyAndEnterRoom(urlRoom, savedPin, true);
             } else {
-                showLoginScreen();
+                const savedRoom = localStorage.getItem('starcraft_room_id');
+                if (savedRoom) {
+                    window.location.href = `?room=${savedRoom}`;
+                } else {
+                    showLoginScreen();
+                }
             }
 
             document.getElementById('btn-enter-room').addEventListener('click', async () => {
@@ -72,13 +79,18 @@
                 }
 
                 let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
+                
+                // 주소창에 ?room= 파라미터 업데이트 후 진입
+                const newUrl = `${window.location.pathname}?room=${roomId}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+
                 await verifyAndEnterRoom(roomId, pinInput, false);
             });
 
             document.getElementById('btn-logout').addEventListener('click', () => {
                 localStorage.removeItem('starcraft_room_id');
                 localStorage.removeItem('starcraft_room_pin');
-                location.reload();
+                window.location.href = window.location.pathname;
             });
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -162,7 +174,7 @@
                     if (isAutoLogin) {
                         localStorage.removeItem('starcraft_room_id');
                         localStorage.removeItem('starcraft_room_pin');
-                        showLoginScreen();
+                        window.location.href = window.location.pathname;
                     }
                     return;
                 }
@@ -984,7 +996,7 @@
         }
 
         function generateOverlayUrls(roomId) {
-            const currentUrl = window.location.href;
+            const currentUrl = window.location.href.split('?')[0];
             const baseUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '');
             document.getElementById('overlay-url-input').value = baseUrl + "/overlay.html?room=" + roomId;
             document.getElementById('score-url-input').value = baseUrl + "/score-overlay.html?room=" + roomId;
