@@ -13,24 +13,26 @@
             background: transparent;
             border: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            /* 새로 주신 이미지에 맞춰 사다리꼴 면적 축소 및 양옆 공간 확장 */
             clip-path: polygon(
                 0% 0%, 
                 100% 0%, 
                 100% 100%, 
-                78% 100%, 
-                68% 58%, 
-                32% 58%, 
-                22% 100%, 
+                76% 100%, 
+                66% 62%, 
+                34% 62%, 
+                24% 100%, 
                 0% 100%
             );
             position: relative;
         }
 
+        /* 양옆 다리 영역 폭을 90px에서 넓어진 비율에 맞춰 안정적으로 배치 */
         .leg-left {
             position: absolute;
             bottom: 4px;
-            left: 8px;
-            width: 90px;
+            left: 6px;
+            width: 86px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -40,8 +42,8 @@
         .leg-right {
             position: absolute;
             bottom: 4px;
-            right: 8px;
-            width: 90px;
+            right: 6px;
+            width: 86px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -66,6 +68,32 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+
+        // 글씨 길이에 따라 폰트 크기와 폭을 자동으로 맞춰주는 함수
+        function renderTextFit(id, text, defaultSize) {
+            let el = document.getElementById(id);
+            el.innerText = text;
+            el.style.whiteSpace = "nowrap";
+            
+            let len = text.length;
+            if (len >= 18) {
+                el.style.fontSize = (defaultSize - 2) + "px";
+                el.style.letterSpacing = "-1px";
+                el.style.transform = "scaleX(0.75)";
+            } else if (len >= 12) {
+                el.style.fontSize = (defaultSize - 1.5) + "px";
+                el.style.letterSpacing = "-0.5px";
+                el.style.transform = "scaleX(0.85)";
+            } else if (len >= 8) {
+                el.style.fontSize = (defaultSize - 0.5) + "px";
+                el.style.letterSpacing = "0px";
+                el.style.transform = "scaleX(0.95)";
+            } else {
+                el.style.fontSize = defaultSize + "px";
+                el.style.letterSpacing = "normal";
+                el.style.transform = "scaleX(1)";
+            }
+        }
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -96,13 +124,13 @@
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                // 1. 체크박스에 따른 표시/숨김 처리
+                // 1. 표시 설정 토글 반영
                 document.getElementById('row-title').style.display = manual.showTitle ? 'flex' : 'none';
                 document.getElementById('row-team').style.display = manual.showTeam ? 'grid' : 'none';
                 document.getElementById('row-player').style.display = manual.showPlayer ? 'grid' : 'none';
                 document.getElementById('row-bottom').style.display = manual.showBottom ? 'flex' : 'none';
 
-                // 2. 텍스트가 가려지지 않도록 컬러 배경을 가상 요소 겹치기 기법으로 세팅
+                // 2. 배경 색상 반영
                 document.getElementById('bg-team1').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('bg-team2').style.backgroundColor = teamNames.team2Color;
                 
@@ -115,18 +143,18 @@
                 document.getElementById('bg-score-p1').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('bg-score-p2').style.backgroundColor = teamNames.team2Color;
 
-                // 3. 수동 입력된 텍스트 및 점수 데이터 꽂아넣기
-                document.getElementById('text-title').innerText = manual.title || "";
+                // 3. 텍스트 삽입 (자동 폭 조정 포함)
+                renderTextFit('text-title', manual.title || "", 11);
                 
-                document.getElementById('text-team1').innerText = manual.t1Name || "";
+                renderTextFit('text-team1', manual.t1Name || "", 12);
                 document.getElementById('score-team1').innerText = manual.t1Score || "0";
                 document.getElementById('score-team2').innerText = manual.t2Score || "0";
-                document.getElementById('text-team2').innerText = manual.t2Name || "";
+                renderTextFit('text-team2', manual.t2Name || "", 12);
 
-                document.getElementById('text-player1').innerText = manual.p1Name || "";
+                renderTextFit('text-player1', manual.p1Name || "", 11.5);
                 document.getElementById('score-player1').innerText = manual.p1Score || "0";
                 document.getElementById('score-player2').innerText = manual.p2Score || "0";
-                document.getElementById('text-player2').innerText = manual.p2Name || "";
+                renderTextFit('text-player2', manual.p2Name || "", 11.5);
 
                 document.getElementById('text-pos1').innerText = manual.pos1 || "";
                 document.getElementById('text-pos2').innerText = manual.pos2 || "";
@@ -138,19 +166,18 @@
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans bg-[#1b1c20]">
         
         <!-- 1. 공지 (Title Row) -->
-        <div id="row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[20px] flex items-center justify-center shrink-0">
-            <span id="text-title" class="text-[#00FFA3] text-[11px] font-black tracking-wider"></span>
+        <div id="row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[20px] flex items-center justify-center shrink-0 overflow-hidden">
+            <span id="text-title" class="text-[#00FFA3] font-black tracking-wider drop-shadow-md origin-center transition-all"></span>
         </div>
         
         <!-- 2. 팀 로우 (Team Row) -->
-        <!-- grid-cols-[1fr_32px_32px_1fr] 로 칸 비율을 칼같이 통일 -->
-        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] text-sm font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
-            <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 truncate shadow text-white">
-                <span id="text-team1" class="relative z-10 truncate text-[12px] font-black drop-shadow-md"></span>
+        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
+            <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-white">
+                <span id="text-team1" class="relative z-10 font-black drop-shadow-md origin-center transition-all"></span>
             </div>
             
             <div id="bg-score-t1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
-                <div class="absolute inset-0 bg-black/30"></div> <!-- 어둡게 만드는 반투명 레이어 -->
+                <div class="absolute inset-0 bg-black/30"></div>
                 <span id="score-team1" class="relative z-10 text-white text-[14px] font-black drop-shadow-md">0</span>
             </div>
             
@@ -159,20 +186,20 @@
                 <span id="score-team2" class="relative z-10 text-white text-[14px] font-black drop-shadow-md">0</span>
             </div>
             
-            <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 truncate shadow text-white">
-                <span id="text-team2" class="relative z-10 truncate text-[12px] font-black drop-shadow-md"></span>
+            <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-white">
+                <span id="text-team2" class="relative z-10 font-black drop-shadow-md origin-center transition-all"></span>
             </div>
         </div>
 
         <!-- 3. 선수 로우 (Player Row) -->
-        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] text-sm font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
-            <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 truncate shadow text-gray-200">
+        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
+            <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-gray-200">
                 <div class="absolute inset-0 bg-black/30"></div>
-                <span id="text-player1" class="relative z-10 truncate text-[11.5px] font-black drop-shadow-md"></span>
+                <span id="text-player1" class="relative z-10 font-black drop-shadow-md origin-center transition-all"></span>
             </div>
             
             <div id="bg-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
-                <div class="absolute inset-0 bg-black/50"></div> <!-- 조금 더 어둡게 -->
+                <div class="absolute inset-0 bg-black/50"></div>
                 <span id="score-player1" class="relative z-10 text-gray-100 text-[13px] font-black drop-shadow-md">0</span>
             </div>
             
@@ -181,9 +208,9 @@
                 <span id="score-player2" class="relative z-10 text-gray-100 text-[13px] font-black drop-shadow-md">0</span>
             </div>
             
-            <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 truncate shadow text-gray-200">
+            <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-gray-200">
                 <div class="absolute inset-0 bg-black/30"></div>
-                <span id="text-player2" class="relative z-10 truncate text-[11.5px] font-black drop-shadow-md"></span>
+                <span id="text-player2" class="relative z-10 font-black drop-shadow-md origin-center transition-all"></span>
             </div>
         </div>
         
