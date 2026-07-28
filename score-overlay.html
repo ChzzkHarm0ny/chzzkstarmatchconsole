@@ -7,6 +7,7 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
+        /* 사다리꼴 파임 디자인을 박스 전체 최하단에 고정 적용 */
         .minimap-scoreboard {
             width: 320px;
             background: #1b1c20;
@@ -15,9 +16,19 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            clip-path: polygon(
+                0% 0%, 
+                100% 0%, 
+                100% calc(100% - 32px), 
+                76% calc(100% - 32px), 
+                68% 100%, 
+                32% 100%, 
+                24% calc(100% - 32px), 
+                0% calc(100% - 32px)
+            );
         }
 
-        /* 꺼진 요소가 완전히 자리를 비우도록 처리 */
+        /* 꺼진 요소는 공간을 남기지 않고 완전히 소멸 */
         .row-hidden {
             display: none !important;
         }
@@ -69,8 +80,8 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (하단 파인 다리 공간) -->
-        <div id="row-bottom" class="h-[32px] shrink-0 relative bg-[#0b0c0e] flex justify-between items-end px-2 pb-1 overflow-hidden" style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 76% 100%, 68% 0%, 32% 0%, 24% 100%, 0% 100%);">
+        <!-- 4. 위치표시 (하단 다리 공간) -->
+        <div id="row-bottom" class="h-[32px] shrink-0 relative bg-[#0b0c0e] flex justify-between items-end px-2 pb-1 overflow-hidden">
             <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;">P12</div>
             <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
         </div>
@@ -150,28 +161,28 @@
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                // 1. 공지 (Title Row)
+                // 1. 공지 토글
                 let rowTitle = document.getElementById('row-title');
                 if (rowTitle) {
                     if (manual.showTitle === false) rowTitle.classList.add('row-hidden');
                     else rowTitle.classList.remove('row-hidden');
                 }
 
-                // 2. 팀 로우 (Team Row) - showTeam 체크박스로 완전히 토글
+                // 2. 팀 로우 토글
                 let rowTeam = document.getElementById('row-team');
                 if (rowTeam) {
                     if (manual.showTeam === false) rowTeam.classList.add('row-hidden');
                     else rowTeam.classList.remove('row-hidden');
                 }
 
-                // 3. 선수 로우 (Player Row) - showPlayer 체크박스로 완전히 토글
+                // 3. 선수 로우 토글
                 let rowPlayer = document.getElementById('row-player');
                 if (rowPlayer) {
                     if (manual.showPlayer === false) rowPlayer.classList.add('row-hidden');
                     else rowPlayer.classList.remove('row-hidden');
                 }
 
-                // 4. 위치 로우 (Bottom Row)
+                // 4. 위치 로우 토글
                 let rowBottom = document.getElementById('row-bottom');
                 if (rowBottom) {
                     if (manual.showBottom === false) rowBottom.classList.add('row-hidden');
