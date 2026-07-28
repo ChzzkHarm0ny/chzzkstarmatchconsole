@@ -14,25 +14,20 @@
             border: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             
-            /* 
-             * 🛠️ [사다리꼴 파임 높이 조절하는 곳] 🛠️
-             * 아래 calc(100% - 15px) 에서 '15px' 숫자를 수정하세요!
-             * 예: 10px (아주 얕게 파임), 25px (더 깊게 파임)
-             */
+            /* 사다리꼴 파임 높이 (원하시는 대로 35px 적용) */
             clip-path: polygon(
                 0% 0%, 
                 100% 0%, 
                 100% 100%, 
                 76% 100%, 
-                68% calc(100% - 35px), /* 높이 조절 */
-                32% calc(100% - 35px), /* 높이 조절 */
+                68% calc(100% - 35px), 
+                32% calc(100% - 35px), 
                 24% 100%, 
                 0% 100%
             );
             position: relative;
         }
 
-        /* 양옆 다리 영역 폭 복구 및 위치 텍스트 제어 */
         .leg-left {
             position: absolute;
             bottom: 4px;
@@ -128,6 +123,7 @@
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
+                // [핵심 변경] display: none 대신 지우면 공간이 싹 사라지도록 처리 (Flex 밀착 구조)
                 document.getElementById('row-title').style.display = manual.showTitle ? 'flex' : 'none';
                 document.getElementById('row-team').style.display = manual.showTeam ? 'grid' : 'none';
                 document.getElementById('row-player').style.display = manual.showPlayer ? 'grid' : 'none';
@@ -161,6 +157,7 @@
     </script>
 </head>
 <body class="flex items-start justify-start p-0">
+    <!-- flex 뼈대 구조로 변경하여 껐을 때 빈 칸 없이 밀착되도록 함 -->
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans bg-[#1b1c20]">
         
         <!-- 1. 공지 (Title Row) -->
