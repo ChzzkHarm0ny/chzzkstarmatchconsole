@@ -14,7 +14,7 @@
             border: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             
-            /* 사다리꼴 파임 높이 (원하시는 대로 35px 적용) */
+            /* 사다리꼴 파임 높이 (35px 유지) */
             clip-path: polygon(
                 0% 0%, 
                 100% 0%, 
@@ -123,7 +123,7 @@
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                // [핵심 변경] display: none 대신 지우면 공간이 싹 사라지도록 처리 (Flex 밀착 구조)
+                // 표시 설정 토글 반영
                 document.getElementById('row-title').style.display = manual.showTitle ? 'flex' : 'none';
                 document.getElementById('row-team').style.display = manual.showTeam ? 'grid' : 'none';
                 document.getElementById('row-player').style.display = manual.showPlayer ? 'grid' : 'none';
@@ -157,16 +157,15 @@
     </script>
 </head>
 <body class="flex items-start justify-start p-0">
-    <!-- flex 뼈대 구조로 변경하여 껐을 때 빈 칸 없이 밀착되도록 함 -->
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans bg-[#1b1c20]">
         
         <!-- 1. 공지 (Title Row) -->
-        <div id="row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[20px] flex items-center justify-center shrink-0 overflow-hidden">
+        <div id="row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0 overflow-hidden">
             <span id="text-title" class="text-[#00FFA3] font-black tracking-wider drop-shadow-md origin-center transition-all"></span>
         </div>
         
-        <!-- 2. 팀 로우 (Team Row) -->
-        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
+        <!-- 2. 팀 로우 (Team Row) - flex-1을 주어 켜져 있는 칸들이 공간을 늘려서 가득 채우도록 함 -->
+        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] flex-1 font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
             <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-white">
                 <span id="text-team1" class="relative z-10 font-black drop-shadow-md origin-center transition-all"></span>
             </div>
@@ -186,8 +185,8 @@
             </div>
         </div>
 
-        <!-- 3. 선수 로우 (Player Row) -->
-        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
+        <!-- 3. 선수 로우 (Player Row) - flex-1 적용 -->
+        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] flex-1 font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
             <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden shadow text-gray-200">
                 <div class="absolute inset-0 bg-black/30"></div>
                 <span id="text-player1" class="relative z-10 font-black drop-shadow-md origin-center transition-all"></span>
@@ -209,8 +208,8 @@
             </div>
         </div>
         
-        <!-- 4. 하단 위치 (Bottom Leg Row) -->
-        <div id="row-bottom" class="flex-grow relative bg-[#0b0c0e]">
+        <!-- 4. 하단 위치 (Bottom Row) -->
+        <div id="row-bottom" class="h-[24px] shrink-0 relative bg-[#0b0c0e]">
             <div class="leg-left">
                 <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black w-full text-left tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
             </div>
