@@ -8,34 +8,52 @@
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
         .minimap-scoreboard {
-            width: 275px;
-            height: 98px;
-            background: rgba(15, 17, 21, 0.98);
-            border: 2px solid #3c3d44;
+            /* 첨부해주신 이미지의 전체 비율에 맞춰 너비와 높이 재조정 */
+            width: 320px;
+            height: 112px; 
+            background: rgba(15, 17, 21, 0.95);
+            /* 테두리 두께 및 그림자 효과 */
+            border-top: 2px solid #3c3d44;
+            border-left: 2px solid #3c3d44;
+            border-right: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            
+            /* 업로드하신 검은 이미지의 꺾임 각도와 파인 깊이를 1:1로 구현한 좌표 */
             clip-path: polygon(
-                0 0, 
-                100% 0, 
+                0% 0%, 
+                100% 0%, 
                 100% 100%, 
-                80% 100%,
-                68% calc(100% - 42px),
-                32% calc(100% - 42px),
-                20% 100%,
-                0 100%
+                78% 100%, 
+                68% 58%, 
+                32% 58%, 
+                22% 100%, 
+                0% 100%
             );
             position: relative;
         }
 
-        .player-footer {
+        /* 왼쪽 선수 명단 컨테이너 (모양 안쪽에 텍스트가 예쁘게 위치하도록 재배치) */
+        .player-left-container {
             position: absolute;
-            bottom: 2px;
-            left: 0;
-            right: 0;
-            height: 26px;
+            bottom: 6px;
+            left: 8px;
+            width: 90px;
             display: flex;
-            justify-content: space-between;
-            padding: 0 4px;
-            font-weight: 900;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 2px;
+        }
+        
+        /* 오른쪽 선수 명단 컨테이너 */
+        .player-right-container {
+            position: absolute;
+            bottom: 6px;
+            right: 8px;
+            width: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 2px;
         }
     </style>
     <script type="module">
@@ -88,9 +106,7 @@
 
                 document.getElementById('league-title').innerText = ms.leagueTitle || "대회이름";
                 
-                let teamNames = ms.teamNames || { team1: "선수1", team2: "선수2", team1Color: "#1d3557", team2Color: "#6a1b1b" };
-                document.getElementById('t1-name').innerText = teamNames.team1;
-                document.getElementById('t2-name').innerText = teamNames.team2;
+                let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
                 document.getElementById('t1-box').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('t2-box').style.backgroundColor = teamNames.team2Color;
 
@@ -114,19 +130,43 @@
                 }
 
                 let scorePos = ms.scorePos || { t1Pos: "", t2Pos: "" };
-                let p1Text = t1Players.map(p => formatPlayerDisplay(p, scorePos.t1Pos)).join(', ');
-                let p2Text = t2Players.map(p => formatPlayerDisplay(p, scorePos.t2Pos)).join(', ');
-
-                let t1El = document.getElementById('t1-player');
-                let t2El = document.getElementById('t2-player');
-                t1El.innerText = p1Text;
-                t2El.innerText = p2Text;
                 
-                // 다대다 팀전일 경우 공간 확보를 위해 폰트 축소
-                t1El.style.fontSize = t1Players.length > 1 ? "10px" : "13px";
-                t2El.style.fontSize = t2Players.length > 1 ? "10px" : "13px";
+                // 빈 칸과 미정 텍스트를 걸러내고 유효한 선수만 포맷팅
+                let p1List = t1Players.filter(p => p !== "-" && p !== "미정").map(p => formatPlayerDisplay(p, scorePos.t1Pos));
+                let p2List = t2Players.filter(p => p !== "-" && p !== "미정").map(p => formatPlayerDisplay(p, scorePos.t2Pos));
+
+                let isSoloMode = (ms.matchMode === 'solo');
+
+                if (isSoloMode) {
+                    document.getElementById('t1-name').innerText = p1List[0] || "선수1";
+                    document.getElementById('t2-name').innerText = p2List[0] || "선수2";
+                    document.getElementById('t1-player-container').innerHTML = "";
+                    document.getElementById('t2-player-container').innerHTML = "";
+                } else {
+                    document.getElementById('t1-name').innerText = teamNames.team1;
+                    document.getElementById('t2-name').innerText = teamNames.team2;
+                    
+                    let p1Chunks = chunkArray(p1List, 2);
+                    let p2Chunks = chunkArray(p2List, 2);
+
+                    // 다대다 선수 명단이 규격 안에 딱 맞게 들어가도록 폰트 및 여백 설정 유지
+                    let p1Html = p1Chunks.map(txt => `<div class="truncate text-blue-300 w-full text-left leading-tight" style="font-size: 11px; font-weight: 900; text-shadow: 1px 1px 2px black; letter-spacing: -0.5px;">${txt}</div>`).join('');
+                    let p2Html = p2Chunks.map(txt => `<div class="truncate text-red-300 w-full text-right leading-tight" style="font-size: 11px; font-weight: 900; text-shadow: 1px 1px 2px black; letter-spacing: -0.5px;">${txt}</div>`).join('');
+
+                    document.getElementById('t1-player-container').innerHTML = p1Html;
+                    document.getElementById('t2-player-container').innerHTML = p2Html;
+                }
             });
         };
+
+        // 배열을 지정한 개수(size)만큼 묶어주는 함수
+        function chunkArray(arr, size) {
+            let result = [];
+            for (let i = 0; i < arr.length; i += size) {
+                result.push(arr.slice(i, i + size).join(', '));
+            }
+            return result;
+        }
 
         function formatPlayerDisplay(name, pos) {
             if (!name || name === "미정" || name === "-") return "-";
@@ -139,12 +179,15 @@
 </head>
 <body class="flex items-start justify-start p-0">
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans">
+        <!-- 상단 대회이름 바 -->
         <div class="bg-[#141518] border-b border-[#2c2d33] py-0.5 px-2 text-center">
             <span id="league-title" class="text-[#00FFA3] text-xs font-black tracking-wider">대회이름</span>
         </div>
+        
+        <!-- 팀 이름 및 스코어 바 -->
         <div class="grid grid-cols-5 text-sm font-black text-center items-center h-8">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
-                <span id="t1-name" class="truncate text-xs font-black">선수1</span>
+                <span id="t1-name" class="truncate text-xs font-black">1팀</span>
             </div>
             <div class="col-span-1 bg-[#1b1c20] text-[#00FFA3] text-sm font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
                 <span id="p1Score">0</span>
@@ -152,17 +195,13 @@
                 <span id="p2Score">0</span>
             </div>
             <div id="t2-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #6a1b1b;">
-                <span id="t2-name" class="truncate text-xs font-black">선수2</span>
+                <span id="t2-name" class="truncate text-xs font-black">2팀</span>
             </div>
         </div>
-        <div class="player-footer flex items-end">
-            <div class="w-[85px] text-left truncate text-blue-300 pl-1 pb-1">
-                <span id="t1-player">-</span>
-            </div>
-            <div class="w-[85px] text-right truncate text-red-300 pr-1 pb-1">
-                <span id="t2-player">-</span>
-            </div>
-        </div>
+        
+        <!-- 동적으로 생성되는 플레이어 컨테이너 -->
+        <div id="t1-player-container" class="player-left-container"></div>
+        <div id="t2-player-container" class="player-right-container"></div>
     </div>
 </body>
 </html>
