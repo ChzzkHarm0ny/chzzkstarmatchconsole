@@ -694,6 +694,10 @@
         function updateVsMatchDropdownOptions() {
             let vsSelect = document.getElementById('vs-match-select');
             if(!vsSelect) return;
+            
+            // 현재 선택되어 있던 값 저장
+            let currentSelectedVal = vsSelect.value;
+
             vsSelect.innerHTML = '<option value="">-- 제작된 경기 목록에서 선택 --</option>';
 
             Object.values(matchSetsObj).forEach(setObj => {
@@ -709,6 +713,11 @@
                     }
                 }
             });
+
+            // 이전에 선택했던 값이 여전히 유효하다면 복원
+            if (currentSelectedVal) {
+                vsSelect.value = currentSelectedVal;
+            }
         }
 
         function updateVsPreview(t1Name, t2Name, mapName) {
@@ -778,12 +787,10 @@
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
 
-            // [핵심 수정] 대진 반영 시 콘솔 내의 VS 미리보기와 드롭다운 선택은 현재 경기로 갱신되되, 오버레이 송출은 건드리지 않음
             let activeMatch = matches[activeMatchIdx];
             if (activeMatch && (activeMatch.t1Player !== "미정" || activeMatch.t2Player !== "미정")) {
                 updateVsPreview(activeMatch.t1Player, activeMatch.t2Player, activeMatch.mapName);
                 
-                // 드롭다운도 해당 세트/경기로 자동 선택되게 연동
                 let vsSelect = document.getElementById('vs-match-select');
                 if(vsSelect) {
                     let targetVal = setId + "-" + activeMatchIdx;
