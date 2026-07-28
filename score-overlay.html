@@ -102,16 +102,20 @@
                 document.getElementById('row-player').style.display = manual.showPlayer ? 'grid' : 'none';
                 document.getElementById('row-bottom').style.display = manual.showBottom ? 'flex' : 'none';
 
-                // 2. 배경 색상 적용 (선수칸은 같은 팀 색상에 밝기를 줄여서 레퍼런스 이미지처럼 구분감 부여)
+                // 2. 텍스트가 가려지지 않도록 컬러 배경을 가상 요소 겹치기 기법으로 세팅
                 document.getElementById('bg-team1').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('bg-team2').style.backgroundColor = teamNames.team2Color;
                 
-                document.getElementById('bg-player1').style.backgroundColor = teamNames.team1Color;
-                document.getElementById('bg-player1').style.filter = "brightness(0.7)";
-                document.getElementById('bg-player2').style.backgroundColor = teamNames.team2Color;
-                document.getElementById('bg-player2').style.filter = "brightness(0.7)";
+                document.getElementById('bg-score-t1').style.backgroundColor = teamNames.team1Color;
+                document.getElementById('bg-score-t2').style.backgroundColor = teamNames.team2Color;
 
-                // 3. 입력된 텍스트 및 점수 삽입
+                document.getElementById('bg-player1').style.backgroundColor = teamNames.team1Color;
+                document.getElementById('bg-player2').style.backgroundColor = teamNames.team2Color;
+
+                document.getElementById('bg-score-p1').style.backgroundColor = teamNames.team1Color;
+                document.getElementById('bg-score-p2').style.backgroundColor = teamNames.team2Color;
+
+                // 3. 수동 입력된 텍스트 및 점수 데이터 꽂아넣기
                 document.getElementById('text-title').innerText = manual.title || "";
                 
                 document.getElementById('text-team1').innerText = manual.t1Name || "";
@@ -139,34 +143,47 @@
         </div>
         
         <!-- 2. 팀 로우 (Team Row) -->
-        <div id="row-team" class="grid grid-cols-[1fr_30px_30px_1fr] h-[26px] text-sm font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
-            <div id="bg-team1" class="h-full flex items-center justify-center px-1 truncate shadow text-white">
-                <span id="text-team1" class="truncate text-[12px] font-black drop-shadow-md"></span>
+        <!-- grid-cols-[1fr_32px_32px_1fr] 로 칸 비율을 칼같이 통일 -->
+        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] text-sm font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
+            <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 truncate shadow text-white">
+                <span id="text-team1" class="relative z-10 truncate text-[12px] font-black drop-shadow-md"></span>
             </div>
-            <div class="bg-[#24354d] text-white text-[14px] font-black h-full flex items-center justify-center border-r border-[#1b1c20]">
-                <span id="score-team1">0</span>
+            
+            <div id="bg-score-t1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
+                <div class="absolute inset-0 bg-black/30"></div> <!-- 어둡게 만드는 반투명 레이어 -->
+                <span id="score-team1" class="relative z-10 text-white text-[14px] font-black drop-shadow-md">0</span>
             </div>
-            <div class="bg-[#4d2424] text-white text-[14px] font-black h-full flex items-center justify-center border-l border-[#1b1c20]">
-                <span id="score-team2">0</span>
+            
+            <div id="bg-score-t2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
+                <div class="absolute inset-0 bg-black/30"></div>
+                <span id="score-team2" class="relative z-10 text-white text-[14px] font-black drop-shadow-md">0</span>
             </div>
-            <div id="bg-team2" class="h-full flex items-center justify-center px-1 truncate shadow text-white">
-                <span id="text-team2" class="truncate text-[12px] font-black drop-shadow-md"></span>
+            
+            <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 truncate shadow text-white">
+                <span id="text-team2" class="relative z-10 truncate text-[12px] font-black drop-shadow-md"></span>
             </div>
         </div>
 
         <!-- 3. 선수 로우 (Player Row) -->
-        <div id="row-player" class="grid grid-cols-[1fr_30px_30px_1fr] h-[26px] text-sm font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
-            <div id="bg-player1" class="h-full flex items-center justify-center px-1 truncate shadow text-gray-200">
-                <span id="text-player1" class="truncate text-[11.5px] font-black drop-shadow-md"></span>
+        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] text-sm font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
+            <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 truncate shadow text-gray-200">
+                <div class="absolute inset-0 bg-black/30"></div>
+                <span id="text-player1" class="relative z-10 truncate text-[11.5px] font-black drop-shadow-md"></span>
             </div>
-            <div class="bg-[#1c2a3e] text-gray-200 text-[13px] font-black h-full flex items-center justify-center border-r border-[#1b1c20]">
-                <span id="score-player1">0</span>
+            
+            <div id="bg-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
+                <div class="absolute inset-0 bg-black/50"></div> <!-- 조금 더 어둡게 -->
+                <span id="score-player1" class="relative z-10 text-gray-100 text-[13px] font-black drop-shadow-md">0</span>
             </div>
-            <div class="bg-[#3e1c1c] text-gray-200 text-[13px] font-black h-full flex items-center justify-center border-l border-[#1b1c20]">
-                <span id="score-player2">0</span>
+            
+            <div id="bg-score-p2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
+                <div class="absolute inset-0 bg-black/50"></div>
+                <span id="score-player2" class="relative z-10 text-gray-100 text-[13px] font-black drop-shadow-md">0</span>
             </div>
-            <div id="bg-player2" class="h-full flex items-center justify-center px-1 truncate shadow text-gray-200">
-                <span id="text-player2" class="truncate text-[11.5px] font-black drop-shadow-md"></span>
+            
+            <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 truncate shadow text-gray-200">
+                <div class="absolute inset-0 bg-black/30"></div>
+                <span id="text-player2" class="relative z-10 truncate text-[11.5px] font-black drop-shadow-md"></span>
             </div>
         </div>
         
