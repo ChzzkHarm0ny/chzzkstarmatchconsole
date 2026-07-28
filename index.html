@@ -213,6 +213,7 @@
                 alert("변경할 비밀번호를 올바르게 입력해주세요.");
                 return;
             }
+
             set(ref(db, "rooms/" + currentRoomId + "/password"), newPin).then(() => {
                 localStorage.setItem('starcraft_room_pin', newPin);
                 document.getElementById('input-new-room-pin').value = "";
@@ -240,6 +241,20 @@
             }
         };
 
+        // 수동 점수 컨트롤 함수 추가
+        window.changeManualScore = function(teamIdx, delta) {
+            if (!currentRoomId) return;
+            if (teamIdx === 1) {
+                let current = parseInt(document.getElementById('p1Score').innerText) || 0;
+                let newVal = Math.max(0, current + delta);
+                set(ref(db, "rooms/" + currentRoomId + "/matchState/p1Score"), newVal);
+            } else {
+                let current = parseInt(document.getElementById('p2Score').innerText) || 0;
+                let newVal = Math.max(0, current + delta);
+                set(ref(db, "rooms/" + currentRoomId + "/matchState/p2Score"), newVal);
+            }
+        };
+
         window.resetMatchSetData = function(setId) {
             if (confirm(matchSetsObj[setId].name + " 대진 설정을 초기화하시겠습니까?")) {
                 matchSetsObj[setId].matches = {};
@@ -248,7 +263,6 @@
                 saveMatchSetsConfigToFirebase();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
-                calculateAndDisplayScores();
                 alert("초기화되었습니다.");
             }
         };
@@ -345,6 +359,9 @@
                         updateVsPreview(t1ImgName, t2ImgName, ms.vsMatch.map?.name, p1Text, p2Text);
                     }
 
+                    document.getElementById('p1Score').innerText = ms.p1Score !== undefined ? ms.p1Score : 0;
+                    document.getElementById('p2Score').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
+
                     updateToggleButtonState('listVisible', 'btn-toggle-list', ms.listVisible);
                     updateToggleButtonState('scoreVisible', 'btn-toggle-score', ms.scoreVisible);
                     updateToggleButtonState('vsVisible', 'btn-toggle-vs', ms.vsVisible);
@@ -353,7 +370,6 @@
                     renderMatchSetTabs();
                     renderMatchSetPanels();
                     updateVsMatchDropdownOptions();
-                    calculateAndDisplayScores();
                 }
             });
         }
@@ -708,7 +724,6 @@
                 renderMatchSetTabs();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
-                calculateAndDisplayScores();
             }
         }
 
@@ -823,7 +838,7 @@
                             </table>
                         </div>
                         <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
-                            🎯 ${setObj.name} 대진 및 현재 경기(스코어) 반영하기
+                            🎯 ${setObj.name} 대진 및 현재 경기 반영하기
                         </button>
                     </div>
                 `;
@@ -905,7 +920,6 @@
             if(!selectElement) return;
             selectElement.innerHTML = '<option value="">' + defaultText + '</option>';
             
-            // [추가] - (공란) 옵션 명시적 추가
             let blankOpt = new Option("- (공란)", "-");
             if(selectedValue === "-") blankOpt.selected = true;
             selectElement.appendChild(blankOpt);
@@ -944,7 +958,6 @@
                     if(m) {
                         let t1Players = m.t1Players || [m.t1Player];
                         let t2Players = m.t2Players || [m.t2Player];
-                        // 드롭다운 표기 시 "-" 및 "미정"은 필터링하여 보여줌
                         let t1Str = t1Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
                         let t2Str = t2Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
                         let map = m.mapName || "미정";
@@ -1037,7 +1050,6 @@
             set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s);
             saveMatchSetsConfigToFirebase();
 
-            calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
 
             let activeMatch = matches[activeMatchIdx];
@@ -1061,7 +1073,7 @@
                 }
             }
 
-            alert(s.name + " 대진 및 스코어가 반영되었습니다! (VS 화면은 수동 송출 버튼을 눌러야 오버레이에 반영됩니다)");
+            alert(s.name + " 대진이 반영되었습니다! (VS 화면은 수동 송출 버튼을 누르세요)");
         };
 
         function saveScorePosState() {
@@ -1072,30 +1084,6 @@
             set(ref(db, "rooms/" + currentRoomId + "/matchState/scorePos"), { t1Pos, t2Pos }).then(() => {
                 alert("스코어보드 선수 위치가 적용되었습니다!");
             });
-        }
-
-        function calculateAndDisplayScores() {
-            let p1TotalScore = 0;
-            let p2TotalScore = 0;
-
-            Object.values(matchSetsObj).forEach(setObj => {
-                let matches = setObj.matches || {};
-                for (let i = 1; i <= setObj.matchesCount; i++) {
-                    let m = matches[i];
-                    if (m) {
-                        if (m.winner === 't1') p1TotalScore++;
-                        if (m.winner === 't2') p2TotalScore++;
-                    }
-                }
-            });
-
-            document.getElementById('p1Score').innerText = p1TotalScore;
-            document.getElementById('p2Score').innerText = p2TotalScore;
-
-            if (currentRoomId) {
-                set(ref(db, "rooms/" + currentRoomId + "/matchState/p1Score"), p1TotalScore);
-                set(ref(db, "rooms/" + currentRoomId + "/matchState/p2Score"), p2TotalScore);
-            }
         }
 
         function saveLeagueTitle() {
@@ -1150,7 +1138,6 @@
             let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
             
             let t1DataArr = t1Players.map(name => {
-                // [추가] 공란 데이터는 비워둠
                 if(name === "-") return { name: "-", race: "-", img: "" };
                 let obj = allPlayers.find(p => p.name === name) || { name: name, race: "미정", img: githubBase + encodeURIComponent(name) + ".png" };
                 return { name: obj.name, race: obj.race, img: obj.img };
@@ -1245,6 +1232,7 @@
                     <div class="flex justify-between items-center mb-4 pb-3 border-b border-[#2c2d33]">
                         <h3 class="text-sm font-bold text-[#00FFA3]">팀 설정, 참가 선수 및 맵 풀 관리</h3>
                     </div>
+
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-[#00FFA3] mb-2">스코어보드 대회/매치 이름 설정</h4>
                         <div class="flex gap-2 mb-2">
@@ -1252,6 +1240,7 @@
                             <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">대회명 적용</button>
                         </div>
                     </div>
+
                     <div id="team-setting-wrapper" class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-gray-300 mb-2">팀 이름 및 색상 설정 (템플릿 선택 가능)</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
@@ -1318,17 +1307,25 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
+                    <!-- [수정] 수동 점수 컨트롤 패널로 변경 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col gap-3">
                         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 (자동 집계)</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어 수동 컨트롤</h3>
+                                <span class="text-[10px] text-gray-400">(승패 자동 연동 해제됨)</span>
+                            </div>
                             <div class="flex items-center gap-6">
-                                <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
-                                    <span class="text-xs font-bold text-blue-400">P1 / Team 1</span>
-                                    <span class="text-2xl font-black text-[#00FFA3]" id="p1Score">0</span>
+                                <div class="flex items-center gap-2 bg-[#141518] px-3 py-1.5 rounded-xl border border-[#2c2d33]">
+                                    <span class="text-xs font-bold text-blue-400 mr-2">P1 / Team 1</span>
+                                    <button onclick="changeManualScore(1, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">-</button>
+                                    <span class="text-xl font-black text-[#00FFA3] w-6 text-center" id="p1Score">0</span>
+                                    <button onclick="changeManualScore(1, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">+</button>
                                 </div>
-                                <div class="flex items-center gap-3 bg-[#141518] px-4 py-2 rounded-xl border border-[#2c2d33]">
-                                    <span class="text-xs font-bold text-red-400">P2 / Team 2</span>
-                                    <span class="text-2xl font-black text-[#00FFA3]" id="p2Score">0</span>
+                                <div class="flex items-center gap-2 bg-[#141518] px-3 py-1.5 rounded-xl border border-[#2c2d33]">
+                                    <span class="text-xs font-bold text-red-400 mr-2">P2 / Team 2</span>
+                                    <button onclick="changeManualScore(2, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">-</button>
+                                    <span class="text-xl font-black text-[#00FFA3] w-6 text-center" id="p2Score">0</span>
+                                    <button onclick="changeManualScore(2, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">+</button>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
