@@ -177,7 +177,6 @@
             enterRoom(roomId);
         }
 
-        // 방 비밀번호 변경 함수
         function changeRoomPassword() {
             if (!currentRoomId) return;
             let newPin = document.getElementById('input-new-room-pin').value.trim();
@@ -1028,10 +1027,11 @@
                 </div>
             </h1>
 
-            <div class="flex gap-2 mb-6 border-b border-[#2c2d33] pb-3">
+            <div class="flex gap-2 mb-6 border-b border-[#2c2d33] pb-3 flex-wrap">
                 <button data-tab="roster" class="tab-btn bg-[#00FFA3] text-black px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">👥 1. 선수 및 맵 선택</button>
                 <button data-tab="match" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚔️ 2. 중계 대시보드</button>
                 <button data-tab="settings" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚙️ 3. 기본 설정 및 링크</button>
+                <button data-tab="guide" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">📖 4. 콘솔 사용법 설명서</button>
             </div>
 
             <div id="tab-roster" class="tab-content">
@@ -1205,7 +1205,6 @@
                     </div>
                 </div>
 
-                <!-- 비밀번호 변경 설정 박스 추가 -->
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                     <h3 class="text-sm font-bold text-[#00FFA3] mb-2">방 비밀번호(PIN) 변경</h3>
                     <p class="text-xs text-gray-400 mb-3">현재 방의 보안 비밀번호를 새로운 값으로 변경합니다.</p>
@@ -1230,6 +1229,50 @@
                     <div class="flex gap-2 mt-2">
                         <input type="text" id="input-user-gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-white">
                         <button id="btn-save-gas-url" class="bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold px-4 py-1.5 rounded text-xs whitespace-nowrap cursor-pointer">URL 저장</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 콘솔 사용법 설명서 탭 -->
+            <div id="tab-guide" class="tab-content hidden">
+                <div class="bg-[#1b1c20] p-6 rounded-xl border border-[#2c2d33] text-xs leading-relaxed space-y-6">
+                    <div>
+                        <h2 class="text-base font-black text-[#00FFA3] mb-2">📖 치치직 스타크래프트 중계 콘솔 사용 가이드</h2>
+                        <p class="text-gray-300">본 콘솔은 스타크래프트 내전 및 방송 중계 시 실시간 스코어보드, 매치리스트, 선수 소개(VS) 화면을 송출할 수 있는 웹 기반 중계 제어 시스템입니다.</p>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">1단계: 구글 시트 DB 연동 및 초기 설정</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                            <li><b>[⚙️ 3. 기본 설정]</b> 탭으로 이동합니다.</li>
+                            <li><b>[📋 DB용 구글시트 초기버전 만들기]</b> 버튼을 눌러 본인 계정에 선수/맵 데이터 시트 사본을 생성합니다.</li>
+                            <li>생성된 구글 시트를 웹에 배포(Apps Script)한 뒤, 발급된 웹 앱 URL을 <b>'내 구글 스프레드시트 연동 설정'</b> 칸에 붙여넣고 [URL 저장]을 누릅니다.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">2단계: 선수 및 맵 풀 구성 ([👥 1. 선수 및 맵 선택] 탭)</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                            <li>종족별(프로토스/테란/저그)로 구분된 선수 목록에서 이번 경기에 참가할 선수를 체크합니다.</li>
+                            <li>하단에서 1팀과 2팀에 소속될 선수를 확인하고 팀 이름을 설정한 뒤 <b>[팀 설정, 참가 선수 및 맵 구성 저장하기]</b>를 누릅니다.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">3단계: 세트별 대진 설정 및 중계 진행 ([⚔️ 2. 중계 대시보드] 탭)</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                            <li>각 세트별(1세트, 2세트 등)로 대진표에서 선수와 맵을 지정합니다.</li>
+                            <li>현재 진행 중인 경기에 라디오 버튼을 체크하고, 승리 팀에 '승' 체크를 한 뒤 <b>[대진 및 현재 경기 반영하기]</b>를 누르면 스코어가 자동으로 집계됩니다.</li>
+                            <li>미니맵 스코어보드 하단에 표시될 선수 위치(예: 9, 3)를 직접 입력하고 [위치 즉시 반영]을 누르면 오버레이에 즉시 반영됩니다.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">4단계: OBS 스튜디오 오버레이 링크 연동</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                            <li>중계 대시보드 상단 및 각 제어부에 있는 <b>[링크 복사]</b> 버튼을 이용해 URL을 복사합니다.</li>
+                            <li>OBS 스튜디오에서 <b>'브라우저 소스'</b>를 추가하고 복사한 URL을 붙여넣어 화면에 배치합니다. (배경은 자동으로 투명 처리되어 송출됩니다.)</li>
+                        </ul>
                     </div>
                 </div>
             </div>
