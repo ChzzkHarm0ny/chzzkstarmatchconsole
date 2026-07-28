@@ -8,6 +8,9 @@
         .race-badge-P { background-color: #FFE000; color: #000; }
         .race-badge-T { background-color: #00AFFF; color: #000; }
         .race-badge-Z { background-color: #FF4545; color: #fff; }
+        .race-P-text { color: #FFE000; }
+        .race-T-text { color: #00AFFF; }
+        .race-Z-text { color: #FF4545; }
         .active-match-row {
             background-color: rgba(0, 255, 163, 0.08) !important;
             border: 2px solid #00FFA3 !important;
@@ -22,7 +25,7 @@
             <p class="text-gray-400 text-sm mb-6">사용 중이신 <b>방 이름</b>을 입력하고 입장하세요.</p>
             <div class="max-w-xs mx-auto flex flex-col gap-3">
                 <input type="text" id="input-room-id" placeholder="방 이름 (예: broadcast)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
-                <input type="password" id="input-room-pin" placeholder="비밀번호 (선택사항, 신규 방만 설정)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <input type="password" id="input-room-pin" placeholder="비밀번호 (선택사항)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
                 <button id="btn-enter-room" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold py-2.5 rounded text-sm cursor-pointer">입장하기</button>
             </div>
         </div>
@@ -110,6 +113,7 @@
                 </div>
 
                 <div class="flex flex-col gap-6 mb-6">
+                    <!-- 매치리스트 대진 설정 패널 -->
                     <div id="match-sets-wrapper" class="w-full"></div>
 
                     <!-- 수동 스코어보드 입력 패널 -->
@@ -180,6 +184,7 @@
                         </button>
                     </div>
 
+                    <!-- VS 매치업 화면 제어 -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-[#00FFA3]">VS 매치업 화면 제어 (선수 소개 화면)</h3>
@@ -266,19 +271,13 @@
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const urlRoom = urlParams.get('room');
-            const savedPin = localStorage.getItem('starcraft_room_pin') || "";
             
             if (urlRoom) {
                 const roomInput = document.getElementById('input-room-id');
                 if(roomInput) roomInput.value = urlRoom;
-                verifyAndEnterRoom(urlRoom, savedPin, true);
+                verifyAndEnterRoom(urlRoom, "", true);
             } else {
-                const savedRoom = localStorage.getItem('starcraft_room_id');
-                if (savedRoom) {
-                    window.location.href = `?room=${savedRoom}`;
-                } else {
-                    showLoginScreen();
-                }
+                showLoginScreen();
             }
 
             const enterBtn = document.getElementById('btn-enter-room');
@@ -374,40 +373,25 @@
             const roomData = snapshot.val();
 
             if (roomData && roomData.password) {
-                if (pin && roomData.password !== pin) {
+                if (!isAutoLogin && pin && roomData.password !== pin) {
                     alert("비밀번호(PIN)가 일치하지 않습니다!");
-                    if (isAutoLogin) {
-                        localStorage.removeItem('starcraft_room_id');
-                        localStorage.removeItem('starcraft_room_pin');
-                        window.location.href = window.location.pathname;
-                    }
+                    showLoginScreen();
                     return;
                 }
-            } else {
+            } else if (!roomData) {
                 let finalPin = pin ? pin : "0000";
                 await set(ref(db, "rooms/" + roomId + "/password"), finalPin);
-                pin = finalPin;
             }
 
-            localStorage.setItem('starcraft_room_id', roomId);
-            localStorage.setItem('starcraft_room_pin', pin);
             enterRoom(roomId);
         }
 
-        function changeRoomPassword() {
-            if (!currentRoomId) return;
-            let newPin = document.getElementById('input-new-room-pin').value.trim();
-            if (!newPin || newPin.length < 2) { alert("비밀번호를 올바르게 입력해주세요."); return; }
-            set(ref(db, "rooms/" + currentRoomId + "/password"), newPin).then(() => {
-                localStorage.setItem('starcraft_room_pin', newPin);
-                alert("비밀번호가 변경되었습니다!");
-            });
-        }
-
-        window.setTeamColorPreset = function(targetTeam, hexCode) {
-            if (targetTeam === 1) document.getElementById('input-team1-color').value = hexCode;
-            else document.getElementById('input-team2-color').value = hexCode;
-            saveTeamNames();
+        window.changeManualScore = function(fieldId, delta) {
+            let el = document.getElementById(fieldId);
+            if(el) {
+                let current = parseInt(el.value) || 0;
+                el.value = Math.max(0, current + delta);
+            }
         };
 
         window.handleWinnerClick = function(elem) {
@@ -421,12 +405,100 @@
             }
         };
 
-        window.changeManualScore = function(fieldId, delta) {
-            let el = document.getElementById(fieldId);
-            if(el) {
-                let current = parseInt(el.value) || 0;
-                el.value = Math.max(0, current + delta);
+        window.changeMatchFormat = function(setId, matchIdx, newFormat) {
+            window.backupMatches(setId);
+            let s = matchSetsObj[setId];
+            if (!s.matches[matchIdx]) s.matches[matchIdx] = {};
+            let m = s.matches[matchIdx];
+            m.matchFormat = parseInt(newFormat);
+            m.t1Players = m.t1Players || [];
+            m.t2Players = m.t2Players || [];
+            while(m.t1Players.length < m.matchFormat) m.t1Players.push("미정");
+            while(m.t2Players.length < m.matchFormat) m.t2Players.push("미정");
+            renderMatchSetPanels();
+        };
+
+        window.adjustSetMatchesCount = function(setId, delta) {
+            if(window.backupMatches) window.backupMatches(setId);
+            let s = matchSetsObj[setId];
+            if(s) {
+                s.matchesCount += delta;
+                if(s.matchesCount < 1) s.matchesCount = 1;
+                if(s.matchesCount > 15) s.matchesCount = 15;
+                renderMatchSetPanels();
             }
+        };
+
+        window.backupMatches = function(setId) {
+            let s = matchSetsObj[setId];
+            if (!s) return;
+            let tempMatches = {};
+            for (let i = 1; i <= s.matchesCount; i++) {
+                let formatEl = document.getElementById('s' + setId + '-format-' + i);
+                if(!formatEl) continue;
+                let format = parseInt(formatEl.value);
+                let t1Players = [];
+                let t2Players = [];
+                for(let j=0; j<format; j++) {
+                    let t1p = document.getElementById(`s${setId}-t1-${i}-${j}`);
+                    let t2p = document.getElementById(`s${setId}-t2-${i}-${j}`);
+                    t1Players.push(t1p ? (t1p.value || "미정") : "미정");
+                    t2Players.push(t2p ? (t2p.value || "미정") : "미정");
+                }
+                let mapEl = document.getElementById('s' + setId + '-map-' + i);
+                let winner = "";
+                let radios = document.getElementsByName('winner_s' + setId + '_m' + i);
+                for(let r of radios) { if(r.checked) winner = r.value; }
+                
+                tempMatches[i] = {
+                    matchFormat: format,
+                    t1Players: t1Players,
+                    t2Players: t2Players,
+                    mapName: mapEl ? (mapEl.value || "미정") : "미정",
+                    winner: winner
+                };
+            }
+            s.matches = tempMatches;
+        };
+
+        window.applyMatchSet = function(setId) {
+            if (!currentRoomId) return;
+            if (window.backupMatches) window.backupMatches(setId);
+            let s = matchSetsObj[setId];
+            if(!s) return;
+            let matches = {};
+            let activeMatchIdx = 1;
+
+            let activeRadios = document.getElementsByName('active_match_set' + setId);
+            for(let ar of activeRadios) { if(ar.checked) activeMatchIdx = parseInt(ar.value); }
+
+            for (let i = 1; i <= s.matchesCount; i++) {
+                let formatEl = document.getElementById('s' + setId + '-format-' + i);
+                if (!formatEl) continue;
+                let format = parseInt(formatEl.value);
+                let t1Players = [], t2Players = [];
+                for(let j=0; j<format; j++) {
+                    let t1p = document.getElementById(`s${setId}-t1-${i}-${j}`);
+                    let t2p = document.getElementById(`s${setId}-t2-${i}-${j}`);
+                    t1Players.push(t1p ? (t1p.value || "미정") : "미정");
+                    t2Players.push(t2p ? (t2p.value || "미정") : "미정");
+                }
+                let mapEl = document.getElementById('s' + setId + '-map-' + i);
+                let winner = "";
+                let radios = document.getElementsByName('winner_s' + setId + '_m' + i);
+                for(let r of radios) { if(r.checked) winner = r.value; }
+
+                matches[i] = { matchFormat: format, t1Players, t2Players, mapName: mapEl ? (mapEl.value || "미정") : "미정", winner };
+            }
+
+            s.matches = matches;
+            s.activeMatchIdx = activeMatchIdx;
+            matchSetsObj[setId] = s;
+
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s);
+            saveMatchSetsConfigToFirebase();
+            updateVsMatchDropdownOptions();
+            alert(s.name + " 대진이 반영되었습니다!");
         };
 
         function switchTab(tabId) {
@@ -597,17 +669,7 @@
                 let data = await res.json();
                 allPlayers = data.players || [];
                 allMaps = data.maps || [];
-                
-                if(selectedRoster.length === 0 && team1Roster.length === 0 && team2Roster.length === 0 && !localStorage.getItem('starcraft_inited_' + currentRoomId)) {
-                    selectedRoster = [];
-                    team1Roster = [];
-                    team2Roster = [];
-                    selectedMapPool = [];
-                    localStorage.setItem('starcraft_inited_' + currentRoomId, "true");
-                }
-
                 renderSelectionUI();
-                renderMatchSetTabs();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
             } catch (e) {
@@ -624,79 +686,30 @@
             const container = document.getElementById('player-selection-container');
             if(!container || allPlayers.length === 0) return;
             container.innerHTML = '';
-
             let wrapper = document.createElement('div');
             wrapper.className = "flex flex-col gap-5";
-
             let checkSection = document.createElement('div');
             checkSection.className = "bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]";
+            checkSection.innerHTML = `<h4 class="text-xs font-bold text-[#00FFA3] mb-3">1. 이번 경기 참가 선수 체크</h4>`;
             
-            let playerHeader = document.createElement('div');
-            playerHeader.className = "flex justify-between items-center mb-3";
-            playerHeader.innerHTML = `
-                <h4 class="text-xs font-bold text-[#00FFA3]">1. 이번 경기 참가 선수 체크</h4>
-                <button id="btn-reset-players" class="bg-[#2c2d33] text-red-400 px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">🔄 초기화</button>
-            `;
-            checkSection.appendChild(playerHeader);
-            
-            let races = ['프로토스', '테란', '저그'];
-            let racesWrapper = document.createElement('div');
-            racesWrapper.className = "flex flex-col gap-4";
-
-            races.forEach(raceName => {
-                let racePlayers = allPlayers.filter(p => p.race === raceName);
-                if(racePlayers.length === 0) return;
-
-                let raceBox = document.createElement('div');
-                raceBox.className = "border border-[#2c2d33] rounded-xl p-3 bg-[#141518]";
-                
-                let raceHeader = document.createElement('div');
-                raceHeader.className = "text-xs font-black text-[#00FFA3] mb-2.5";
-                raceHeader.innerText = raceName;
-                raceBox.appendChild(raceHeader);
-
-                let raceGrid = document.createElement('div');
-                raceGrid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2";
-
-                racePlayers.forEach(p => {
-                    let isChecked = selectedRoster.includes(p.name);
-                    let card = document.createElement('div');
-                    card.className = "border rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#0b0c0e] border-[#2c2d33] opacity-40");
-                    card.onclick = () => {
-                        if (selectedRoster.includes(p.name)) {
-                            selectedRoster = selectedRoster.filter(n => n !== p.name);
-                            team1Roster = team1Roster.filter(n => n !== p.name);
-                            team2Roster = team2Roster.filter(n => n !== p.name);
-                        } else {
-                            selectedRoster.push(p.name);
-                            team1Roster.push(p.name);
-                        }
-                        renderPlayerSelectionGrid();
-                    };
-
-                    let imgSrc = p.img || "https://placehold.co/40x40/1b1c20/FFF?text=User";
-                    card.innerHTML = `
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
-                        <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]">
-                        <div class="truncate"><div class="text-xs font-bold text-white truncate">${p.name}</div></div>
-                    `;
-                    raceGrid.appendChild(card);
-                });
-                raceBox.appendChild(raceGrid);
-                racesWrapper.appendChild(raceBox);
+            let grid = document.createElement('div');
+            grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2";
+            allPlayers.forEach(p => {
+                let isChecked = selectedRoster.includes(p.name);
+                let card = document.createElement('div');
+                card.className = "border rounded-lg p-2 flex items-center gap-2 cursor-pointer " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#0b0c0e] border-[#2c2d33] opacity-40");
+                card.onclick = () => {
+                    if (selectedRoster.includes(p.name)) selectedRoster = selectedRoster.filter(n => n !== p.name);
+                    else selectedRoster.push(p.name);
+                    renderPlayerSelectionGrid();
+                    renderMatchSetPanels();
+                };
+                card.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none"><span class="text-xs font-bold text-white truncate">${p.name}</span>`;
+                grid.appendChild(card);
             });
-
-            checkSection.appendChild(racesWrapper);
+            checkSection.appendChild(grid);
             wrapper.appendChild(checkSection);
             container.appendChild(wrapper);
-
-            const resetBtn = document.getElementById('btn-reset-players');
-            if(resetBtn) {
-                resetBtn.onclick = () => {
-                    selectedRoster = []; team1Roster = []; team2Roster = [];
-                    renderPlayerSelectionGrid();
-                };
-            }
         }
 
         function renderMapGrid() {
@@ -708,7 +721,6 @@
             wrapper.innerHTML = `<h3 class="text-sm font-bold text-[#00FFA3]">3. 맵 풀 선택</h3>`;
             let grid = document.createElement('div');
             grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2";
-
             allMaps.forEach(m => {
                 let isChecked = selectedMapPool.includes(m.name);
                 let card = document.createElement('div');
@@ -717,6 +729,7 @@
                     if (selectedMapPool.includes(m.name)) selectedMapPool = selectedMapPool.filter(n => n !== m.name);
                     else selectedMapPool.push(m.name);
                     renderMapGrid();
+                    renderMatchSetPanels();
                 };
                 card.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none"><span class="text-xs font-bold text-white truncate">${m.name}</span>`;
                 grid.appendChild(card);
@@ -729,8 +742,6 @@
             if (!currentRoomId) return;
             Promise.all([
                 set(ref(db, "rooms/" + currentRoomId + "/matchState/selectedRoster"), selectedRoster),
-                set(ref(db, "rooms/" + currentRoomId + "/matchState/team1Roster"), team1Roster),
-                set(ref(db, "rooms/" + currentRoomId + "/matchState/team2Roster"), team2Roster),
                 set(ref(db, "rooms/" + currentRoomId + "/matchState/selectedMapPool"), selectedMapPool)
             ]).then(() => {
                 alert("저장되었습니다!");
@@ -748,6 +759,7 @@
                 btn.innerText = setObj.name;
                 btn.onclick = () => {
                     activeSetId = setObj.id;
+                    renderMatchSetTabs();
                     renderMatchSetPanels();
                 };
                 container.appendChild(btn);
@@ -763,11 +775,89 @@
 
             let panel = document.createElement('div');
             panel.className = "bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]";
-            panel.innerHTML = `<h3 class="text-sm font-bold text-[#00FFA3] mb-3">${setObj.name} 대진 설정</h3><div id="set-tbody-${setObj.id}" class="text-xs">대진 설정 패널</div>`;
+            panel.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-[#00FFA3]">${setObj.name} 상세 대진 설정</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400">경기 수:</span>
+                        <button onclick="window.adjustSetMatchesCount(${setObj.id}, -1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">-</button>
+                        <span class="text-xs font-black text-[#00FFA3]">${setObj.matchesCount}경기</span>
+                        <button onclick="window.adjustSetMatchesCount(${setObj.id}, 1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">+</button>
+                    </div>
+                </div>
+                <div class="overflow-y-auto mb-3" style="max-height: 400px;">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-[#2c2d33]">
+                                <th class="p-1.5">진행</th>
+                                <th class="p-1.5">경기</th>
+                                <th class="p-1.5">${team1Name} 진영</th>
+                                <th class="p-1.5">맵</th>
+                                <th class="p-1.5">${team2Name} 진영</th>
+                            </tr>
+                        </thead>
+                        <tbody id="set-tbody-${setObj.id}"></tbody>
+                    </table>
+                </div>
+                <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-xs cursor-pointer">📥 ${setObj.name} 대진 반영하기</button>
+            `;
             wrapper.appendChild(panel);
+
+            const tbody = document.getElementById(`set-tbody-${setObj.id}`);
+            if(!tbody) return;
+
+            for (let i = 1; i <= setObj.matchesCount; i++) {
+                let m = (setObj.matches && setObj.matches[i]) || {};
+                let format = m.matchFormat || 1;
+                let t1p = m.t1Players || ["미정"];
+                let t2p = m.t2Players || ["미정"];
+
+                let tr = document.createElement('tr');
+                tr.className = "border-b border-[#2c2d33] text-center";
+                tr.innerHTML = `
+                    <td class="p-2"><input type="radio" name="active_match_set${setObj.id}" value="${i}" ${i === 1 ? 'checked' : ''} class="accent-[#00FFA3]"></td>
+                    <td class="p-2 font-bold">${i}경기</td>
+                    <td class="p-2"><select id="s${setObj.id}-t1-${i}-0" class="bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-white w-28"></select></td>
+                    <td class="p-2"><select id="s${setObj.id}-map-${i}" class="bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-white w-28"></select></td>
+                    <td class="p-2"><select id="s${setObj.id}-t2-${i}-0" class="bg-[#0b0c0e] border border-[#2c2d33] rounded p-1 text-white w-28"></select></td>
+                `;
+                tbody.appendChild(tr);
+
+                let sel1 = document.getElementById(`s${setObj.id}-t1-${i}-0`);
+                let sel2 = document.getElementById(`s${setObj.id}-t2-${i}-0`);
+                let mapSel = document.getElementById(`s${setObj.id}-map-${i}`);
+
+                sel1.innerHTML = `<option value="">선수 선택</option><option value="-">-</option>`;
+                sel2.innerHTML = `<option value="">선수 선택</option><option value="-">-</option>`;
+                selectedRoster.forEach(name => {
+                    sel1.add(new Option(name, name, false, t1p[0] === name));
+                    sel2.add(new Option(name, name, false, t2p[0] === name));
+                });
+
+                mapSel.innerHTML = `<option value="">맵 선택</option>`;
+                selectedMapPool.forEach(mName => {
+                    mapSel.add(new Option(mName, mName, false, m.mapName === mName));
+                });
+            }
+            renderMatchSetTabs();
         }
 
-        function updateVsMatchDropdownOptions() {}
+        function updateVsMatchDropdownOptions() {
+            let vsSelect = document.getElementById('vs-match-select');
+            if(!vsSelect) return;
+            vsSelect.innerHTML = '<option value="">-- 제작된 경기 목록에서 선택 --</option>';
+            Object.values(matchSetsObj).forEach(setObj => {
+                let matches = setObj.matches || {};
+                for(let i=1; i<=setObj.matchesCount; i++) {
+                    let m = matches[i];
+                    if(m && m.t1Players) {
+                        let opt = new Option(`${setObj.name} - ${i}경기 [ ${m.t1Players[0]} vs ${m.t2Players[0]} / ${m.mapName} ]`, `${setObj.id}-${i}`);
+                        vsSelect.appendChild(opt);
+                    }
+                }
+            });
+        }
+
         function updateVsPreview() {}
         function saveVsMatchState() {}
 
