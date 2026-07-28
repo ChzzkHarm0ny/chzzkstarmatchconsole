@@ -13,21 +13,26 @@
             background: transparent;
             border: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            /* 새로 주신 이미지에 맞춰 사다리꼴 면적 축소 및 양옆 공간 확장 */
+            
+            /* 
+             * 🛠️ [사다리꼴 파임 높이 조절하는 곳] 🛠️
+             * 아래 calc(100% - 15px) 에서 '15px' 숫자를 수정하세요!
+             * 예: 10px (아주 얕게 파임), 25px (더 깊게 파임)
+             */
             clip-path: polygon(
                 0% 0%, 
                 100% 0%, 
                 100% 100%, 
                 76% 100%, 
-                66% 62%, 
-                34% 62%, 
+                68% calc(100% - 15px), /* 높이 조절 */
+                32% calc(100% - 15px), /* 높이 조절 */
                 24% 100%, 
                 0% 100%
             );
             position: relative;
         }
 
-        /* 양옆 다리 영역 폭을 90px에서 넓어진 비율에 맞춰 안정적으로 배치 */
+        /* 양옆 다리 영역 폭 복구 및 위치 텍스트 제어 */
         .leg-left {
             position: absolute;
             bottom: 4px;
@@ -69,7 +74,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 글씨 길이에 따라 폰트 크기와 폭을 자동으로 맞춰주는 함수
         function renderTextFit(id, text, defaultSize) {
             let el = document.getElementById(id);
             el.innerText = text;
@@ -124,26 +128,20 @@
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                // 1. 표시 설정 토글 반영
                 document.getElementById('row-title').style.display = manual.showTitle ? 'flex' : 'none';
                 document.getElementById('row-team').style.display = manual.showTeam ? 'grid' : 'none';
                 document.getElementById('row-player').style.display = manual.showPlayer ? 'grid' : 'none';
-                document.getElementById('row-bottom').style.display = manual.showBottom ? 'flex' : 'none';
+                document.getElementById('row-bottom').style.display = manual.showBottom ? 'block' : 'none';
 
-                // 2. 배경 색상 반영
                 document.getElementById('bg-team1').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('bg-team2').style.backgroundColor = teamNames.team2Color;
-                
                 document.getElementById('bg-score-t1').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('bg-score-t2').style.backgroundColor = teamNames.team2Color;
-
                 document.getElementById('bg-player1').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('bg-player2').style.backgroundColor = teamNames.team2Color;
-
                 document.getElementById('bg-score-p1').style.backgroundColor = teamNames.team1Color;
                 document.getElementById('bg-score-p2').style.backgroundColor = teamNames.team2Color;
 
-                // 3. 텍스트 삽입 (자동 폭 조정 포함)
                 renderTextFit('text-title', manual.title || "", 11);
                 
                 renderTextFit('text-team1', manual.t1Name || "", 12);
