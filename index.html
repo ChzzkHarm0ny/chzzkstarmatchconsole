@@ -130,6 +130,18 @@
                 }
             });
 
+            document.getElementById('btn-reset-all-room').addEventListener('click', () => {
+                if (confirm("⚠️ 정말로 이 방의 모든 데이터를 초기상태로 되돌리시겠습니까? (저장된 대진 및 설정이 모두 삭제됩니다)")) {
+                    if (currentRoomId) {
+                        remove(ref(db, "rooms/" + currentRoomId + "/matchState")).then(() => {
+                            localStorage.removeItem('starcraft_inited_' + currentRoomId);
+                            alert("방 데이터가 초기화되었습니다.");
+                            location.reload();
+                        });
+                    }
+                }
+            });
+
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
 
             document.getElementById('vs-match-select').addEventListener('change', (e) => {
@@ -377,7 +389,6 @@
                 allPlayers = data.players || [];
                 allMaps = data.maps || [];
                 
-                // 최초 연동 시 자동으로 전체 선택되지 않고 빈 상태로 시작하도록 변경
                 if(selectedRoster.length === 0 && team1Roster.length === 0 && team2Roster.length === 0 && !localStorage.getItem('starcraft_inited_' + currentRoomId)) {
                     selectedRoster = [];
                     team1Roster = [];
@@ -410,7 +421,15 @@
 
             let checkSection = document.createElement('div');
             checkSection.className = "bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]";
-            checkSection.innerHTML = '<h4 class="text-xs font-bold text-[#00FFA3] mb-3">1. 이번 경기 참가 선수 체크 (종족별 구분)</h4>';
+            
+            // 선수 선택 헤더 및 개별 초기화 버튼 추가
+            let playerHeader = document.createElement('div');
+            playerHeader.className = "flex justify-between items-center mb-3";
+            playerHeader.innerHTML = `
+                <h4 class="text-xs font-bold text-[#00FFA3]">1. 이번 경기 참가 선수 체크 (종족별 구분)</h4>
+                <button id="btn-reset-players" class="bg-[#2c2d33] hover:bg-red-500/20 text-red-400 px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer border border-red-500/30">🔄 선수 선택 초기화</button>
+            `;
+            checkSection.appendChild(playerHeader);
             
             let races = ['프로토스', '테란', '저그'];
             let raceConfig = {
@@ -522,6 +541,17 @@
             }
 
             container.appendChild(wrapper);
+
+            // 동적으로 생성된 선수 초기화 버튼 이벤트 바인딩
+            document.getElementById('btn-reset-players').onclick = () => {
+                if (confirm("참가 선수 선택을 모두 초기화(해제)하시겠습니까?")) {
+                    selectedRoster = [];
+                    team1Roster = [];
+                    team2Roster = [];
+                    renderPlayerSelectionGrid();
+                    alert("선수 선택이 초기화되었습니다.");
+                }
+            };
         }
 
         function togglePlayerParticipation(playerName) {
@@ -552,6 +582,18 @@
             if(!container || allMaps.length === 0) return;
             container.innerHTML = '';
 
+            let wrapper = document.createElement('div');
+            wrapper.className = "flex flex-col gap-3";
+
+            // 맵 선택 헤더 및 개별 초기화 버튼 추가
+            let mapHeader = document.createElement('div');
+            mapHeader.className = "flex justify-between items-center mb-1";
+            mapHeader.innerHTML = `
+                <h3 class="text-sm font-bold text-[#00FFA3]">3. 이번 경기에 사용할 맵 풀(Pool) 선택</h3>
+                <button id="btn-reset-maps" class="bg-[#2c2d33] hover:bg-red-500/20 text-yellow-400 px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer border border-yellow-500/30">🔄 맵 풀 초기화</button>
+            `;
+            wrapper.appendChild(mapHeader);
+
             let grid = document.createElement('div');
             grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2";
 
@@ -570,7 +612,17 @@
                 grid.appendChild(card);
             });
 
-            container.appendChild(grid);
+            wrapper.appendChild(grid);
+            container.appendChild(wrapper);
+
+            // 동적으로 생성된 맵 초기화 버튼 이벤트 바인딩
+            document.getElementById('btn-reset-maps').onclick = () => {
+                if (confirm("맵 풀 선택을 모두 초기화(해제)하시겠습니까?")) {
+                    selectedMapPool = [];
+                    renderMapGrid();
+                    alert("맵 풀이 초기화되었습니다.");
+                }
+            };
         }
 
         function toggleMapSelection(mapName) {
@@ -710,9 +762,30 @@
         window.adjustSetMatchesCount = function(setId, delta) {
             let s = matchSetsObj[setId];
             if(s) {
+                let tempMatches = {};
+                for (let i = 1; i <= s.matchesCount; i++) {
+                    let t1El = document.getElementById('s' + setId + '-t1-' + i);
+                    let t2El = document.getElementById('s' + setId + '-t2-' + i);
+                    let mapEl = document.getElementById('s' + setId + '-map-' + i);
+                    if (t1El) {
+                        let winner = "";
+                        let radios = document.getElementsByName('winner_s' + setId + '_m' + i);
+                        for(let r of radios) { if(r.checked) winner = r.value; }
+
+                        tempMatches[i] = {
+                            t1Player: t1El.value || "미정",
+                            t2Player: t2El ? (t2El.value || "미정") : "미정",
+                            mapName: mapEl ? (mapEl.value || "미정") : "미정",
+                            winner: winner
+                        };
+                    }
+                }
+                s.matches = tempMatches;
+
                 s.matchesCount += delta;
                 if(s.matchesCount < 1) s.matchesCount = 1;
                 if(s.matchesCount > 15) s.matchesCount = 15;
+
                 renderMatchSetPanels();
             }
         };
@@ -724,7 +797,7 @@
             const roomRef = ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId);
             onValue(roomRef, (snapshot) => {
                 let setData = snapshot.val() || {};
-                let matchesData = setData.matches || {};
+                let matchesData = matchSetsObj[setId]?.matches || setData.matches || {};
                 let activeMatchIdx = setData.activeMatchIdx || 1;
                 tbody.innerHTML = '';
 
@@ -1063,10 +1136,6 @@
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                     <div class="flex justify-between items-center mb-4 pb-3 border-b border-[#2c2d33]">
                         <h3 class="text-sm font-bold text-[#00FFA3]">팀 설정, 참가 선수 및 맵 풀 관리</h3>
-                        <div class="flex items-center gap-2">
-                            <button id="btn-reset-players" class="bg-[#2c2d33] hover:bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-red-500/30">🔄 선수 선택 초기화</button>
-                            <button id="btn-reset-maps" class="bg-[#2c2d33] hover:bg-red-500/20 text-yellow-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-yellow-500/30">🔄 맵 풀 초기화</button>
-                        </div>
                     </div>
 
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
@@ -1077,7 +1146,6 @@
                         </div>
                     </div>
 
-                    <!-- 팀 대항전 모드일 때만 노출되는 팀 이름 및 색상 설정 영역 -->
                     <div id="team-setting-wrapper" class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-gray-300 mb-2">팀 이름 및 색상 설정 (템플릿 선택 가능)</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
@@ -1115,7 +1183,6 @@
                         <div class="p-6 text-center text-xs text-gray-400">구글 시트 URL을 먼저 연동해 주세요.</div>
                     </div>
 
-                    <h3 class="text-sm font-bold text-[#00FFA3] mb-1">3. 이번 경기에 사용할 맵 풀(Pool) 선택</h3>
                     <div id="map-grid-container" class="mb-4">
                         <div class="p-6 text-center text-xs text-gray-400">구글 시트 URL을 먼저 연동해 주세요.</div>
                     </div>
@@ -1240,6 +1307,13 @@
                     </div>
                 </div>
 
+                <!-- 전체 초기화 버튼 추가 -->
+                <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-red-500/30">
+                    <h3 class="text-sm font-bold text-red-400 mb-2">⚠️ 방 전체 데이터 초기화</h3>
+                    <p class="text-xs text-gray-400 mb-3">현재 방의 모든 대진표, 스코어, 선수 선택 및 설정 데이터를 초기 상태로 되돌립니다.</p>
+                    <button id="btn-reset-all-room" class="w-full bg-red-600/80 hover:bg-red-600 text-white font-bold py-2 rounded text-xs cursor-pointer">방 전체 데이터 초기화하기</button>
+                </div>
+
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                     <h3 class="text-sm font-bold text-[#00FFA3] mb-2">구글 스프레드시트 데이터베이스(DB) 안내</h3>
                     <p class="text-xs text-gray-400 mb-3">콘솔에 연동할 선수 및 맵 데이터를 관리하는 기본 스프레드시트 사본을 생성할 수 있습니다.</p>
@@ -1259,7 +1333,6 @@
                 </div>
             </div>
 
-            <!-- 4. 콘솔 사용법 설명서 탭 -->
             <div id="tab-guide" class="tab-content hidden">
                 <div class="bg-[#1b1c20] p-6 rounded-xl border border-[#2c2d33] text-xs leading-relaxed space-y-6">
                     <div>
