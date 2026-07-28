@@ -46,6 +46,7 @@
             1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {} }
         };
         let activeSetId = 1;
+        let currentMatchMode = "team"; // 'team' 또는 'solo'
         let team1Name = "1팀";
         let team2Name = "2팀";
         let team1Color = "#1d3557";
@@ -79,8 +80,6 @@
                 }
 
                 let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
-                
-                // 주소창에 ?room= 파라미터 업데이트 후 진입
                 const newUrl = `${window.location.pathname}?room=${roomId}`;
                 window.history.pushState({ path: newUrl }, '', newUrl);
 
@@ -159,7 +158,7 @@
             document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
             
             document.getElementById('btn-save-gas-url').addEventListener('click', saveUserGasUrl);
-            document.getElementById('btn-save-match-mode').addEventListener('click', saveMatchMode);
+            document.getElementById('select-match-mode').addEventListener('change', saveMatchMode);
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
         };
 
@@ -284,8 +283,11 @@
 
                 if (data.matchState) {
                     let ms = data.matchState;
-                    if(ms.matchMode) document.getElementById('select-match-mode').value = ms.matchMode;
-                    toggleTeamPanelByMode(ms.matchMode || 'team');
+                    if(ms.matchMode) {
+                        currentMatchMode = ms.matchMode;
+                        document.getElementById('select-match-mode').value = currentMatchMode;
+                    }
+                    toggleTeamPanelByMode(currentMatchMode);
 
                     if(ms.selectedRoster) selectedRoster = ms.selectedRoster;
                     if(ms.team1Roster) team1Roster = ms.team1Roster;
@@ -357,12 +359,13 @@
         }
 
         function toggleTeamPanelByMode(mode) {
-            const teamPanel = document.getElementById('team-setting-panel');
-            if (teamPanel) {
+            currentMatchMode = mode;
+            const teamSettingWrapper = document.getElementById('team-setting-wrapper');
+            if (teamSettingWrapper) {
                 if (mode === 'solo') {
-                    teamPanel.classList.add('opacity-50', 'pointer-events-none');
+                    teamSettingWrapper.classList.add('hidden');
                 } else {
-                    teamPanel.classList.remove('opacity-50', 'pointer-events-none');
+                    teamSettingWrapper.classList.remove('hidden');
                 }
             }
         }
@@ -463,59 +466,62 @@
             checkSection.appendChild(racesWrapper);
             wrapper.appendChild(checkSection);
 
-            let teamSection = document.createElement('div');
-            teamSection.className = "grid grid-cols-1 sm:grid-cols-2 gap-4";
+            // 팀 대항전 모드일 때만 소속 배정 패널 표시
+            if (currentMatchMode === 'team') {
+                let teamSection = document.createElement('div');
+                teamSection.className = "grid grid-cols-1 sm:grid-cols-2 gap-4";
 
-            let t1Div = document.createElement('div');
-            t1Div.className = "bg-[#0b0c0e] p-3 rounded-xl border border-blue-500/30";
-            t1Div.innerHTML = `<h4 class="text-xs font-bold text-blue-400 mb-2">🛡️ [ ${team1Name} ] 소속 배정 (클릭시 팀 변경)</h4>`;
-            let t1List = document.createElement('div');
-            t1List.className = "flex flex-col gap-1.5 min-h-[80px]";
+                let t1Div = document.createElement('div');
+                t1Div.className = "bg-[#0b0c0e] p-3 rounded-xl border border-blue-500/30";
+                t1Div.innerHTML = `<h4 class="text-xs font-bold text-blue-400 mb-2">🛡️ [ ${team1Name} ] 소속 배정 (클릭시 팀 변경)</h4>`;
+                let t1List = document.createElement('div');
+                t1List.className = "flex flex-col gap-1.5 min-h-[80px]";
 
-            let t2Div = document.createElement('div');
-            t2Div.className = "bg-[#0b0c0e] p-3 rounded-xl border border-red-500/30";
-            t2Div.innerHTML = `<h4 class="text-xs font-bold text-red-400 mb-2">⚔️ [ ${team2Name} ] 소속 배정 (클릭시 팀 변경)</h4>`;
-            let t2List = document.createElement('div');
-            t2List.className = "flex flex-col gap-1.5 min-h-[80px]";
+                let t2Div = document.createElement('div');
+                t2Div.className = "bg-[#0b0c0e] p-3 rounded-xl border border-red-500/30";
+                t2Div.innerHTML = `<h4 class="text-xs font-bold text-red-400 mb-2">⚔️ [ ${team2Name} ] 소속 배정 (클릭시 팀 변경)</h4>`;
+                let t2List = document.createElement('div');
+                t2List.className = "flex flex-col gap-1.5 min-h-[80px]";
 
-            selectedRoster.forEach(name => {
-                let p = allPlayers.find(x => x.name === name);
-                if(!p) return;
+                selectedRoster.forEach(name => {
+                    let p = allPlayers.find(x => x.name === name);
+                    if(!p) return;
 
-                let inTeam1 = team1Roster.includes(name);
-                let inTeam2 = team2Roster.includes(name);
-                if (!inTeam1 && !inTeam2) {
-                    team1Roster.push(name);
-                    inTeam1 = true;
-                }
+                    let inTeam1 = team1Roster.includes(name);
+                    let inTeam2 = team2Roster.includes(name);
+                    if (!inTeam1 && !inTeam2) {
+                        team1Roster.push(name);
+                        inTeam1 = true;
+                    }
 
-                let card = document.createElement('div');
-                card.className = "border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all " + (inTeam1 ? "bg-[#142233] border-blue-500/50" : "bg-[#331414] border-red-500/50");
-                card.onclick = () => togglePlayerTeam(name);
+                    let card = document.createElement('div');
+                    card.className = "border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all " + (inTeam1 ? "bg-[#142233] border-blue-500/50" : "bg-[#331414] border-red-500/50");
+                    card.onclick = () => togglePlayerTeam(name);
 
-                let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
-                let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
+                    let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
+                    let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
 
-                card.innerHTML = `
-                    <div class="flex items-center gap-2.5">
-                        <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
-                        <div>
-                            <div class="text-xs font-bold text-white">${p.name}</div>
-                            <span class="text-[9px] ${raceBadgeClass} px-1 rounded">${p.race}</span>
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
+                            <div>
+                                <div class="text-xs font-bold text-white">${p.name}</div>
+                                <span class="text-[9px] ${raceBadgeClass} px-1 rounded">${p.race}</span>
+                            </div>
                         </div>
-                    </div>
-                    <span class="text-[10px] text-gray-400 font-bold">${inTeam1 ? `▶ ${team2Name}로` : `${team1Name}로 ◀`}</span>
-                `;
+                        <span class="text-[10px] text-gray-400 font-bold">${inTeam1 ? `▶ ${team2Name}로` : `${team1Name}로 ◀`}</span>
+                    `;
 
-                if (inTeam1) t1List.appendChild(card);
-                else if (inTeam2) t2List.appendChild(card);
-            });
+                    if (inTeam1) t1List.appendChild(card);
+                    else if (inTeam2) t2List.appendChild(card);
+                });
 
-            t1Div.appendChild(t1List);
-            t2Div.appendChild(t2List);
-            teamSection.appendChild(t1Div);
-            teamSection.appendChild(t2Div);
-            wrapper.appendChild(teamSection);
+                t1Div.appendChild(t1List);
+                t2Div.appendChild(t2List);
+                teamSection.appendChild(t1Div);
+                teamSection.appendChild(t2Div);
+                wrapper.appendChild(teamSection);
+            }
 
             container.appendChild(wrapper);
         }
@@ -655,6 +661,9 @@
             if(!wrapper) return;
             wrapper.innerHTML = '';
 
+            let labelP1 = (currentMatchMode === 'solo') ? "선수 1" : team1Name;
+            let labelP2 = (currentMatchMode === 'solo') ? "선수 2" : team2Name;
+
             Object.values(matchSetsObj).forEach(setObj => {
                 let panel = document.createElement('div');
                 panel.id = 'match-set-panel-' + setObj.id;
@@ -680,9 +689,9 @@
                                     <tr class="text-gray-400 border-b border-[#2c2d33]">
                                         <th class="p-1.5 pb-2">현재 경기</th>
                                         <th class="p-1.5 pb-2">경기</th>
-                                        <th class="p-1.5 pb-2">${team1Name} 선수</th>
+                                        <th class="p-1.5 pb-2">${labelP1} 선수</th>
                                         <th class="p-1.5 pb-2">맵</th>
-                                        <th class="p-1.5 pb-2">${team2Name} 선수</th>
+                                        <th class="p-1.5 pb-2">${labelP2} 선수</th>
                                     </tr>
                                 </thead>
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
@@ -748,11 +757,11 @@
                     `;
                     tbody.appendChild(tr);
 
-                    let activeTeam1List = team1Roster.filter(name => selectedRoster.includes(name));
-                    let activeTeam2List = team2Roster.filter(name => selectedRoster.includes(name));
+                    let targetList1 = (currentMatchMode === 'solo') ? selectedRoster : team1Roster.filter(name => selectedRoster.includes(name));
+                    let targetList2 = (currentMatchMode === 'solo') ? selectedRoster : team2Roster.filter(name => selectedRoster.includes(name));
 
-                    populatePlayerSelect(document.getElementById(`s${setId}-t1-${i}`), "선수 선택", m.t1Player, activeTeam1List);
-                    populatePlayerSelect(document.getElementById(`s${setId}-t2-${i}`), "선수 선택", m.t2Player, activeTeam2List);
+                    populatePlayerSelect(document.getElementById(`s${setId}-t1-${i}`), "선수 선택", m.t1Player, targetList1);
+                    populatePlayerSelect(document.getElementById(`s${setId}-t2-${i}`), "선수 선택", m.t2Player, targetList2);
                     populateActiveMapSelect(document.getElementById(`s${setId}-map-${i}`), "맵 선택", m.mapName);
                 }
             }, { onlyOnce: true });
@@ -952,7 +961,13 @@
         function saveMatchMode() {
             if (!currentRoomId) return;
             let mode = document.getElementById('select-match-mode').value;
-            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchMode"), mode);
+            currentMatchMode = mode;
+            toggleTeamPanelByMode(mode);
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchMode"), mode).then(() => {
+                renderPlayerSelectionGrid();
+                renderMatchSetPanels();
+                alert("경기 진행 모드가 변경되었습니다!");
+            });
         }
 
         function saveVsMatchState() {
@@ -1064,7 +1079,8 @@
                         </div>
                     </div>
 
-                    <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
+                    <!-- 팀 대항전 모드일 때만 노출되는 팀 이름 및 색상 설정 영역 -->
+                    <div id="team-setting-wrapper" class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-gray-300 mb-2">팀 이름 및 색상 설정 (템플릿 선택 가능)</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                             <div class="flex flex-col gap-2 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
@@ -1153,11 +1169,11 @@
 
                         <div class="flex items-center justify-between gap-2 bg-[#0b0c0e] p-3 rounded-xl border border-[#2c2d33] text-xs">
                             <div class="flex items-center gap-2 flex-1">
-                                <span class="text-blue-400 font-bold whitespace-nowrap">P1(Team1) 위치:</span>
+                                <span class="text-blue-400 font-bold whitespace-nowrap">P1 위치:</span>
                                 <input type="text" id="input-score-t1-pos" placeholder="예: 9" class="w-20 bg-[#141518] border border-[#2c2d33] rounded p-1 text-center text-white">
                             </div>
                             <div class="flex items-center gap-2 flex-1">
-                                <span class="text-red-400 font-bold whitespace-nowrap">P2(Team2) 위치:</span>
+                                <span class="text-red-400 font-bold whitespace-nowrap">P2 위치:</span>
                                 <input type="text" id="input-score-t2-pos" placeholder="예: 3" class="w-20 bg-[#141518] border border-[#2c2d33] rounded p-1 text-center text-white">
                             </div>
                             <button id="btn-save-score-pos" class="bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold px-4 py-1.5 rounded text-xs whitespace-nowrap cursor-pointer">위치 즉시 반영</button>
