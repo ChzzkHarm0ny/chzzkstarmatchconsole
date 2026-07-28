@@ -7,7 +7,6 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 높이를 고정하지 않고 내용물에 따라 유동적으로 조절되도록 변경 */
         .minimap-scoreboard {
             width: 320px;
             background: transparent;
@@ -146,11 +145,11 @@
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                // 1. 공지 표시 여부 (display: none 처리하여 공간 완전 소멸)
+                // 1. 공지 표시 여부
                 let rowTitle = document.getElementById('row-title');
                 if (rowTitle) rowTitle.style.display = manual.showTitle ? 'flex' : 'none';
 
-                // 2. 팀 로우 표시 여부
+                // 2. 팀 로우 전체 표시 여부 (팀명과 팀 점수가 모두 꺼졌거나 showTeam이 false면 행을 통째로 숨김)
                 let rowTeam = document.getElementById('row-team');
                 if (rowTeam) {
                     if (manual.showTeam === false && manual.showTeamScore === false) {
@@ -159,14 +158,26 @@
                         rowTeam.style.display = 'grid';
                         let bgT1 = document.getElementById('bg-team1');
                         let bgT2 = document.getElementById('bg-team2');
-                        if (bgT1) bgT1.style.display = manual.showTeam ? 'flex' : 'none';
-                        if (bgT2) bgT2.style.display = manual.showTeam ? 'flex' : 'none';
-
                         let bgScoreT1 = document.getElementById('bg-score-t1');
                         let bgScoreT2 = document.getElementById('bg-score-t2');
-                        if (bgScoreT1) bgScoreT1.style.display = (manual.showTeamScore !== false) ? 'flex' : 'none';
-                        if (bgScoreT2) bgScoreT2.style.display = (manual.showTeamScore !== false) ? 'flex' : 'none';
 
+                        if (manual.showTeam === false) {
+                            if (bgT1) bgT1.style.display = 'none';
+                            if (bgT2) bgT2.style.display = 'none';
+                        } else {
+                            if (bgT1) bgT1.style.display = 'flex';
+                            if (bgT2) bgT2.style.display = 'flex';
+                        }
+
+                        if (manual.showTeamScore === false) {
+                            if (bgScoreT1) bgScoreT1.style.display = 'none';
+                            if (bgScoreT2) bgScoreT2.style.display = 'none';
+                        } else {
+                            if (bgScoreT1) bgScoreT1.style.display = 'flex';
+                            if (bgScoreT2) bgScoreT2.style.display = 'flex';
+                        }
+
+                        // 가로 칸 비율 동적 조정
                         if (manual.showTeam === false && manual.showTeamScore !== false) {
                             rowTeam.style.gridTemplateColumns = '0px 32px 32px 0px';
                         } else if (manual.showTeamScore === false && manual.showTeam !== false) {
@@ -177,7 +188,7 @@
                     }
                 }
 
-                // 3. 선수 로우 표시 여부
+                // 3. 선수 로우 전체 표시 여부
                 let rowPlayer = document.getElementById('row-player');
                 if (rowPlayer) {
                     if (manual.showPlayer === false && manual.showPlayerScore === false) {
@@ -186,13 +197,24 @@
                         rowPlayer.style.display = 'grid';
                         let bgP1 = document.getElementById('bg-player1');
                         let bgP2 = document.getElementById('bg-player2');
-                        if (bgP1) bgP1.style.display = manual.showPlayer ? 'flex' : 'none';
-                        if (bgP2) bgP2.style.display = manual.showPlayer ? 'flex' : 'none';
-
                         let bgScoreP1 = document.getElementById('bg-score-p1');
                         let bgScoreP2 = document.getElementById('bg-score-p2');
-                        if (bgScoreP1) bgScoreP1.style.display = (manual.showPlayerScore !== false) ? 'flex' : 'none';
-                        if (bgScoreP2) bgScoreP2.style.display = (manual.showPlayerScore !== false) ? 'flex' : 'none';
+
+                        if (manual.showPlayer === false) {
+                            if (bgP1) bgP1.style.display = 'none';
+                            if (bgP2) bgP2.style.display = 'none';
+                        } else {
+                            if (bgP1) bgP1.style.display = 'flex';
+                            if (bgP2) bgP2.style.display = 'flex';
+                        }
+
+                        if (manual.showPlayerScore === false) {
+                            if (bgScoreP1) bgScoreP1.style.display = 'none';
+                            if (bgScoreP2) bgScoreP2.style.display = 'none';
+                        } else {
+                            if (bgScoreP1) bgScoreP1.style.display = 'flex';
+                            if (bgScoreP2) bgScoreP2.style.display = 'flex';
+                        }
 
                         if (manual.showPlayer === false && manual.showPlayerScore !== false) {
                             rowPlayer.style.gridTemplateColumns = '0px 32px 32px 0px';
