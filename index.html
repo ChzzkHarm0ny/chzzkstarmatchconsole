@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK StarCraft Console - Room Login</title>
+    <title>CHZZK StarCraft Console - Secure Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         .race-badge-P { background-color: #FFE000; color: #000; }
@@ -18,7 +18,7 @@
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
@@ -54,25 +54,30 @@
 
         window.onload = function() {
             const savedRoom = localStorage.getItem('starcraft_room_id');
+            const savedPin = localStorage.getItem('starcraft_room_pin') || "";
+            
             if (savedRoom) {
-                enterRoom(savedRoom);
+                verifyAndEnterRoom(savedRoom, savedPin, true);
             } else {
                 showLoginScreen();
             }
 
-            document.getElementById('btn-enter-room').addEventListener('click', () => {
+            document.getElementById('btn-enter-room').addEventListener('click', async () => {
                 let roomInput = document.getElementById('input-room-id').value.trim();
+                let pinInput = document.getElementById('input-room-pin').value.trim();
+
                 if (!roomInput) {
                     alert("방 이름을 입력해주세요!");
                     return;
                 }
+
                 let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
-                localStorage.setItem('starcraft_room_id', roomId);
-                enterRoom(roomId);
+                await verifyAndEnterRoom(roomId, pinInput, false);
             });
 
             document.getElementById('btn-logout').addEventListener('click', () => {
                 localStorage.removeItem('starcraft_room_id');
+                localStorage.removeItem('starcraft_room_pin');
                 location.reload();
             });
 
@@ -131,6 +136,7 @@
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
             document.getElementById('btn-save-league-title').addEventListener('click', saveLeagueTitle);
             document.getElementById('btn-save-score-pos').addEventListener('click', saveScorePosState);
+            document.getElementById('btn-change-room-password').addEventListener('click', changeRoomPassword);
 
             document.getElementById('btn-toggle-list').addEventListener('click', () => toggleOverlayVisibility('listVisible', 'btn-toggle-list'));
             document.getElementById('btn-toggle-score').addEventListener('click', () => toggleOverlayVisibility('scoreVisible', 'btn-toggle-score'));
@@ -144,6 +150,48 @@
             document.getElementById('btn-save-match-mode').addEventListener('click', saveMatchMode);
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
         };
+
+        async function verifyAndEnterRoom(roomId, pin, isAutoLogin) {
+            const roomRef = ref(db, "rooms/" + roomId);
+            const snapshot = await get(roomRef);
+            const roomData = snapshot.val();
+
+            if (roomData && roomData.password) {
+                if (pin && roomData.password !== pin) {
+                    alert("비밀번호(PIN)가 일치하지 않습니다!");
+                    if (isAutoLogin) {
+                        localStorage.removeItem('starcraft_room_id');
+                        localStorage.removeItem('starcraft_room_pin');
+                        showLoginScreen();
+                    }
+                    return;
+                }
+            } else {
+                let finalPin = pin ? pin : "0000";
+                await set(ref(db, "rooms/" + roomId + "/password"), finalPin);
+                pin = finalPin;
+            }
+
+            localStorage.setItem('starcraft_room_id', roomId);
+            localStorage.setItem('starcraft_room_pin', pin);
+            enterRoom(roomId);
+        }
+
+        // 방 비밀번호 변경 함수
+        function changeRoomPassword() {
+            if (!currentRoomId) return;
+            let newPin = document.getElementById('input-new-room-pin').value.trim();
+            if (!newPin || newPin.length < 2) {
+                alert("변경할 비밀번호를 올바르게 입력해주세요.");
+                return;
+            }
+
+            set(ref(db, "rooms/" + currentRoomId + "/password"), newPin).then(() => {
+                localStorage.setItem('starcraft_room_pin', newPin);
+                document.getElementById('input-new-room-pin').value = "";
+                alert("방 비밀번호가 성공적으로 변경되었습니다!");
+            });
+        }
 
         window.setTeamColorPreset = function(targetTeam, hexCode) {
             if (targetTeam === 1) {
@@ -345,35 +393,63 @@
             container.innerHTML = '';
 
             let wrapper = document.createElement('div');
-            wrapper.className = "flex flex-col gap-4";
+            wrapper.className = "flex flex-col gap-5";
 
             let checkSection = document.createElement('div');
-            checkSection.className = "bg-[#0b0c0e] p-3 rounded-xl border border-[#2c2d33]";
-            checkSection.innerHTML = '<h4 class="text-xs font-bold text-[#00FFA3] mb-2">1. 이번 경기 참가 선수 체크</h4>';
+            checkSection.className = "bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]";
+            checkSection.innerHTML = '<h4 class="text-xs font-bold text-[#00FFA3] mb-3">1. 이번 경기 참가 선수 체크 (종족별 구분)</h4>';
             
-            let checkGrid = document.createElement('div');
-            checkGrid.className = "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2";
+            let races = ['프로토스', '테란', '저그'];
+            let raceConfig = {
+                '프로토스': { label: '⚡ 프로토스 (Protoss)', borderClass: 'border-yellow-500/30', headerColor: 'text-[#FFE000]', bgHeader: 'bg-yellow-500/10' },
+                '테란': { label: '🛡️ 테란 (Terran)', borderClass: 'border-blue-500/30', headerColor: 'text-[#00AFFF]', bgHeader: 'bg-blue-500/10' },
+                '저그': { label: '🔥 저그 (Zerg)', borderClass: 'border-red-500/30', headerColor: 'text-[#FF4545]', bgHeader: 'bg-red-500/10' }
+            };
 
-            allPlayers.forEach(p => {
-                let isChecked = selectedRoster.includes(p.name);
-                let card = document.createElement('div');
-                card.className = "border rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#141518] border-[#2c2d33] opacity-40");
-                card.onclick = () => togglePlayerParticipation(p.name);
+            let racesWrapper = document.createElement('div');
+            racesWrapper.className = "flex flex-col gap-4";
 
-                let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
-                let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
+            races.forEach(raceName => {
+                let racePlayers = allPlayers.filter(p => p.race === raceName);
+                if(racePlayers.length === 0) return;
 
-                card.innerHTML = `
-                    <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
-                    <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
-                    <div class="truncate">
-                        <div class="text-xs font-bold text-white truncate">${p.name}</div>
-                        <span class="text-[9px] ${raceBadgeClass} px-1 rounded">${p.race}</span>
-                    </div>
-                `;
-                checkGrid.appendChild(card);
+                let conf = raceConfig[raceName];
+                let raceBox = document.createElement('div');
+                raceBox.className = `border ${conf.borderClass} rounded-xl p-3 bg-[#141518]`;
+                
+                let raceHeader = document.createElement('div');
+                raceHeader.className = `text-xs font-black ${conf.headerColor} ${conf.bgHeader} px-3 py-1.5 rounded-lg mb-2.5`;
+                raceHeader.innerText = conf.label;
+                raceBox.appendChild(raceHeader);
+
+                let raceGrid = document.createElement('div');
+                raceGrid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2";
+
+                racePlayers.forEach(p => {
+                    let isChecked = selectedRoster.includes(p.name);
+                    let card = document.createElement('div');
+                    card.className = "border rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#0b0c0e] border-[#2c2d33] opacity-40");
+                    card.onclick = () => togglePlayerParticipation(p.name);
+
+                    let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
+                    let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
+
+                    card.innerHTML = `
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
+                        <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
+                        <div class="truncate">
+                            <div class="text-xs font-bold text-white truncate">${p.name}</div>
+                            <span class="text-[9px] ${raceBadgeClass} px-1 rounded">${p.race}</span>
+                        </div>
+                    `;
+                    raceGrid.appendChild(card);
+                });
+
+                raceBox.appendChild(raceGrid);
+                racesWrapper.appendChild(raceBox);
             });
-            checkSection.appendChild(checkGrid);
+
+            checkSection.appendChild(racesWrapper);
             wrapper.appendChild(checkSection);
 
             let teamSection = document.createElement('div');
@@ -695,7 +771,6 @@
             let vsSelect = document.getElementById('vs-match-select');
             if(!vsSelect) return;
             
-            // 현재 선택되어 있던 값 저장
             let currentSelectedVal = vsSelect.value;
 
             vsSelect.innerHTML = '<option value="">-- 제작된 경기 목록에서 선택 --</option>';
@@ -714,7 +789,6 @@
                 }
             });
 
-            // 이전에 선택했던 값이 여전히 유효하다면 복원
             if (currentSelectedVal) {
                 vsSelect.value = currentSelectedVal;
             }
@@ -934,10 +1008,11 @@
     <div class="max-w-5xl mx-auto">
         <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
             <h1 class="text-2xl font-bold mb-2 text-[#00FFA3]">CHZZK STARCRAFT CONSOLE</h1>
-            <p class="text-gray-400 text-sm mb-6">사용할 본인만의 <b>방 이름</b>을 입력하고 입장하세요.</p>
-            <div class="max-w-xs mx-auto flex gap-2">
-                <input type="text" id="input-room-id" placeholder="예: jaeho_broadcast" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
-                <button id="btn-enter-room" class="bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold px-5 py-2 rounded text-sm whitespace-nowrap cursor-pointer">입장</button>
+            <p class="text-gray-400 text-sm mb-6">사용 중이신 <b>방 이름</b>을 입력하고 입장하세요. (기존 방은 비밀번호 생략 가능)</p>
+            <div class="max-w-xs mx-auto flex flex-col gap-3">
+                <input type="text" id="input-room-id" placeholder="방 이름 (예: jaeho_broadcast)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <input type="password" id="input-room-pin" placeholder="비밀번호 (선택사항, 신규 방만 설정)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <button id="btn-enter-room" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold py-2.5 rounded text-sm cursor-pointer">입장하기</button>
             </div>
         </div>
 
@@ -1128,6 +1203,24 @@
                             <option value="solo">⚔️ 개인전 (1v1) 모드</option>
                         </select>
                     </div>
+                </div>
+
+                <!-- 비밀번호 변경 설정 박스 추가 -->
+                <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
+                    <h3 class="text-sm font-bold text-[#00FFA3] mb-2">방 비밀번호(PIN) 변경</h3>
+                    <p class="text-xs text-gray-400 mb-3">현재 방의 보안 비밀번호를 새로운 값으로 변경합니다.</p>
+                    <div class="flex gap-2">
+                        <input type="password" id="input-new-room-pin" placeholder="새 비밀번호 입력" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-white">
+                        <button id="btn-change-room-password" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">비밀번호 변경</button>
+                    </div>
+                </div>
+
+                <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
+                    <h3 class="text-sm font-bold text-[#00FFA3] mb-2">구글 스프레드시트 데이터베이스(DB) 안내</h3>
+                    <p class="text-xs text-gray-400 mb-3">콘솔에 연동할 선수 및 맵 데이터를 관리하는 기본 스프레드시트 사본을 생성할 수 있습니다.</p>
+                    <a href="https://docs.google.com/spreadsheets/d/1eA1GCEga0FcpmPMO8Qm8nXoZOPeQioAaBgXZs-NDyCc/copy" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded text-xs transition-all">
+                        📋 DB용 구글시트 초기버전 만들기 (사본 생성)
+                    </a>
                 </div>
 
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
