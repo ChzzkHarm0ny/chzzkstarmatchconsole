@@ -7,28 +7,25 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 중앙 하단 사다리꼴 빈 공간을 인게임 타이머 크기에 맞춰 넓고 깊게 확장 */
         .minimap-scoreboard {
             width: 275px;
             height: 98px;
             background: rgba(15, 17, 21, 0.98);
             border: 2px solid #3c3d44;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            /* 중앙 하단 파이는 공간을 넓힘 (가로폭 확장, 높이 42px로 깊게) */
             clip-path: polygon(
                 0 0, 
                 100% 0, 
                 100% 100%, 
-                80% 100%, /* 오른쪽 아래 시작점 */
-                68% calc(100% - 42px), /* 오른쪽 안쪽 꺾임 */
-                32% calc(100% - 42px), /* 왼쪽 안쪽 꺾임 */
-                20% 100%, /* 왼쪽 아래 끝점 */
+                80% 100%,
+                68% calc(100% - 42px),
+                32% calc(100% - 42px),
+                20% 100%,
                 0 100%
             );
             position: relative;
         }
 
-        /* 넓어진 사다리꼴 양옆 밑바닥에 배치되는 선수 이름 영역 (위치 미세 조정) */
         .player-footer {
             position: absolute;
             bottom: 2px;
@@ -38,7 +35,6 @@
             display: flex;
             justify-content: space-between;
             padding: 0 4px;
-            font-size: 13px;
             font-weight: 900;
         }
     </style>
@@ -65,10 +61,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const roomId = urlParams.get('room');
 
-            if (!roomId) {
-                document.body.innerHTML = "<div style='color:white; padding:20px;'>방(room) 정보가 지정되지 않았습니다.</div>";
-                return;
-            }
+            if (!roomId) return;
 
             const roomRef = ref(db, "rooms/" + roomId);
             onValue(roomRef, async (snapshot) => {
@@ -81,82 +74,74 @@
                         if (sheetData.players) {
                             sheetData.players.forEach(p => { playerRaceMap[p.name] = p.race; });
                         }
-                    } catch (e) { console.error("시트 데이터 로드 실패:", e); }
+                    } catch (e) {}
                 }
 
                 let ms = data.matchState || {};
-                
                 let scoreboardEl = document.getElementById('scoreboard-wrapper');
                 if (ms.scoreVisible === false) {
                     scoreboardEl.style.opacity = '0';
-                    scoreboardEl.style.pointerEvents = 'none';
                     return;
                 } else {
                     scoreboardEl.style.opacity = '1';
-                    scoreboardEl.style.pointerEvents = 'auto';
                 }
 
-                let leagueTitle = ms.leagueTitle || "대회이름";
+                document.getElementById('league-title').innerText = ms.leagueTitle || "대회이름";
+                
                 let teamNames = ms.teamNames || { team1: "선수1", team2: "선수2", team1Color: "#1d3557", team2Color: "#6a1b1b" };
-                let t1Name = teamNames.team1 || "선수1";
-                let t2Name = teamNames.team2 || "선수2";
-                let t1Color = teamNames.team1Color || "#1d3557";
-                let t2Color = teamNames.team2Color || "#6a1b1b";
-
-                document.getElementById('league-title').innerText = leagueTitle;
-                document.getElementById('t1-name').innerText = t1Name;
-                document.getElementById('t2-name').innerText = t2Name;
-                document.getElementById('t1-box').style.backgroundColor = t1Color;
-                document.getElementById('t2-box').style.backgroundColor = t2Color;
+                document.getElementById('t1-name').innerText = teamNames.team1;
+                document.getElementById('t2-name').innerText = teamNames.team2;
+                document.getElementById('t1-box').style.backgroundColor = teamNames.team1Color;
+                document.getElementById('t2-box').style.backgroundColor = teamNames.team2Color;
 
                 document.getElementById('p1Score').innerText = ms.p1Score !== undefined ? ms.p1Score : 0;
                 document.getElementById('p2Score').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
 
-                let activeSetName = "1세트";
-                let activeIdx = 1;
-                let currentP1Player = "-";
-                let currentP2Player = "-";
+                let t1Players = ["-"];
+                let t2Players = ["-"];
 
                 if (ms.matchSetsObj) {
                     let setsArray = Object.values(ms.matchSetsObj);
                     if (setsArray.length > 0) {
                         let targetSet = setsArray[0];
-                        activeSetName = targetSet.name.replace(" (매치)", "");
-                        activeIdx = targetSet.activeMatchIdx || 1;
-                        
+                        let activeIdx = targetSet.activeMatchIdx || 1;
                         if (targetSet.matches && targetSet.matches[activeIdx]) {
                             let activeMatch = targetSet.matches[activeIdx];
-                            currentP1Player = activeMatch.t1Player && activeMatch.t1Player !== "미정" ? activeMatch.t1Player : "-";
-                            currentP2Player = activeMatch.t2Player && activeMatch.t2Player !== "미정" ? activeMatch.t2Player : "-";
+                            t1Players = activeMatch.t1Players || [activeMatch.t1Player];
+                            t2Players = activeMatch.t2Players || [activeMatch.t2Player];
                         }
                     }
                 }
 
                 let scorePos = ms.scorePos || { t1Pos: "", t2Pos: "" };
+                let p1Text = t1Players.map(p => formatPlayerDisplay(p, scorePos.t1Pos)).join(', ');
+                let p2Text = t2Players.map(p => formatPlayerDisplay(p, scorePos.t2Pos)).join(', ');
 
-                document.getElementById('t1-player').innerText = formatPlayerDisplay(currentP1Player, scorePos.t1Pos);
-                document.getElementById('t2-player').innerText = formatPlayerDisplay(currentP2Player, scorePos.t2Pos);
+                let t1El = document.getElementById('t1-player');
+                let t2El = document.getElementById('t2-player');
+                t1El.innerText = p1Text;
+                t2El.innerText = p2Text;
+                
+                // 다대다 팀전일 경우 공간 확보를 위해 폰트 축소
+                t1El.style.fontSize = t1Players.length > 1 ? "10px" : "13px";
+                t2El.style.fontSize = t2Players.length > 1 ? "10px" : "13px";
             });
         };
 
         function formatPlayerDisplay(name, pos) {
-            if (name === "-") return "-";
+            if (!name || name === "미정" || name === "-") return "-";
             let raceFull = playerRaceMap[name] || "";
             let raceInitial = raceFull === "프로토스" ? "P" : (raceFull === "테란" ? "T" : (raceFull === "저그" ? "Z" : ""));
             let badge = (pos ? pos : "") + raceInitial;
-            return badge ? `${name} (${badge})` : name;
+            return badge ? `${name}(${badge})` : name;
         }
     </script>
 </head>
 <body class="flex items-start justify-start p-0">
-    
     <div id="scoreboard-wrapper" class="minimap-scoreboard flex flex-col text-white font-sans">
-        <!-- 상단 대회/매치 이름 바 -->
         <div class="bg-[#141518] border-b border-[#2c2d33] py-0.5 px-2 text-center">
             <span id="league-title" class="text-[#00FFA3] text-xs font-black tracking-wider">대회이름</span>
         </div>
-
-        <!-- 팀 이름 및 스코어 바 -->
         <div class="grid grid-cols-5 text-sm font-black text-center items-center h-8">
             <div id="t1-box" class="col-span-2 h-full flex items-center justify-center px-1 truncate text-white shadow" style="background-color: #1d3557;">
                 <span id="t1-name" class="truncate text-xs font-black">선수1</span>
@@ -170,17 +155,14 @@
                 <span id="t2-name" class="truncate text-xs font-black">선수2</span>
             </div>
         </div>
-
-        <!-- 넓어진 사다리꼴 빈 공간 양옆에 배치되는 선수 이름 영역 -->
-        <div class="player-footer">
-            <div class="w-[85px] text-left truncate text-blue-300 pl-1">
+        <div class="player-footer flex items-end">
+            <div class="w-[85px] text-left truncate text-blue-300 pl-1 pb-1">
                 <span id="t1-player">-</span>
             </div>
-            <div class="w-[85px] text-right truncate text-red-300 pr-1">
+            <div class="w-[85px] text-right truncate text-red-300 pr-1 pb-1">
                 <span id="t2-player">-</span>
             </div>
         </div>
     </div>
-
 </body>
 </html>
