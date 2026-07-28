@@ -7,7 +7,6 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 스코어보드 전체 박스는 직사각형 유지 */
         .minimap-scoreboard {
             width: 320px;
             background: #1b1c20;
@@ -18,8 +17,9 @@
             position: relative;
         }
 
-        /* 하단 파츠 내부에서만 사다리꼴 빈 공간(Cutout)이 파이도록 설정 */
+        /* 하단 파츠: 양쪽은 검은색 다리, 가운데 사다리꼴 공간은 빈 공간(투명)으로 파이도록 설정 */
         .bottom-cutout {
+            background-color: #0b0c0e;
             clip-path: polygon(
                 0% 0%, 
                 100% 0%, 
@@ -32,7 +32,6 @@
             );
         }
 
-        /* 꺼진 요소는 공간을 남기지 않고 완전히 소멸 */
         .row-hidden {
             display: none !important;
         }
@@ -84,8 +83,8 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (하단 파인 다리 공간에 사다리꼴 컷아웃 적용) -->
-        <div id="row-bottom" class="h-[35px] shrink-0 relative bg-[#0b0c0e] flex justify-between items-end px-2 pb-1 overflow-hidden bottom-cutout">
+        <!-- 4. 위치표시 (하단 사다리꼴 파인 다리 공간) -->
+        <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bottom-cutout">
             <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;">P12</div>
             <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
         </div>
@@ -193,7 +192,7 @@
                     else rowBottom.classList.remove('row-hidden');
                 }
 
-                // 배경색 반영
+                // 팀 배경색 반영
                 ['bg-team1', 'bg-team2', 'bg-score-t1', 'bg-score-t2', 'bg-player1', 'bg-player2', 'bg-score-p1', 'bg-score-p2'].forEach(id => {
                     let el = document.getElementById(id);
                     if (el) {
