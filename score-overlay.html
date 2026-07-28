@@ -102,11 +102,11 @@
                 document.getElementById('league-title').innerText = ms.leagueTitle || "대회이름";
                 
                 let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
-                document.getElementById('t1-box').style.backgroundColor = teamNames.team1Color;
-                document.getElementById('t2-box').style.backgroundColor = teamNames.team2Color;
+                document.getElementById('main-t1-box').style.backgroundColor = teamNames.team1Color;
+                document.getElementById('main-t2-box').style.backgroundColor = teamNames.team2Color;
 
-                document.getElementById('p1Score').innerText = ms.p1Score !== undefined ? ms.p1Score : 0;
-                document.getElementById('p2Score').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
+                document.getElementById('main-score1').innerText = ms.p1Score !== undefined ? ms.p1Score : 0;
+                document.getElementById('main-score2').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
 
                 let t1Players = ["-"];
                 let t2Players = ["-"];
@@ -136,42 +136,39 @@
                 if (isSoloMode) {
                     // [개인전 모드] 
                     // 1) 상단 컬러 박스에 팀명 대신 '선수명' 기입
-                    document.getElementById('t1-name').innerText = t1PlayersRaw[0] || "선수1";
-                    document.getElementById('t2-name').innerText = t2PlayersRaw[0] || "선수2";
+                    document.getElementById('main-t1-name').innerText = t1PlayersRaw[0] || "선수1";
+                    document.getElementById('main-t2-name').innerText = t2PlayersRaw[0] || "선수2";
                     
-                    // 2) 하단 공간에 선수명단은 지우고 위치+종족 표기
-                    document.getElementById('t1-players').innerHTML = "";
-                    document.getElementById('t2-players').innerHTML = "";
+                    // 2) 하단 다리 공간에 선수명단은 지우고 (종족)과 위치 표기만 남김
+                    document.getElementById('p1-list').innerHTML = "";
+                    document.getElementById('p2-list').innerHTML = "";
 
                     let r1 = playerRaceMap[t1PlayersRaw[0]] || "";
                     let r1Initial = r1 === "프로토스" ? "(P)" : (r1 === "테란" ? "(T)" : (r1 === "저그" ? "(Z)" : ""));
                     let r2 = playerRaceMap[t2PlayersRaw[0]] || "";
                     let r2Initial = r2 === "프로토스" ? "(P)" : (r2 === "테란" ? "(T)" : (r2 === "저그" ? "(Z)" : ""));
 
-                    document.getElementById('t1-pos').innerText = pos1Text ? `${pos1Text} ${r1Initial}` : r1Initial;
-                    document.getElementById('t2-pos').innerText = pos2Text ? `${pos2Text} ${r2Initial}` : r2Initial;
+                    document.getElementById('pos1').innerText = pos1Text ? `${pos1Text} ${r1Initial}` : r1Initial;
+                    document.getElementById('pos2').innerText = pos2Text ? `${pos2Text} ${r2Initial}` : r2Initial;
 
                 } else {
                     // [팀전 모드]
-                    // 1) 상단 컬러 박스에 '팀명' 기입
-                    document.getElementById('t1-name').innerText = teamNames.team1;
-                    document.getElementById('t2-name').innerText = teamNames.team2;
+                    // 1) 상단 컬러 박스에 '팀명' 정상 기입
+                    document.getElementById('main-t1-name').innerText = teamNames.team1;
+                    document.getElementById('main-t2-name').innerText = teamNames.team2;
                     
-                    // 2) 하단 공간에 이름(종족) 포맷팅 후 2명씩 묶어서 세로 나열
+                    // 2) 하단 다리 공간에 이름(종족) 포맷팅 후 2명씩 묶어서 세로 나열
                     let p1Formatted = t1PlayersRaw.map(p => formatPlayerDisplay(p));
                     let p2Formatted = t2PlayersRaw.map(p => formatPlayerDisplay(p));
 
                     let fontSize = p1Formatted.length > 2 ? '11px' : '12px';
                     
-                    let p1Html = chunkArray(p1Formatted, 2).map(txt => `<div class="truncate text-blue-300 w-full text-left" style="font-size: ${fontSize}; font-weight: 900; line-height: 1.25; text-shadow: 1px 1px 2px black;">${txt}</div>`).join('');
-                    let p2Html = chunkArray(p2Formatted, 2).map(txt => `<div class="truncate text-red-300 w-full text-right" style="font-size: ${fontSize}; font-weight: 900; line-height: 1.25; text-shadow: 1px 1px 2px black;">${txt}</div>`).join('');
-
-                    document.getElementById('t1-players').innerHTML = p1Html;
-                    document.getElementById('t2-players').innerHTML = p2Html;
+                    document.getElementById('p1-list').innerHTML = chunkArray(p1Formatted, 2).map(txt => `<div style="font-size: ${fontSize}; font-weight: 900; line-height: 1.2;">${txt}</div>`).join('');
+                    document.getElementById('p2-list').innerHTML = chunkArray(p2Formatted, 2).map(txt => `<div style="font-size: ${fontSize}; font-weight: 900; line-height: 1.2;">${txt}</div>`).join('');
 
                     // 3) 맨 아랫줄에 시작 위치 표기
-                    document.getElementById('t1-pos').innerText = pos1Text;
-                    document.getElementById('t2-pos').innerText = pos2Text;
+                    document.getElementById('pos1').innerText = pos1Text;
+                    document.getElementById('pos2').innerText = pos2Text;
                 }
             });
         };
@@ -198,39 +195,35 @@
         
         <!-- 1. 대회 이름 / 세트 -->
         <div class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0">
-            <span id="league-title" class="text-[#00FFA3] text-[12px] font-black tracking-wider">대회이름</span>
+            <span id="league-title" class="text-[#00FFA3] text-[11px] font-black tracking-wider">대회이름</span>
         </div>
         
-        <!-- 2. 팀명(또는 솔로일시 선수명) 및 스코어 -->
+        <!-- 2. 메인 스코어 열 (개인전/팀전 자동 전환부) -->
         <div class="grid grid-cols-[1fr_60px_1fr] h-[34px] text-sm font-black text-center items-center shrink-0 border-b border-[#2c2d33]">
-            <div id="t1-box" class="h-full flex items-center justify-center px-1 truncate shadow text-white" style="background-color: #1d3557;">
-                <span id="t1-name" class="truncate text-[13px] font-black drop-shadow-md">1팀</span>
+            <div id="main-t1-box" class="h-full flex items-center justify-center px-1 truncate shadow text-white" style="background-color: #1d3557;">
+                <span id="main-t1-name" class="truncate text-[13px] font-black drop-shadow-md">1팀</span>
             </div>
             <div class="bg-[#1b1c20] text-[#00FFA3] text-[14px] font-black h-full flex items-center justify-center border-x border-[#2c2d33]">
-                <span id="p1Score">0</span><span class="mx-1 text-gray-500">-</span><span id="p2Score">0</span>
+                <span id="main-score1">0</span><span class="mx-1 text-gray-500">-</span><span id="main-score2">0</span>
             </div>
-            <div id="t2-box" class="h-full flex items-center justify-center px-1 truncate shadow text-white" style="background-color: #6a1b1b;">
-                <span id="t2-name" class="truncate text-[13px] font-black drop-shadow-md">2팀</span>
+            <div id="main-t2-box" class="h-full flex items-center justify-center px-1 truncate shadow text-white" style="background-color: #6a1b1b;">
+                <span id="main-t2-name" class="truncate text-[13px] font-black drop-shadow-md">2팀</span>
             </div>
         </div>
         
-        <!-- 3 & 4. 선수 명단 및 위치 (하단 영역) -->
+        <!-- 3 & 4. 양쪽 다리(Leg) 선수 명단 및 위치 -->
         <div class="flex-grow relative bg-[#0b0c0e]">
             
-            <!-- 왼쪽 팀 공간 -->
+            <!-- 왼쪽 공간 -->
             <div class="leg-left">
-                <!-- 선수 명단 렌더링 컨테이너 -->
-                <div id="t1-players" class="w-full"></div>
-                <!-- 하단 시작 위치 텍스트 -->
-                <div id="t1-pos" class="text-yellow-400 text-[12px] font-black w-full text-left tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
+                <div id="p1-list" class="flex flex-col text-blue-300 tracking-tighter" style="text-shadow: 1px 1px 2px black;"></div>
+                <div id="pos1" class="text-yellow-400 text-[12px] font-black w-full text-left tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
             </div>
             
-            <!-- 오른쪽 팀 공간 -->
+            <!-- 오른쪽 공간 -->
             <div class="leg-right">
-                <!-- 선수 명단 렌더링 컨테이너 -->
-                <div id="t2-players" class="w-full"></div>
-                <!-- 하단 시작 위치 텍스트 -->
-                <div id="t2-pos" class="text-yellow-400 text-[12px] font-black w-full text-right tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
+                <div id="p2-list" class="flex flex-col items-end text-red-300 tracking-tighter" style="text-shadow: 1px 1px 2px black;"></div>
+                <div id="pos2" class="text-yellow-400 text-[12px] font-black w-full text-right tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
             </div>
             
         </div>
