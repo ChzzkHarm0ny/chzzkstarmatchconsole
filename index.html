@@ -93,8 +93,8 @@
             });
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    switchTab(e.target.dataset.tab);
+                btn.addEventListener('click', function() {
+                    switchTab(this.dataset.tab);
                 });
             });
 
@@ -112,8 +112,26 @@
                 saveMatchSetsConfigToFirebase();
             });
 
+            document.getElementById('btn-reset-players').addEventListener('click', () => {
+                if (confirm("참가 선수 선택을 모두 초기화(해제)하시겠습니까?")) {
+                    selectedRoster = [];
+                    team1Roster = [];
+                    team2Roster = [];
+                    renderPlayerSelectionGrid();
+                    alert("선수 선택이 초기화되었습니다.");
+                }
+            });
+
+            document.getElementById('btn-reset-maps').addEventListener('click', () => {
+                if (confirm("맵 풀 선택을 모두 초기화(해제)하시겠습니까?")) {
+                    selectedMapPool = [];
+                    renderMapGrid();
+                    alert("맵 풀이 초기화되었습니다.");
+                }
+            });
+
             document.getElementById('btn-reset-all-room').addEventListener('click', () => {
-                if (confirm("⚠️ 정말로 이 방의 모든 데이터를 초기상태로 되돌리시겠습니까?")) {
+                if (confirm("⚠️ 정말로 이 방의 모든 데이터를 초기상태로 되돌리시겠습니까? (저장된 대진 및 설정이 모두 삭제됩니다)")) {
                     if (currentRoomId) {
                         remove(ref(db, "rooms/" + currentRoomId + "/matchState")).then(() => {
                             localStorage.removeItem('starcraft_inited_' + currentRoomId);
@@ -134,11 +152,11 @@
                 let matchIdx = parts[1];
                 let matchData = matchSetsObj[setId]?.matches[matchIdx];
                 if(matchData) {
-                    let p1Text = matchData.t1Players ? matchData.t1Players.join(', ') : "미정";
-                    let p2Text = matchData.t2Players ? matchData.t2Players.join(', ') : "미정";
-                    let t1ImgName = matchData.t1Players && matchData.t1Players[0] ? matchData.t1Players[0] : "선수1";
-                    let t2ImgName = matchData.t2Players && matchData.t2Players[0] ? matchData.t2Players[0] : "선수2";
-                    updateVsPreview(t1ImgName, t2ImgName, matchData.mapName, p1Text, p2Text);
+                    let t1Players = matchData.t1Players || [matchData.t1Player || "미정"];
+                    let t2Players = matchData.t2Players || [matchData.t2Player || "미정"];
+                    let p1Text = t1Players.join(', ');
+                    let p2Text = t2Players.join(', ');
+                    updateVsPreview(t1Players[0], t2Players[0], matchData.mapName, p1Text, p2Text);
                 }
             });
 
@@ -193,6 +211,7 @@
                 alert("변경할 비밀번호를 올바르게 입력해주세요.");
                 return;
             }
+
             set(ref(db, "rooms/" + currentRoomId + "/password"), newPin).then(() => {
                 localStorage.setItem('starcraft_room_pin', newPin);
                 document.getElementById('input-new-room-pin').value = "";
@@ -215,7 +234,9 @@
                 elem.dataset.checked = "false";
             } else {
                 let radios = document.getElementsByName(elem.name);
-                for(let r of radios) { r.dataset.checked = "false"; }
+                for(let r of radios) {
+                    r.dataset.checked = "false";
+                }
                 elem.dataset.checked = "true";
             }
         };
@@ -258,6 +279,7 @@
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('console-main-content').classList.remove('hidden');
             document.getElementById('room-display-name').innerText = "현재 방: [ " + roomId + " ]";
+
             generateOverlayUrls(roomId);
             loadRoomData(roomId);
         }
@@ -293,26 +315,31 @@
                         leagueTitleText = ms.leagueTitle;
                         document.getElementById('input-league-title').value = leagueTitleText;
                     }
+
                     if(ms.scorePos) {
                         document.getElementById('input-score-t1-pos').value = ms.scorePos.t1Pos || "";
                         document.getElementById('input-score-t2-pos').value = ms.scorePos.t2Pos || "";
                     }
+
                     if(ms.teamNames) {
                         team1Name = ms.teamNames.team1 || "1팀";
                         team2Name = ms.teamNames.team2 || "2팀";
                         team1Color = ms.teamNames.team1Color || "#1d3557";
                         team2Color = ms.teamNames.team2Color || "#6a1b1b";
+
                         document.getElementById('input-team1-name').value = team1Name;
                         document.getElementById('input-team2-name').value = team2Name;
                         document.getElementById('input-team1-color').value = team1Color;
                         document.getElementById('input-team2-color').value = team2Color;
                     }
 
-                    if(ms.vsMatch && ms.vsMatch.t1 && ms.vsMatch.t1.length > 0) {
-                        let t1ImgName = ms.vsMatch.t1[0].name;
-                        let t2ImgName = ms.vsMatch.t2[0] ? ms.vsMatch.t2[0].name : "선수2";
-                        let p1Text = ms.vsMatch.t1.map(x=>x.name).join(', ');
-                        let p2Text = ms.vsMatch.t2.map(x=>x.name).join(', ');
+                    if(ms.vsMatch && ms.vsMatch.t1) {
+                        let t1Arr = Array.isArray(ms.vsMatch.t1) ? ms.vsMatch.t1 : [ms.vsMatch.t1];
+                        let t2Arr = Array.isArray(ms.vsMatch.t2) ? ms.vsMatch.t2 : [ms.vsMatch.t2];
+                        let t1ImgName = t1Arr[0] ? t1Arr[0].name : "선수1";
+                        let t2ImgName = t2Arr[0] ? t2Arr[0].name : "선수2";
+                        let p1Text = t1Arr.map(x=>x.name).join(', ');
+                        let p2Text = t2Arr.map(x=>x.name).join(', ');
                         updateVsPreview(t1ImgName, t2ImgName, ms.vsMatch.map?.name, p1Text, p2Text);
                     }
 
@@ -334,6 +361,7 @@
             const btn = document.getElementById(btnId);
             let currentState = btn.dataset.state === 'true';
             let newState = !currentState;
+
             set(ref(db, "rooms/" + currentRoomId + "/matchState/" + visibleKey), newState).then(() => {
                 updateToggleButtonState(visibleKey, btnId, newState);
             });
@@ -354,10 +382,15 @@
 
         function toggleTeamPanelByMode(mode) {
             currentMatchMode = mode;
+            // Note: team-setting-wrapper logic depends on if you wrapped it in your local code.
+            // Leaving this as-is since the user's provided HTML does not have a wrapper with this ID.
             const teamSettingWrapper = document.getElementById('team-setting-wrapper');
             if (teamSettingWrapper) {
-                if (mode === 'solo') teamSettingWrapper.classList.add('hidden');
-                else teamSettingWrapper.classList.remove('hidden');
+                if (mode === 'solo') {
+                    teamSettingWrapper.classList.add('hidden');
+                } else {
+                    teamSettingWrapper.classList.remove('hidden');
+                }
             }
         }
 
@@ -394,18 +427,13 @@
             const container = document.getElementById('player-selection-container');
             if(!container || allPlayers.length === 0) return;
             container.innerHTML = '';
+
             let wrapper = document.createElement('div');
             wrapper.className = "flex flex-col gap-5";
 
             let checkSection = document.createElement('div');
             checkSection.className = "bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]";
-            let playerHeader = document.createElement('div');
-            playerHeader.className = "flex justify-between items-center mb-3";
-            playerHeader.innerHTML = `
-                <h4 class="text-xs font-bold text-[#00FFA3]">1. 이번 경기 참가 선수 체크 (종족별 구분)</h4>
-                <button id="btn-reset-players" class="bg-[#2c2d33] hover:bg-red-500/20 text-red-400 px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer border border-red-500/30">🔄 선수 선택 초기화</button>
-            `;
-            checkSection.appendChild(playerHeader);
+            checkSection.innerHTML = '<h4 class="text-xs font-bold text-[#00FFA3] mb-3">1. 이번 경기 참가 선수 체크 (종족별 구분)</h4>';
             
             let races = ['프로토스', '테란', '저그'];
             let raceConfig = {
@@ -420,13 +448,16 @@
             races.forEach(raceName => {
                 let racePlayers = allPlayers.filter(p => p.race === raceName);
                 if(racePlayers.length === 0) return;
+
                 let conf = raceConfig[raceName];
                 let raceBox = document.createElement('div');
                 raceBox.className = `border ${conf.borderClass} rounded-xl p-3 bg-[#141518]`;
+                
                 let raceHeader = document.createElement('div');
                 raceHeader.className = `text-xs font-black ${conf.headerColor} ${conf.bgHeader} px-3 py-1.5 rounded-lg mb-2.5`;
                 raceHeader.innerText = conf.label;
                 raceBox.appendChild(raceHeader);
+
                 let raceGrid = document.createElement('div');
                 raceGrid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2";
 
@@ -435,8 +466,10 @@
                     let card = document.createElement('div');
                     card.className = "border rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#0b0c0e] border-[#2c2d33] opacity-40");
                     card.onclick = () => togglePlayerParticipation(p.name);
+
                     let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
                     let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
+
                     card.innerHTML = `
                         <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
                         <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
@@ -447,15 +480,18 @@
                     `;
                     raceGrid.appendChild(card);
                 });
+
                 raceBox.appendChild(raceGrid);
                 racesWrapper.appendChild(raceBox);
             });
+
             checkSection.appendChild(racesWrapper);
             wrapper.appendChild(checkSection);
 
             if (currentMatchMode === 'team') {
                 let teamSection = document.createElement('div');
                 teamSection.className = "grid grid-cols-1 sm:grid-cols-2 gap-4";
+
                 let t1Div = document.createElement('div');
                 t1Div.className = "bg-[#0b0c0e] p-3 rounded-xl border border-blue-500/30";
                 t1Div.innerHTML = `<h4 class="text-xs font-bold text-blue-400 mb-2">🛡️ [ ${team1Name} ] 소속 배정 (클릭시 팀 변경)</h4>`;
@@ -471,14 +507,21 @@
                 selectedRoster.forEach(name => {
                     let p = allPlayers.find(x => x.name === name);
                     if(!p) return;
+
                     let inTeam1 = team1Roster.includes(name);
                     let inTeam2 = team2Roster.includes(name);
-                    if (!inTeam1 && !inTeam2) { team1Roster.push(name); inTeam1 = true; }
+                    if (!inTeam1 && !inTeam2) {
+                        team1Roster.push(name);
+                        inTeam1 = true;
+                    }
+
                     let card = document.createElement('div');
                     card.className = "border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all " + (inTeam1 ? "bg-[#142233] border-blue-500/50" : "bg-[#331414] border-red-500/50");
                     card.onclick = () => togglePlayerTeam(name);
+
                     let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
                     let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
+
                     card.innerHTML = `
                         <div class="flex items-center gap-2.5">
                             <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
@@ -489,26 +532,19 @@
                         </div>
                         <span class="text-[10px] text-gray-400 font-bold">${inTeam1 ? `▶ ${team2Name}로` : `${team1Name}로 ◀`}</span>
                     `;
+
                     if (inTeam1) t1List.appendChild(card);
                     else if (inTeam2) t2List.appendChild(card);
                 });
+
                 t1Div.appendChild(t1List);
                 t2Div.appendChild(t2List);
                 teamSection.appendChild(t1Div);
                 teamSection.appendChild(t2Div);
                 wrapper.appendChild(teamSection);
             }
-            container.appendChild(wrapper);
 
-            document.getElementById('btn-reset-players').onclick = () => {
-                if (confirm("참가 선수 선택을 모두 초기화(해제)하시겠습니까?")) {
-                    selectedRoster = [];
-                    team1Roster = [];
-                    team2Roster = [];
-                    renderPlayerSelectionGrid();
-                    alert("선수 선택이 초기화되었습니다.");
-                }
-            };
+            container.appendChild(wrapper);
         }
 
         function togglePlayerParticipation(playerName) {
@@ -538,15 +574,6 @@
             const container = document.getElementById('map-grid-container');
             if(!container || allMaps.length === 0) return;
             container.innerHTML = '';
-            let wrapper = document.createElement('div');
-            wrapper.className = "flex flex-col gap-3";
-            let mapHeader = document.createElement('div');
-            mapHeader.className = "flex justify-between items-center mb-1";
-            mapHeader.innerHTML = `
-                <h3 class="text-sm font-bold text-[#00FFA3]">3. 이번 경기에 사용할 맵 풀(Pool) 선택</h3>
-                <button id="btn-reset-maps" class="bg-[#2c2d33] hover:bg-red-500/20 text-yellow-400 px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer border border-yellow-500/30">🔄 맵 풀 초기화</button>
-            `;
-            wrapper.appendChild(mapHeader);
 
             let grid = document.createElement('div');
             grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2";
@@ -556,6 +583,7 @@
                 let card = document.createElement('div');
                 card.className = "border rounded-lg p-2.5 flex items-center gap-2.5 cursor-pointer transition-all " + (isChecked ? "bg-[#1b2a24] border-[#00FFA3]" : "bg-[#0b0c0e] border-[#2c2d33] opacity-50");
                 card.onclick = () => toggleMapSelection(m.name);
+
                 let mapImgUrl = m.url || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/" + encodeURIComponent(m.name) + ".png";
                 card.innerHTML = `
                     <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
@@ -564,16 +592,8 @@
                 `;
                 grid.appendChild(card);
             });
-            wrapper.appendChild(grid);
-            container.appendChild(wrapper);
 
-            document.getElementById('btn-reset-maps').onclick = () => {
-                if (confirm("맵 풀 선택을 모두 초기화(해제)하시겠습니까?")) {
-                    selectedMapPool = [];
-                    renderMapGrid();
-                    alert("맵 풀이 초기화되었습니다.");
-                }
-            };
+            container.appendChild(grid);
         }
 
         function toggleMapSelection(mapName) {
@@ -602,9 +622,11 @@
             const container = document.getElementById('match-set-tabs');
             if(!container) return;
             container.innerHTML = '';
+
             Object.values(matchSetsObj).forEach((setObj) => {
                 let wrap = document.createElement('div');
                 wrap.className = "flex items-center gap-1 bg-[#1b1c20] rounded-lg border border-[#2c2d33] overflow-hidden";
+                
                 let btn = document.createElement('button');
                 btn.className = "px-4 py-2 text-xs font-bold cursor-pointer transition-all " + (setObj.id === activeSetId ? "bg-[#00FFA3] text-black" : "text-gray-300");
                 btn.innerText = setObj.name + " (" + setObj.matchesCount + "경기)";
@@ -619,6 +641,7 @@
                     delBtn.onclick = () => removeMatchSet(setObj.id);
                     wrap.appendChild(delBtn);
                 }
+
                 container.appendChild(wrap);
             });
         }
@@ -627,8 +650,12 @@
             if (confirm(setId + "세트를 삭제하시겠습니까?")) {
                 remove(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId));
                 delete matchSetsObj[setId];
+                
                 let keys = Object.keys(matchSetsObj);
-                if (activeSetId === setId && keys.length > 0) activeSetId = Number(keys[0]);
+                if (activeSetId === setId && keys.length > 0) {
+                    activeSetId = Number(keys[0]);
+                }
+
                 saveMatchSetsConfigToFirebase();
                 renderMatchSetTabs();
                 renderMatchSetPanels();
@@ -663,8 +690,8 @@
                 for(let j=0; j<format; j++) {
                     let t1p = document.getElementById(`s${setId}-t1-${i}-${j}`);
                     let t2p = document.getElementById(`s${setId}-t2-${i}-${j}`);
-                    t1Players.push(t1p ? t1p.value : "미정");
-                    t2Players.push(t2p ? t2p.value : "미정");
+                    t1Players.push(t1p ? (t1p.value || "미정") : "미정");
+                    t2Players.push(t2p ? (t2p.value || "미정") : "미정");
                 }
                 let mapEl = document.getElementById('s' + setId + '-map-' + i);
                 let winner = "";
@@ -675,7 +702,7 @@
                     matchFormat: format,
                     t1Players: t1Players,
                     t2Players: t2Players,
-                    mapName: mapEl ? mapEl.value : "미정",
+                    mapName: mapEl ? (mapEl.value || "미정") : "미정",
                     winner: winner
                 };
             }
@@ -683,7 +710,7 @@
         };
 
         window.changeMatchFormat = function(setId, matchIdx, newFormat) {
-            backupMatches(setId);
+            window.backupMatches(setId);
             let s = matchSetsObj[setId];
             if (!s.matches[matchIdx]) s.matches[matchIdx] = {};
             let m = s.matches[matchIdx];
@@ -696,7 +723,7 @@
         };
 
         window.adjustSetMatchesCount = function(setId, delta) {
-            backupMatches(setId);
+            if(window.backupMatches) window.backupMatches(setId);
             let s = matchSetsObj[setId];
             if(s) {
                 s.matchesCount += delta;
@@ -728,12 +755,12 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-400">경기 수 조절:</span>
-                                <button onclick="adjustSetMatchesCount(${setObj.id}, -1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">-</button>
+                                <button onclick="window.adjustSetMatchesCount(${setObj.id}, -1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">-</button>
                                 <span class="text-xs font-black text-[#00FFA3]">${setObj.matchesCount}경기</span>
-                                <button onclick="adjustSetMatchesCount(${setObj.id}, 1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">+</button>
+                                <button onclick="window.adjustSetMatchesCount(${setObj.id}, 1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">+</button>
                             </div>
                         </div>
-                        <div class="overflow-y-auto mb-3 pr-1" style="max-height: 520px;">
+                        <div class="overflow-y-auto mb-3 pr-1" style="max-height: 420px;">
                             <table class="w-full text-xs">
                                 <thead>
                                     <tr class="text-gray-400 border-b border-[#2c2d33]">
@@ -747,15 +774,14 @@
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
                             </table>
                         </div>
-                        <button id="btn-save-set-${setObj.id}" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
+                        <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
                             🎯 ${setObj.name} 대진 및 현재 경기(스코어) 반영하기
                         </button>
                     </div>
                 `;
                 wrapper.appendChild(panel);
-                fillMatchTableRows(setObj.id, setObj.matchesCount);
 
-                document.getElementById('btn-save-set-' + setObj.id).onclick = () => { applyMatchSet(setObj.id); };
+                fillMatchTableRows(setObj.id, setObj.matchesCount);
             });
             renderMatchSetTabs();
         }
@@ -852,7 +878,9 @@
         function updateVsMatchDropdownOptions() {
             let vsSelect = document.getElementById('vs-match-select');
             if(!vsSelect) return;
+            
             let currentSelectedVal = vsSelect.value;
+
             vsSelect.innerHTML = '<option value="">-- 제작된 경기 목록에서 선택 --</option>';
 
             Object.values(matchSetsObj).forEach(setObj => {
@@ -866,14 +894,17 @@
                         let t2Str = t2Players.join(', ') || "미정";
                         let map = m.mapName || "미정";
                         if(t1Str !== "미정" || t2Str !== "미정") {
-                            let formatLabel = m.matchFormat > 1 ? `[${m.matchFormat}v${m.matchFormat}] ` : "";
+                            let formatLabel = m.matchFormat && m.matchFormat > 1 ? `[${m.matchFormat}v${m.matchFormat}] ` : "";
                             let opt = new Option(setObj.name + " - " + i + "경기 " + formatLabel + "[ " + t1Str + " vs " + t2Str + " / " + map + " ]", setObj.id + "-" + i);
                             vsSelect.appendChild(opt);
                         }
                     }
                 }
             });
-            if (currentSelectedVal) vsSelect.value = currentSelectedVal;
+
+            if (currentSelectedVal) {
+                vsSelect.value = currentSelectedVal;
+            }
         }
 
         function updateVsPreview(t1Name, t2Name, mapName, p1FullText, p2FullText) {
@@ -900,21 +931,51 @@
 
         window.applyMatchSet = function(setId) {
             if (!currentRoomId) return;
-            backupMatches(setId); 
+            if (window.backupMatches) window.backupMatches(setId);
             let s = matchSetsObj[setId];
             if(!s) return;
-            
+            let matches = {};
             let activeMatchIdx = 1;
+
             let activeRadios = document.getElementsByName('active_match_set' + setId);
             for(let ar of activeRadios) {
                 if(ar.checked) activeMatchIdx = parseInt(ar.value);
             }
 
-            let currentMatchData = s.matches[activeMatchIdx];
+            for (let i = 1; i <= s.matchesCount; i++) {
+                let formatEl = document.getElementById('s' + setId + '-format-' + i);
+                if (!formatEl) continue;
+
+                let format = parseInt(formatEl.value);
+                let t1Players = [];
+                let t2Players = [];
+                for(let j=0; j<format; j++) {
+                    let t1p = document.getElementById(`s${setId}-t1-${i}-${j}`);
+                    let t2p = document.getElementById(`s${setId}-t2-${i}-${j}`);
+                    t1Players.push(t1p ? (t1p.value || "미정") : "미정");
+                    t2Players.push(t2p ? (t2p.value || "미정") : "미정");
+                }
+
+                let mapEl = document.getElementById('s' + setId + '-map-' + i);
+                let winner = "";
+                let radios = document.getElementsByName('winner_s' + setId + '_m' + i);
+                for(let r of radios) { if(r.checked) winner = r.value; }
+
+                matches[i] = {
+                    matchFormat: format,
+                    t1Players: t1Players,
+                    t2Players: t2Players,
+                    mapName: mapEl ? (mapEl.value || "미정") : "미정",
+                    winner: winner
+                };
+            }
+
+            let currentMatchData = matches[activeMatchIdx];
             if (currentMatchData && currentMatchData.winner !== "" && activeMatchIdx < s.matchesCount) {
                 activeMatchIdx += 1;
             }
 
+            s.matches = matches;
             s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
 
@@ -924,7 +985,7 @@
             calculateAndDisplayScores();
             updateVsMatchDropdownOptions();
 
-            let activeMatch = s.matches[activeMatchIdx];
+            let activeMatch = matches[activeMatchIdx];
             if (activeMatch && (activeMatch.t1Players[0] !== "미정" || activeMatch.t2Players[0] !== "미정")) {
                 let p1Text = activeMatch.t1Players.join(', ');
                 let p2Text = activeMatch.t2Players.join(', ');
@@ -934,10 +995,14 @@
                 if(vsSelect) {
                     let targetVal = setId + "-" + activeMatchIdx;
                     for(let opt of vsSelect.options) {
-                        if(opt.value === targetVal) { vsSelect.value = targetVal; break; }
+                        if(opt.value === targetVal) {
+                            vsSelect.value = targetVal;
+                            break;
+                        }
                     }
                 }
             }
+
             alert(s.name + " 대진 및 스코어가 반영되었습니다! (VS 화면은 수동 송출 버튼을 눌러야 오버레이에 반영됩니다)");
         };
 
@@ -945,6 +1010,7 @@
             if (!currentRoomId) return;
             let t1Pos = document.getElementById('input-score-t1-pos').value.trim();
             let t2Pos = document.getElementById('input-score-t2-pos').value.trim();
+
             set(ref(db, "rooms/" + currentRoomId + "/matchState/scorePos"), { t1Pos, t2Pos }).then(() => {
                 alert("스코어보드 선수 위치가 적용되었습니다!");
             });
@@ -953,6 +1019,7 @@
         function calculateAndDisplayScores() {
             let p1TotalScore = 0;
             let p2TotalScore = 0;
+
             Object.values(matchSetsObj).forEach(setObj => {
                 let matches = setObj.matches || {};
                 for (let i = 1; i <= setObj.matchesCount; i++) {
@@ -963,6 +1030,7 @@
                     }
                 }
             });
+
             document.getElementById('p1Score').innerText = p1TotalScore;
             document.getElementById('p2Score').innerText = p2TotalScore;
 
@@ -1018,13 +1086,16 @@
             let m = matchSetsObj[setId]?.matches[matchIdx];
             if(!m) return;
 
+            let t1Players = m.t1Players || [m.t1Player || "미정"];
+            let t2Players = m.t2Players || [m.t2Player || "미정"];
+
             let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
             
-            let t1DataArr = m.t1Players.map(name => {
+            let t1DataArr = t1Players.map(name => {
                 let obj = allPlayers.find(p => p.name === name) || { name: name, race: "미정", img: githubBase + encodeURIComponent(name) + ".png" };
                 return { name: obj.name, race: obj.race, img: obj.img };
             });
-            let t2DataArr = m.t2Players.map(name => {
+            let t2DataArr = t2Players.map(name => {
                 let obj = allPlayers.find(p => p.name === name) || { name: name, race: "미정", img: githubBase + encodeURIComponent(name) + ".png" };
                 return { name: obj.name, race: obj.race, img: obj.img };
             });
@@ -1038,9 +1109,9 @@
 
             set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
             
-            let p1Text = m.t1Players.join(', ');
-            let p2Text = m.t2Players.join(', ');
-            updateVsPreview(m.t1Players[0], m.t2Players[0], m.mapName, p1Text, p2Text);
+            let p1Text = t1Players.join(', ');
+            let p2Text = t2Players.join(', ');
+            updateVsPreview(t1Players[0], t2Players[0], m.mapName, p1Text, p2Text);
             alert("선택한 경기 정보가 VS 매치업 화면에 송출되었습니다!");
         }
 
@@ -1110,6 +1181,7 @@
                     <div class="flex justify-between items-center mb-4 pb-3 border-b border-[#2c2d33]">
                         <h3 class="text-sm font-bold text-[#00FFA3]">팀 설정, 참가 선수 및 맵 풀 관리</h3>
                     </div>
+
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-[#00FFA3] mb-2">스코어보드 대회/매치 이름 설정</h4>
                         <div class="flex gap-2 mb-2">
@@ -1117,6 +1189,7 @@
                             <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">대회명 적용</button>
                         </div>
                     </div>
+
                     <div id="team-setting-wrapper" class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-gray-300 mb-2">팀 이름 및 색상 설정 (템플릿 선택 가능)</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
@@ -1149,12 +1222,15 @@
                         </div>
                         <button id="btn-save-teams" class="w-full bg-[#2c2d33] hover:bg-[#3c3d44] text-white font-bold py-1.5 rounded-lg text-xs cursor-pointer">팀 정보 반영하기</button>
                     </div>
+
                     <div id="player-selection-container" class="mb-6">
                         <div class="p-6 text-center text-xs text-gray-400">구글 시트 URL을 먼저 연동해 주세요.</div>
                     </div>
+
                     <div id="map-grid-container" class="mb-4">
                         <div class="p-6 text-center text-xs text-gray-400">구글 시트 URL을 먼저 연동해 주세요.</div>
                     </div>
+
                     <button id="btn-save-selection" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-xs cursor-pointer">팀 설정, 참가 선수 및 맵 구성 저장하기</button>
                 </div>
             </div>
@@ -1162,6 +1238,7 @@
             <div id="tab-match" class="tab-content hidden">
                 <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between flex-wrap gap-3">
                     <div class="flex items-center gap-2 flex-wrap" id="match-set-tabs"></div>
+                    
                     <div class="flex items-center gap-2">
                         <button id="btn-add-match-set" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-3 py-1.5 rounded text-xs font-bold cursor-pointer whitespace-nowrap">+새 세트(묶음) 추가</button>
                     </div>
@@ -1198,6 +1275,7 @@
                                 <button id="btn-copy-score-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                             </div>
                         </div>
+
                         <div class="flex items-center justify-between gap-2 bg-[#0b0c0e] p-3 rounded-xl border border-[#2c2d33] text-xs">
                             <div class="flex items-center gap-2 flex-1">
                                 <span class="text-blue-400 font-bold whitespace-nowrap">P1 위치:</span>
@@ -1220,6 +1298,7 @@
                                 <button id="btn-copy-vs-url" class="bg-[#2c2d33] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                             </div>
                         </div>
+
                         <div class="mb-4 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-4">
                             <div class="flex items-center gap-3 flex-1 justify-end">
                                 <div class="text-right">
@@ -1240,6 +1319,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="mb-3">
                             <label class="block text-[10px] text-gray-400 mb-1">출전 경기 선택 (목록에서 고르면 위 미리보기에 즉시 반영됩니다)</label>
                             <select id="vs-match-select" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-[#00FFA3] font-bold"></select>
@@ -1251,7 +1331,9 @@
 
             <div id="tab-settings" class="tab-content hidden">
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#00FFA3]/30 flex items-center justify-between">
-                    <div><h3 class="text-sm font-bold text-[#00FFA3]">경기 진행 모드 선택</h3></div>
+                    <div>
+                        <h3 class="text-sm font-bold text-[#00FFA3]">경기 진행 모드 선택</h3>
+                    </div>
                     <div class="flex items-center gap-2">
                         <select id="select-match-mode" class="bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-white font-bold">
                             <option value="team">🛡️ 팀 대항전 모드</option>
@@ -1259,6 +1341,7 @@
                         </select>
                     </div>
                 </div>
+
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                     <h3 class="text-sm font-bold text-[#00FFA3] mb-2">방 비밀번호(PIN) 변경</h3>
                     <p class="text-xs text-gray-400 mb-3">현재 방의 보안 비밀번호를 새로운 값으로 변경합니다.</p>
@@ -1267,31 +1350,40 @@
                         <button id="btn-change-room-password" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">비밀번호 변경</button>
                     </div>
                 </div>
+
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-red-500/30">
                     <h3 class="text-sm font-bold text-red-400 mb-2">⚠️ 방 전체 데이터 초기화</h3>
                     <p class="text-xs text-gray-400 mb-3">현재 방의 모든 대진표, 스코어, 선수 선택 및 설정 데이터를 초기 상태로 되돌립니다.</p>
                     <button id="btn-reset-all-room" class="w-full bg-red-600/80 hover:bg-red-600 text-white font-bold py-2 rounded text-xs cursor-pointer">방 전체 데이터 초기화하기</button>
                 </div>
+
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
                     <h3 class="text-sm font-bold text-[#00FFA3] mb-2">구글 스프레드시트 데이터베이스(DB) 안내</h3>
                     <p class="text-xs text-gray-400 mb-3">콘솔에 연동할 선수 및 맵 데이터를 관리하는 기본 스프레드시트 사본을 생성할 수 있습니다.</p>
-                    <a href="https://docs.google.com/spreadsheets/d/1eA1GCEga0FcpmPMO8Qm8nXoZOPeQioAaBgXZs-NDyCc/copy" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded text-xs transition-all">📋 DB용 구글시트 초기버전 만들기 (사본 생성)</a>
+                    <a href="https://docs.google.com/spreadsheets/d/1eA1GCEga0FcpmPMO8Qm8nXoZOPeQioAaBgXZs-NDyCc/copy" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded text-xs transition-all">
+                        📋 DB용 구글시트 초기버전 만들기 (사본 생성)
+                    </a>
                 </div>
+
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                    <div class="flex justify-between items-center mb-1"><h3 class="text-sm font-bold text-[#00FFA3]">내 구글 스프레드시트 연동 설정</h3></div>
+                    <div class="flex justify-between items-center mb-1">
+                        <h3 class="text-sm font-bold text-[#00FFA3]">내 구글 스프레드시트 연동 설정</h3>
+                    </div>
                     <div class="flex gap-2 mt-2">
                         <input type="text" id="input-user-gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-white">
                         <button id="btn-save-gas-url" class="bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold px-4 py-1.5 rounded text-xs whitespace-nowrap cursor-pointer">URL 저장</button>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- 4. 콘솔 사용법 설명서 탭 -->
             <div id="tab-guide" class="tab-content hidden">
                 <div class="bg-[#1b1c20] p-6 rounded-xl border border-[#2c2d33] text-xs leading-relaxed space-y-6">
                     <div>
                         <h2 class="text-base font-black text-[#00FFA3] mb-2">📖 치치직 스타크래프트 중계 콘솔 사용 가이드</h2>
                         <p class="text-gray-300">본 콘솔은 스타크래프트 내전 및 방송 중계 시 실시간 스코어보드, 매치리스트, 선수 소개(VS) 화면을 송출할 수 있는 웹 기반 중계 제어 시스템입니다.</p>
                     </div>
+
                     <div class="border-t border-[#2c2d33] pt-4">
                         <h3 class="text-sm font-bold text-yellow-400 mb-2">1단계: 구글 시트 DB 생성 및 작성 방법</h3>
                         <ul class="list-disc pl-5 space-y-1.5 text-gray-300">
@@ -1305,6 +1397,7 @@
                             </li>
                         </ul>
                     </div>
+
                     <div class="border-t border-[#2c2d33] pt-4">
                         <h3 class="text-sm font-bold text-yellow-400 mb-2">2단계: 구글 시트 웹 앱 배포 및 연동</h3>
                         <ul class="list-disc pl-5 space-y-1.5 text-gray-300">
@@ -1319,15 +1412,16 @@
                             <li><b>URL 복사 및 저장:</b> 배포 완료 후 발급되는 <b>[웹 앱 URL]</b>(끝이 `/exec`로 끝나는 주소)을 복사합니다. 콘솔의 <b>[⚙️ 3. 기본 설정]</b> 탭으로 돌아와 <b>'내 구글 스프레드시트 연동 설정'</b> 칸에 붙여넣고 [URL 저장]을 누릅니다.</li>
                         </ul>
                     </div>
+
                     <div class="border-t border-[#2c2d33] pt-4">
                         <h3 class="text-sm font-bold text-yellow-400 mb-2">3단계: 선수 및 맵 풀 구성</h3>
                         <ul class="list-disc pl-5 space-y-1 text-gray-300">
                             <li><b>[👥 1. 선수 및 맵 선택]</b> 탭으로 이동합니다.</li>
                             <li>프로토스, 테란, 저그 종족별 구획으로 정돈된 선수 목록에서 이번 경기에 참가할 선수를 체크합니다.</li>
                             <li>하단에서 1팀과 2팀에 소속될 선수를 확인하고 팀 이름을 설정한 뒤 <b>[팀 설정, 참가 선수 및 맵 구성 저장하기]</b> 버튼을 누릅니다.</li>
-                            <li>※ 선수의 종족이 변경될 경우, 연동된 구글 시트의 `players` 탭에서 수정하시면 실시간으로 반영됩니다.</li>
                         </ul>
                     </div>
+
                     <div class="border-t border-[#2c2d33] pt-4">
                         <h3 class="text-sm font-bold text-yellow-400 mb-2">4단계: 세트별 대진 설정 및 중계 진행</h3>
                         <ul class="list-disc pl-5 space-y-1 text-gray-300">
@@ -1337,6 +1431,7 @@
                             <li>미니맵 스코어보드 하단에 노출될 선수 위치(예: 9, 3)를 콘솔 하단 입력란에 직접 적고 [위치 즉시 반영]을 누르면 오버레이에 즉시 반영됩니다.</li>
                         </ul>
                     </div>
+
                     <div class="border-t border-[#2c2d33] pt-4">
                         <h3 class="text-sm font-bold text-yellow-400 mb-2">5단계: OBS 스튜디오 오버레이 링크 연동</h3>
                         <ul class="list-disc pl-5 space-y-1 text-gray-300">
