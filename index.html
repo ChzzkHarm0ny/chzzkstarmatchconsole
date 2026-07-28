@@ -130,7 +130,7 @@
             });
 
             document.getElementById('btn-reset-all-room').addEventListener('click', () => {
-                if (confirm("⚠️ 정말로 이 방의 모든 데이터를 초기상태로 되돌리시겠습니까? (저장된 대진 및 설정이 모두 삭제됩니다)")) {
+                if (confirm("⚠️ 정말로 이 방의 모든 데이터를 초기상태로 되돌리시겠습니까?")) {
                     if (currentRoomId) {
                         remove(ref(db, "rooms/" + currentRoomId + "/matchState")).then(() => {
                             localStorage.removeItem('starcraft_inited_' + currentRoomId);
@@ -143,7 +143,7 @@
 
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
 
-            // 스코어보드 매뉴얼 입력 적용 이벤트
+            // [오류 수정] 스코어보드 매뉴얼 입력 적용 이벤트 리스너 정상 연결
             document.getElementById('btn-save-manual-score').addEventListener('click', saveManualScoreboard);
 
             document.getElementById('vs-match-select').addEventListener('change', (e) => {
@@ -166,7 +166,6 @@
 
             document.getElementById('btn-save-vs').addEventListener('click', saveVsMatchState);
             document.getElementById('btn-save-league-title').addEventListener('click', saveLeagueTitle);
-            document.getElementById('btn-save-score-pos').addEventListener('click', saveScorePosState);
             document.getElementById('btn-change-room-password').addEventListener('click', changeRoomPassword);
 
             document.getElementById('btn-toggle-list').addEventListener('click', () => toggleOverlayVisibility('listVisible', 'btn-toggle-list'));
@@ -831,7 +830,7 @@
                             </table>
                         </div>
                         <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#2c2d33] hover:bg-[#3c3d44] text-white font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
-                            📥 ${setObj.name} 대진 및 현재 경기 반영 (VS 화면/매치리스트만)
+                            📥 ${setObj.name} 대진 및 현재 경기 반영 (VS 화면에 적용/스코어 임시입력)
                         </button>
                     </div>
                 `;
@@ -1079,8 +1078,8 @@
             alert(s.name + " 대진이 기록되었습니다! (하단의 스코어보드 입력 패널에 이름이 자동 채워졌습니다)");
         };
 
-        // 스코어보드 수동 입력 저장 함수
-        window.saveManualScoreboard = function() {
+        // [오류 수정 완료] 전역 스코프에 정상적으로 정의된 스코어보드 수동 저장 함수
+        function saveManualScoreboard() {
             if (!currentRoomId) return;
 
             let manualData = {
@@ -1108,7 +1107,7 @@
             set(ref(db, "rooms/" + currentRoomId + "/manualScore"), manualData).then(() => {
                 alert("스코어보드 오버레이가 수동 입력값으로 즉시 업데이트 되었습니다!");
             });
-        };
+        }
 
         function saveLeagueTitle() {
             if (!currentRoomId) return;
@@ -1131,7 +1130,6 @@
                 renderPlayerSelectionGrid();
                 renderMatchSetPanels();
                 
-                // 수동 입력란에도 팀 이름 기본 반영
                 document.getElementById('man-t1-name').value = team1Name;
                 document.getElementById('man-t2-name').value = team2Name;
                 
@@ -1540,13 +1538,13 @@
                     </div>
 
                     <div class="border-t border-[#2c2d33] pt-4">
-                        <h3 class="text-sm font-bold text-yellow-400 mb-2">4단계: 세트별 대진 설정 및 스코어보드 수동 조작</h3>
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">4단계: 대진 설정 및 스코어보드 수동 조작</h3>
                         <ul class="list-disc pl-5 space-y-1 text-gray-300">
                             <li><b>[⚔️ 2. 중계 대시보드]</b> 탭으로 이동합니다.</li>
                             <li>각 세트별 상세 대진 표에서 매치 형태(1v1~4v4)와 선수를 지정합니다.</li>
                             <li>진행할 경기의 라디오 버튼을 체크하고 <b>[대진 및 현재 경기 반영]</b> 버튼을 누르면, 하단 <b>[스코어보드 수동 컨트롤 패널]</b>에 선수 이름과 종족 등이 자동으로 임시 채워집니다.</li>
                             <li><b>[표시 설정]</b> 체크박스를 통해 개인전(팀 로우 끄기)/팀전(모두 켜기) 등 원하는 화면 구조를 마음대로 껐다 켤 수 있습니다.</li>
-                            <li>점수(+/-)나 텍스트를 입맛에 맞게 수정한 뒤, 반드시 <b>[🎯 스코어보드 오버레이 실시간 수동 반영]</b> 버튼을 눌러야 화면에 송출됩니다.</li>
+                            <li>점수(+/-)나 텍스트를 입맛에 맞게 수정한 뒤, 반드시 <b>[🎯 스코어보드 오버레이 실시간 수동 반영]</b> 버튼을 눌러야 화면에 최종 송출됩니다.</li>
                         </ul>
                     </div>
 
