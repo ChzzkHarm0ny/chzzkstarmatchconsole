@@ -51,7 +51,6 @@
         let team2Name = "2팀";
         let team1Color = "#1d3557";
         let team2Color = "#6a1b1b";
-        let leagueTitleText = "스타크래프트 프로리그";
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -143,6 +142,9 @@
             });
 
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
+
+            // 스코어보드 매뉴얼 입력 적용 이벤트
+            document.getElementById('btn-save-manual-score').addEventListener('click', saveManualScoreboard);
 
             document.getElementById('vs-match-select').addEventListener('change', (e) => {
                 let val = e.target.value;
@@ -241,17 +243,20 @@
             }
         };
 
-        // 수동 점수 컨트롤 함수 추가
         window.changeManualScore = function(teamIdx, delta) {
             if (!currentRoomId) return;
             if (teamIdx === 1) {
-                let current = parseInt(document.getElementById('p1Score').innerText) || 0;
-                let newVal = Math.max(0, current + delta);
-                set(ref(db, "rooms/" + currentRoomId + "/matchState/p1Score"), newVal);
-            } else {
-                let current = parseInt(document.getElementById('p2Score').innerText) || 0;
-                let newVal = Math.max(0, current + delta);
-                set(ref(db, "rooms/" + currentRoomId + "/matchState/p2Score"), newVal);
+                let current = parseInt(document.getElementById('man-t1-score').value) || 0;
+                document.getElementById('man-t1-score').value = Math.max(0, current + delta);
+            } else if (teamIdx === 2) {
+                let current = parseInt(document.getElementById('man-t2-score').value) || 0;
+                document.getElementById('man-t2-score').value = Math.max(0, current + delta);
+            } else if (teamIdx === 3) {
+                let current = parseInt(document.getElementById('man-p1-score').value) || 0;
+                document.getElementById('man-p1-score').value = Math.max(0, current + delta);
+            } else if (teamIdx === 4) {
+                let current = parseInt(document.getElementById('man-p2-score').value) || 0;
+                document.getElementById('man-p2-score').value = Math.max(0, current + delta);
             }
         };
 
@@ -327,16 +332,6 @@
                     if(ms.selectedMapPool) selectedMapPool = ms.selectedMapPool;
                     if(ms.matchSetsObj) matchSetsObj = ms.matchSetsObj;
 
-                    if(ms.leagueTitle) {
-                        leagueTitleText = ms.leagueTitle;
-                        document.getElementById('input-league-title').value = leagueTitleText;
-                    }
-
-                    if(ms.scorePos) {
-                        document.getElementById('input-score-t1-pos').value = ms.scorePos.t1Pos || "";
-                        document.getElementById('input-score-t2-pos').value = ms.scorePos.t2Pos || "";
-                    }
-
                     if(ms.teamNames) {
                         team1Name = ms.teamNames.team1 || "1팀";
                         team2Name = ms.teamNames.team2 || "2팀";
@@ -359,8 +354,30 @@
                         updateVsPreview(t1ImgName, t2ImgName, ms.vsMatch.map?.name, p1Text, p2Text);
                     }
 
-                    document.getElementById('p1Score').innerText = ms.p1Score !== undefined ? ms.p1Score : 0;
-                    document.getElementById('p2Score').innerText = ms.p2Score !== undefined ? ms.p2Score : 0;
+                    // 스코어보드 수동 입력 데이터 불러오기
+                    let manual = data.manualScore || {
+                        showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
+                        title: "[1세트]", t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
+                        p1Name: "선수1", p1Score: 0, p2Score: 0, p2Name: "선수2", pos1: "", pos2: ""
+                    };
+                    document.getElementById('cb-show-title').checked = manual.showTitle;
+                    document.getElementById('cb-show-team').checked = manual.showTeam;
+                    document.getElementById('cb-show-player').checked = manual.showPlayer;
+                    document.getElementById('cb-show-bottom').checked = manual.showBottom;
+
+                    document.getElementById('man-title').value = manual.title || "";
+                    document.getElementById('man-t1-name').value = manual.t1Name || "";
+                    document.getElementById('man-t1-score').value = manual.t1Score || 0;
+                    document.getElementById('man-t2-score').value = manual.t2Score || 0;
+                    document.getElementById('man-t2-name').value = manual.t2Name || "";
+
+                    document.getElementById('man-p1-name').value = manual.p1Name || "";
+                    document.getElementById('man-p1-score').value = manual.p1Score || 0;
+                    document.getElementById('man-p2-score').value = manual.p2Score || 0;
+                    document.getElementById('man-p2-name').value = manual.p2Name || "";
+
+                    document.getElementById('man-pos1').value = manual.pos1 || "";
+                    document.getElementById('man-pos2').value = manual.pos2 || "";
 
                     updateToggleButtonState('listVisible', 'btn-toggle-list', ms.listVisible);
                     updateToggleButtonState('scoreVisible', 'btn-toggle-score', ms.scoreVisible);
@@ -568,19 +585,6 @@
             }
 
             container.appendChild(wrapper);
-
-            let btnResetPlayers = document.getElementById('btn-reset-players');
-            if (btnResetPlayers) {
-                btnResetPlayers.onclick = () => {
-                    if (confirm("참가 선수 선택을 모두 초기화(해제)하시겠습니까?")) {
-                        selectedRoster = [];
-                        team1Roster = [];
-                        team2Roster = [];
-                        renderPlayerSelectionGrid();
-                        alert("선수 선택이 초기화되었습니다.");
-                    }
-                };
-            }
         }
 
         function togglePlayerParticipation(playerName) {
@@ -642,17 +646,6 @@
 
             wrapper.appendChild(grid);
             container.appendChild(wrapper);
-
-            let btnResetMaps = document.getElementById('btn-reset-maps');
-            if (btnResetMaps) {
-                btnResetMaps.onclick = () => {
-                    if (confirm("맵 풀 선택을 모두 초기화(해제)하시겠습니까?")) {
-                        selectedMapPool = [];
-                        renderMapGrid();
-                        alert("맵 풀이 초기화되었습니다.");
-                    }
-                };
-            }
         }
 
         function toggleMapSelection(mapName) {
@@ -837,8 +830,8 @@
                                 <tbody id="set-tbody-${setObj.id}"></tbody>
                             </table>
                         </div>
-                        <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
-                            🎯 ${setObj.name} 대진 및 현재 경기 반영하기
+                        <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#2c2d33] hover:bg-[#3c3d44] text-white font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
+                            📥 ${setObj.name} 대진 및 현재 경기 반영 (VS 화면/매치리스트만)
                         </button>
                     </div>
                 `;
@@ -1049,7 +1042,6 @@
 
             set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s);
             saveMatchSetsConfigToFirebase();
-
             updateVsMatchDropdownOptions();
 
             let activeMatch = matches[activeMatchIdx];
@@ -1071,20 +1063,52 @@
                         }
                     }
                 }
+                
+                // 대진표에서 가져온 정보를 스코어보드 수동 입력 패널에 자동 채우기 편의 기능
+                document.getElementById('man-title').value = `[${s.name.split(' ')[0]}]`;
+                
+                let r1 = playerRaceMap[t1ImgName] || "";
+                let r1Initial = r1 === "프로토스" ? "P" : (r1 === "테란" ? "T" : (r1 === "저그" ? "Z" : ""));
+                let r2 = playerRaceMap[t2ImgName] || "";
+                let r2Initial = r2 === "프로토스" ? "P" : (r2 === "테란" ? "T" : (r2 === "저그" ? "Z" : ""));
+
+                document.getElementById('man-p1-name').value = p1Text + (r1Initial ? `(${r1Initial})` : "");
+                document.getElementById('man-p2-name').value = p2Text + (r2Initial ? `(${r2Initial})` : "");
             }
 
-            alert(s.name + " 대진이 반영되었습니다! (VS 화면은 수동 송출 버튼을 누르세요)");
+            alert(s.name + " 대진이 기록되었습니다! (하단의 스코어보드 입력 패널에 이름이 자동 채워졌습니다)");
         };
 
-        function saveScorePosState() {
+        // 스코어보드 수동 입력 저장 함수
+        window.saveManualScoreboard = function() {
             if (!currentRoomId) return;
-            let t1Pos = document.getElementById('input-score-t1-pos').value.trim();
-            let t2Pos = document.getElementById('input-score-t2-pos').value.trim();
 
-            set(ref(db, "rooms/" + currentRoomId + "/matchState/scorePos"), { t1Pos, t2Pos }).then(() => {
-                alert("스코어보드 선수 위치가 적용되었습니다!");
+            let manualData = {
+                showTitle: document.getElementById('cb-show-title').checked,
+                showTeam: document.getElementById('cb-show-team').checked,
+                showPlayer: document.getElementById('cb-show-player').checked,
+                showBottom: document.getElementById('cb-show-bottom').checked,
+                
+                title: document.getElementById('man-title').value.trim(),
+                
+                t1Name: document.getElementById('man-t1-name').value.trim(),
+                t1Score: document.getElementById('man-t1-score').value.trim(),
+                t2Score: document.getElementById('man-t2-score').value.trim(),
+                t2Name: document.getElementById('man-t2-name').value.trim(),
+
+                p1Name: document.getElementById('man-p1-name').value.trim(),
+                p1Score: document.getElementById('man-p1-score').value.trim(),
+                p2Score: document.getElementById('man-p2-score').value.trim(),
+                p2Name: document.getElementById('man-p2-name').value.trim(),
+
+                pos1: document.getElementById('man-pos1').value.trim(),
+                pos2: document.getElementById('man-pos2').value.trim()
+            };
+
+            set(ref(db, "rooms/" + currentRoomId + "/manualScore"), manualData).then(() => {
+                alert("스코어보드 오버레이가 수동 입력값으로 즉시 업데이트 되었습니다!");
             });
-        }
+        };
 
         function saveLeagueTitle() {
             if (!currentRoomId) return;
@@ -1106,6 +1130,11 @@
             }).then(() => {
                 renderPlayerSelectionGrid();
                 renderMatchSetPanels();
+                
+                // 수동 입력란에도 팀 이름 기본 반영
+                document.getElementById('man-t1-name').value = team1Name;
+                document.getElementById('man-t2-name').value = team2Name;
+                
                 alert("팀 정보가 적용되었습니다!");
             });
         }
@@ -1234,10 +1263,10 @@
                     </div>
 
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
-                        <h4 class="text-xs font-bold text-[#00FFA3] mb-2">스코어보드 대회/매치 이름 설정</h4>
+                        <h4 class="text-xs font-bold text-[#00FFA3] mb-2">대회/매치 이름 기본 설정</h4>
                         <div class="flex gap-2 mb-2">
                             <input type="text" id="input-league-title" value="스타크래프트 프로리그" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white" placeholder="예: 씨나인 대학리그 starcraft">
-                            <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">대회명 적용</button>
+                            <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">기본 대회명 저장</button>
                         </div>
                     </div>
 
@@ -1289,7 +1318,6 @@
             <div id="tab-match" class="tab-content hidden">
                 <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between flex-wrap gap-3">
                     <div class="flex items-center gap-2 flex-wrap" id="match-set-tabs"></div>
-                    
                     <div class="flex items-center gap-2">
                         <button id="btn-add-match-set" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-3 py-1.5 rounded text-xs font-bold cursor-pointer whitespace-nowrap">+새 세트(묶음) 추가</button>
                     </div>
@@ -1307,26 +1335,12 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
-                    <!-- [수정] 수동 점수 컨트롤 패널로 변경 -->
+                    <!-- [수동 스코어보드 입력 패널] -->
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col gap-3">
-                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div class="flex items-center gap-2">
-                                <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어 수동 컨트롤</h3>
-                                <span class="text-[10px] text-gray-400">(승패 자동 연동 해제됨)</span>
-                            </div>
-                            <div class="flex items-center gap-6">
-                                <div class="flex items-center gap-2 bg-[#141518] px-3 py-1.5 rounded-xl border border-[#2c2d33]">
-                                    <span class="text-xs font-bold text-blue-400 mr-2">P1 / Team 1</span>
-                                    <button onclick="changeManualScore(1, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">-</button>
-                                    <span class="text-xl font-black text-[#00FFA3] w-6 text-center" id="p1Score">0</span>
-                                    <button onclick="changeManualScore(1, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">+</button>
-                                </div>
-                                <div class="flex items-center gap-2 bg-[#141518] px-3 py-1.5 rounded-xl border border-[#2c2d33]">
-                                    <span class="text-xs font-bold text-red-400 mr-2">P2 / Team 2</span>
-                                    <button onclick="changeManualScore(2, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">-</button>
-                                    <span class="text-xl font-black text-[#00FFA3] w-6 text-center" id="p2Score">0</span>
-                                    <button onclick="changeManualScore(2, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2.5 py-0.5 rounded text-white font-black cursor-pointer">+</button>
-                                </div>
+                        <div class="flex flex-col sm:flex-row items-center justify-between border-b border-[#2c2d33] pb-3 gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 직접 입력 (수동 제어)</h3>
+                                <p class="text-[10px] text-gray-400 mt-0.5">상단 대진표에서 반영 버튼을 누르면 이 칸에 이름이 자동으로 임시 입력됩니다.</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button id="btn-toggle-score" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐</button>
@@ -1335,17 +1349,61 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between gap-2 bg-[#0b0c0e] p-3 rounded-xl border border-[#2c2d33] text-xs">
-                            <div class="flex items-center gap-2 flex-1">
-                                <span class="text-blue-400 font-bold whitespace-nowrap">P1 위치:</span>
-                                <input type="text" id="input-score-t1-pos" placeholder="예: 9" class="w-20 bg-[#141518] border border-[#2c2d33] rounded p-1 text-center text-white">
-                            </div>
-                            <div class="flex items-center gap-2 flex-1">
-                                <span class="text-red-400 font-bold whitespace-nowrap">P2 위치:</span>
-                                <input type="text" id="input-score-t2-pos" placeholder="예: 3" class="w-20 bg-[#141518] border border-[#2c2d33] rounded p-1 text-center text-white">
-                            </div>
-                            <button id="btn-save-score-pos" class="bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold px-4 py-1.5 rounded text-xs whitespace-nowrap cursor-pointer">위치 즉시 반영</button>
+                        <!-- 표시 설정 토글 -->
+                        <div class="flex items-center gap-4 text-[11px] font-bold text-gray-300 bg-[#0b0c0e] p-2 rounded-lg border border-[#2c2d33] overflow-x-auto whitespace-nowrap">
+                            <span class="text-white bg-[#2c2d33] px-2 py-0.5 rounded">표시 설정</span>
+                            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-title" checked class="accent-[#00FFA3]"> 공지 (상단)</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-team" checked class="accent-[#00FFA3]"> 팀 로우 (배경색 있음)</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-player" checked class="accent-[#00FFA3]"> 선수 로우 (배경색 있음)</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-bottom" checked class="accent-[#00FFA3]"> 위치 로우 (하단)</label>
                         </div>
+
+                        <!-- 입력 폼 그리드 -->
+                        <div class="grid grid-cols-1 gap-2.5 mt-1 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
+                            <!-- 공지 -->
+                            <div class="flex gap-2 items-center">
+                                <span class="w-[70px] text-[11px] text-gray-400 text-right">공지</span>
+                                <input type="text" id="man-title" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1.5 text-xs text-center text-[#00FFA3] font-bold" placeholder="예: [1세트]">
+                            </div>
+                            <!-- 팀 로우 -->
+                            <div class="flex gap-2 items-center bg-[#1b1c20] p-1.5 rounded border border-[#2c2d33]">
+                                <span class="w-[64px] text-[11px] text-gray-400 text-right mr-1">팀 로우</span>
+                                <input type="text" id="man-t1-name" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold" placeholder="TEAM 1">
+                                <button onclick="changeManualScore(1, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">-</button>
+                                <input type="number" id="man-t1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded px-1 py-1 text-xs text-center text-white font-black" value="0">
+                                <button onclick="changeManualScore(1, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">+</button>
+                                <span class="text-gray-500 font-bold mx-0.5">:</span>
+                                <button onclick="changeManualScore(2, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">-</button>
+                                <input type="number" id="man-t2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded px-1 py-1 text-xs text-center text-white font-black" value="0">
+                                <button onclick="changeManualScore(2, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">+</button>
+                                <input type="text" id="man-t2-name" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold" placeholder="TEAM 2">
+                            </div>
+                            <!-- 선수 로우 -->
+                            <div class="flex gap-2 items-center bg-[#1b1c20] p-1.5 rounded border border-[#2c2d33]">
+                                <span class="w-[64px] text-[11px] text-gray-400 text-right mr-1">선수 로우</span>
+                                <input type="text" id="man-p1-name" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold" placeholder="선수 1">
+                                <button onclick="changeManualScore(3, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">-</button>
+                                <input type="number" id="man-p1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded px-1 py-1 text-xs text-center text-white font-black" value="0">
+                                <button onclick="changeManualScore(3, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">+</button>
+                                <span class="text-gray-500 font-bold mx-0.5">:</span>
+                                <button onclick="changeManualScore(4, -1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">-</button>
+                                <input type="number" id="man-p2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded px-1 py-1 text-xs text-center text-white font-black" value="0">
+                                <button onclick="changeManualScore(4, 1)" class="bg-[#2c2d33] hover:bg-[#3c3d44] px-2 py-1 rounded text-white font-black cursor-pointer">+</button>
+                                <input type="text" id="man-p2-name" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold" placeholder="선수 2">
+                            </div>
+                            <!-- 위치 로우 -->
+                            <div class="flex gap-2 items-center justify-center mt-1">
+                                <span class="w-[70px] text-[11px] text-gray-400 text-right">위치 로우</span>
+                                <input type="text" id="man-pos1" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1.5 text-xs text-center text-yellow-400 font-bold" placeholder="예: P12">
+                                <div class="flex-1 text-center text-[10px] text-gray-600">◀ 좌 / 우 ▶</div>
+                                <input type="text" id="man-pos2" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1.5 text-xs text-center text-yellow-400 font-bold" placeholder="예: P5">
+                                <div class="w-2"></div>
+                            </div>
+                        </div>
+
+                        <button id="btn-save-manual-score" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-3 mt-1 rounded-lg text-sm cursor-pointer shadow-lg transition-all border border-[#00e692]">
+                            🎯 스코어보드 오버레이 실시간 수동 반영
+                        </button>
                     </div>
 
                     <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
@@ -1435,9 +1493,71 @@
                 </div>
             </div>
 
+            <!-- 4. 콘솔 사용법 설명서 탭 -->
             <div id="tab-guide" class="tab-content hidden">
                 <div class="bg-[#1b1c20] p-6 rounded-xl border border-[#2c2d33] text-xs leading-relaxed space-y-6">
-                    <p class="text-gray-300">중계 콘솔 사용 가이드는 생략 (기존과 동일하게 사용하시면 됩니다)</p>
+                    <div>
+                        <h2 class="text-base font-black text-[#00FFA3] mb-2">📖 치치직 스타크래프트 중계 콘솔 사용 가이드</h2>
+                        <p class="text-gray-300">본 콘솔은 스타크래프트 내전 및 방송 중계 시 실시간 스코어보드, 매치리스트, 선수 소개(VS) 화면을 송출할 수 있는 웹 기반 중계 제어 시스템입니다.</p>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">1단계: 구글 시트 DB 생성 및 작성 방법</h3>
+                        <ul class="list-disc pl-5 space-y-1.5 text-gray-300">
+                            <li><b>시트 사본 생성:</b> <b>[⚙️ 3. 기본 설정]</b> 탭에서 <b>[📋 DB용 구글시트 초기버전 만들기]</b> 버튼을 눌러 본인 계정에 선수/맵 데이터 시트 사본을 생성합니다.</li>
+                            <li><b>시트 내용 채우기 (`players` 및 `maps` 탭):</b>
+                                <ul class="list-disc pl-5 mt-1 space-y-1 text-gray-400">
+                                    <li><b>선수(`players`):</b> 선수의 이름, 종족(프로토스/테란/저그), 이미지 주소(`img`) 칸을 채웁니다.</li>
+                                    <li><b>맵(`maps`):</b> 맵 이름과 맵 이미지 주소(`url`) 칸을 채웁니다.</li>
+                                    <li><b>💡 중요 (이미지 등록 방법):</b> 선수 프로필 사진이나 맵 이미지는 컴퓨터에 있는 파일을 바로 넣을 수 없습니다. <b>이미지를 웹(블로그, 이미지 호스팅, GitHub 등)에 업로드한 뒤 생성된 이미지 주소(URL)를 시트의 이미지 칸에 입력</b>해야 콘솔과 오버레이에 정상적으로 출력됩니다.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">2단계: 구글 시트 웹 앱 배포 및 연동</h3>
+                        <ul class="list-disc pl-5 space-y-1.5 text-gray-300">
+                            <li><b>Apps Script 열기:</b> 생성된 구글 시트 상단 메뉴에서 <b>[확장 프로그램] ➔ [Apps Script]</b>를 클릭합니다.</li>
+                            <li><b>웹 앱 배포하기:</b>
+                                <ol class="list-decimal pl-5 mt-1 space-y-0.5 text-gray-400">
+                                    <li>우측 상단의 <b>[배포] ➔ [새 배포]</b>를 클릭합니다.</li>
+                                    <li>왼쪽 상단 톱니바퀴(유형 선택) 아이콘을 눌러 <b>[웹 앱]</b>을 선택합니다.</li>
+                                    <li>설명은 간단히 적고, <b>액세스 권한 있는 사용자</b>를 반드시 <b>[모든 사용자(Anyone)]</b>로 설정한 뒤 하단의 <b>[배포]</b> 버튼을 누릅니다. (권한 검토 창이 뜨면 본인 계정 선택 ➔ [고급] ➔ [안전하지 않음으로 이동]을 눌러 허용)</li>
+                                </ol>
+                            </li>
+                            <li><b>URL 복사 및 저장:</b> 배포 완료 후 발급되는 <b>[웹 앱 URL]</b>(끝이 `/exec`로 끝나는 주소)을 복사합니다. 콘솔의 <b>[⚙️ 3. 기본 설정]</b> 탭으로 돌아와 <b>'내 구글 스프레드시트 연동 설정'</b> 칸에 붙여넣고 [URL 저장]을 누릅니다.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">3단계: 선수 및 맵 풀 구성</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                            <li><b>[👥 1. 선수 및 맵 선택]</b> 탭으로 이동합니다.</li>
+                            <li>프로토스, 테란, 저그 종족별 구획으로 정돈된 선수 목록에서 이번 경기에 참가할 선수를 체크합니다.</li>
+                            <li>하단에서 1팀과 2팀에 소속될 선수를 확인하고 팀 이름을 설정한 뒤 <b>[팀 설정, 참가 선수 및 맵 구성 저장하기]</b> 버튼을 누릅니다.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">4단계: 세트별 대진 설정 및 스코어보드 수동 조작</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                            <li><b>[⚔️ 2. 중계 대시보드]</b> 탭으로 이동합니다.</li>
+                            <li>각 세트별 상세 대진 표에서 매치 형태(1v1~4v4)와 선수를 지정합니다.</li>
+                            <li>진행할 경기의 라디오 버튼을 체크하고 <b>[대진 및 현재 경기 반영]</b> 버튼을 누르면, 하단 <b>[스코어보드 수동 컨트롤 패널]</b>에 선수 이름과 종족 등이 자동으로 임시 채워집니다.</li>
+                            <li><b>[표시 설정]</b> 체크박스를 통해 개인전(팀 로우 끄기)/팀전(모두 켜기) 등 원하는 화면 구조를 마음대로 껐다 켤 수 있습니다.</li>
+                            <li>점수(+/-)나 텍스트를 입맛에 맞게 수정한 뒤, 반드시 <b>[🎯 스코어보드 오버레이 실시간 수동 반영]</b> 버튼을 눌러야 화면에 송출됩니다.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-[#2c2d33] pt-4">
+                        <h3 class="text-sm font-bold text-yellow-400 mb-2">5단계: OBS 스튜디오 오버레이 링크 연동</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                            <li>중계 대시보드 상단 및 각 제어부에 있는 <b>[링크 복사]</b> 버튼을 이용해 URL을 복사합니다.</li>
+                            <li>OBS 스튜디오에서 <b>'브라우저 소스'</b>를 추가하고 복사한 URL을 붙여넣어 화면에 배치합니다.</li>
+                            <li>배경은 투명하게 처리되어 있으므로 뒤쪽 중계 화면 위에 얹어서 바로 사용하실 수 있습니다.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
