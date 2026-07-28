@@ -46,7 +46,7 @@
             1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {} }
         };
         let activeSetId = 1;
-        let currentMatchMode = "team"; // 'team' 또는 'solo'
+        let currentMatchMode = "team";
         let team1Name = "1팀";
         let team2Name = "2팀";
         let team1Color = "#1d3557";
@@ -377,14 +377,13 @@
                 allPlayers = data.players || [];
                 allMaps = data.maps || [];
                 
-                if(selectedRoster.length === 0 && team1Roster.length === 0 && team2Roster.length === 0) {
-                    selectedRoster = allPlayers.map(p => p.name);
-                    let mid = Math.ceil(selectedRoster.length / 2);
-                    team1Roster = selectedRoster.slice(0, mid);
-                    team2Roster = selectedRoster.slice(mid);
-                }
-                if(selectedMapPool.length === 0) {
-                    selectedMapPool = allMaps.map(m => m.name);
+                // 최초 연동 시 자동으로 전체 선택되지 않고 빈 상태로 시작하도록 변경
+                if(selectedRoster.length === 0 && team1Roster.length === 0 && team2Roster.length === 0 && !localStorage.getItem('starcraft_inited_' + currentRoomId)) {
+                    selectedRoster = [];
+                    team1Roster = [];
+                    team2Roster = [];
+                    selectedMapPool = [];
+                    localStorage.setItem('starcraft_inited_' + currentRoomId, "true");
                 }
 
                 renderSelectionUI();
@@ -466,7 +465,6 @@
             checkSection.appendChild(racesWrapper);
             wrapper.appendChild(checkSection);
 
-            // 팀 대항전 모드일 때만 소속 배정 패널 표시
             if (currentMatchMode === 'team') {
                 let teamSection = document.createElement('div');
                 teamSection.className = "grid grid-cols-1 sm:grid-cols-2 gap-4";
