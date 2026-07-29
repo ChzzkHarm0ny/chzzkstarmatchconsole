@@ -2,21 +2,44 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK Multi-Set ProLeague Overlay</title>
+    <title>CHZZK Match List Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
-        .race-P { color: #FFE000; }
-        .race-T { color: #00AFFF; }
-        .race-Z { color: #FF4545; }
-        .player-loser { color: #4b5563 !important; opacity: 0.5; }
-        #list-wrapper { transition: opacity 0.3s ease; }
-        .overlay-active-match {
-            border: 2px solid #00FFA3 !important;
+        body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
+        .match-list-container {
+            width: 320px;
+            background: rgba(18, 19, 22, 0.95);
+            border: 1px solid #2c2d33;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+        .active-match-highlight {
             background-color: rgba(0, 255, 163, 0.15) !important;
-            box-shadow: 0 0 15px rgba(0, 255, 163, 0.5);
+            border: 2px solid #00FFA3 !important;
         }
     </style>
+</head>
+<body class="flex items-start justify-start p-0">
+    <div id="matchlist-wrapper" class="match-list-container text-white">
+        <!-- 상단 헤더 -->
+        <div id="matchlist-header" class="bg-[#1b1c20] px-3.5 py-2.5 border-b border-[#2c2d33] flex items-center justify-between">
+            <span id="league-title-text" class="text-xs font-black text-[#00FFA3] tracking-wide">스타크래프트 프로리그</span>
+            <div class="flex gap-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#00FFA3] inline-block"></span>
+            </div>
+        </div>
+
+        <!-- 세트 탭 목록 -->
+        <div id="matchset-tabs-bar" class="flex bg-[#0b0c0e] border-b border-[#2c2d33] overflow-x-auto"></div>
+
+        <!-- 매치 목록 바디 (글씨 크기를 시원하게 확대) -->
+        <div id="matchlist-body" class="p-2.5 flex flex-col gap-2 max-h-[380px] overflow-y-auto"></div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
@@ -34,111 +57,106 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let playerRaceMap = {};
 
-        window.onload = async function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomId = urlParams.get('room');
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
 
-            if (!roomId) return;
-
+        if (roomId) {
             const roomRef = ref(db, "rooms/" + roomId);
-            onValue(roomRef, async (snapshot) => {
+            onValue(roomRef, (snapshot) => {
                 const data = snapshot.val() || {};
-                let listEl = document.getElementById('list-wrapper');
-                if (data.matchState && data.matchState.listVisible === false) {
-                    listEl.style.opacity = '0';
-                    listEl.style.pointerEvents = 'none';
-                    return;
-                } else {
-                    listEl.style.opacity = '1';
-                    listEl.style.pointerEvents = 'auto';
-                }
+                let ms = data.matchState || {};
 
-                if (data.settings && data.settings.gasUrl) {
-                    try {
-                        let res = await fetch(data.settings.gasUrl + "?action=getData");
-                        let sheetData = await res.json();
-                        if (sheetData.players) {
-                            sheetData.players.forEach(p => { playerRaceMap[p.name] = p.race; });
-                        }
-                    } catch (e) {}
-                }
-
-                if (data.matchState) {
-                    let ms = data.matchState;
-                    let isSoloMode = (ms.matchMode === 'solo');
-                    let team1Name = isSoloMode ? "P1" : (ms.teamNames ? ms.teamNames.team1 : "1팀");
-                    let team2Name = isSoloMode ? "P2" : (ms.teamNames ? ms.teamNames.team2 : "2팀");
-                    let team1Color = (ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557";
-                    let team2Color = (ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b";
-
-                    if (ms.matchSetsObj) {
-                        let wrapper = document.getElementById('sets-wrapper');
-                        wrapper.innerHTML = '';
-
-                        Object.values(ms.matchSetsObj).forEach(setObj => {
-                            let card = document.createElement('div');
-                            card.className = "flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md w-[420px] shrink-0";
-                            
-                            let headerHtml = `
-                                <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-3 text-center">
-                                    <div class="text-xs tracking-widest text-[#00FFA3] font-black mb-2">${setObj.name.toUpperCase()}</div>
-                                    <div class="grid grid-cols-5 text-base font-black items-center px-4">
-                                        <div class="col-span-2 py-2 px-3 rounded-lg truncate text-white shadow text-base" style="background-color: ${team1Color};">${team1Name}</div>
-                                        <div class="col-span-1 flex items-center justify-center text-gray-400 text-base">-</div>
-                                        <div class="col-span-2 py-2 px-3 rounded-lg truncate text-white shadow text-base" style="background-color: ${team2Color};">${team2Name}</div>
-                                    </div>
-                                </div>
-                            `;
-
-                            let bodyHtml = `<div class="p-3 flex flex-col gap-2 max-h-[500px] overflow-y-auto">`;
-                            let activeMatchIdx = setObj.activeMatchIdx || 1;
-                            
-                            for (let i = 1; i <= setObj.matchesCount; i++) {
-                                let match = (setObj.matches && setObj.matches[i]) ? setObj.matches[i] : {};
-                                let t1Players = match.t1Players || [match.t1Player || "미정"];
-                                let t2Players = match.t2Players || [match.t2Player || "미정"];
-                                let mapName = match.mapName || "미정";
-                                let winner = match.winner || "";
-
-                                let t1Html = t1Players.map(p => `<div class="truncate ${getRaceClass(p)} ${winner === 't2' ? 'player-loser' : ''}">${p}</div>`).join('');
-                                let t2Html = t2Players.map(p => `<div class="truncate ${getRaceClass(p)} ${winner === 't1' ? 'player-loser' : ''}">${p}</div>`).join('');
-
-                                let isCurrentActive = (Number(activeMatchIdx) === i);
-                                let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "border-[#2c2d33] bg-[#1b1c20]/90";
-
-                                bodyHtml += `
-                                    <div class="flex items-center justify-between px-4 py-2.5 rounded-xl border text-base font-bold shadow-inner ${rowHighlightClass}">
-                                        <div class="w-8 text-center text-gray-400 font-black text-sm">${i}</div>
-                                        <div class="w-32 text-center flex flex-col gap-1 text-base leading-tight">${t1Html}</div>
-                                        <div class="w-32 text-center text-gray-300 font-medium truncate text-sm px-1">${mapName}</div>
-                                        <div class="w-32 text-center flex flex-col gap-1 text-base leading-tight">${t2Html}</div>
-                                    </div>
-                                `;
-                            }
-                            bodyHtml += `</div>`;
-
-                            card.innerHTML = headerHtml + bodyHtml;
-                            wrapper.appendChild(card);
-                        });
+                let wrapper = document.getElementById('matchlist-wrapper');
+                if (wrapper) {
+                    if (ms.listVisible === false) {
+                        wrapper.style.opacity = '0';
+                        return;
+                    } else {
+                        wrapper.style.opacity = '1';
                     }
                 }
-            });
-        };
 
-        function getRaceClass(playerName) {
-            let race = playerRaceMap[playerName];
-            if (race === "프로토스") return "race-P";
-            if (race === "테란") return "race-T";
-            if (race === "저그") return "race-Z";
-            return "text-white";
+                if (ms.leagueTitle) {
+                    document.getElementById('league-title-text').innerText = ms.leagueTitle;
+                }
+
+                let matchSetsObj = ms.matchSetsObj || ms.matchSetsConfig || {
+                    1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {} }
+                };
+
+                let setKeys = Object.keys(matchSetsObj).sort((a,b)=>a-b);
+                let activeSetId = Number(sessionStorage.getItem('active_set_id') || setKeys[0] || 1);
+                if(!matchSetsObj[activeSetId]) activeSetId = Number(setKeys[0] || 1);
+
+                // 세트 탭 렌더링
+                let tabsBar = document.getElementById('matchset-tabs-bar');
+                tabsBar.innerHTML = '';
+                if (setKeys.length > 1) {
+                    tabsBar.style.display = 'flex';
+                    setKeys.forEach(setId => {
+                        let sObj = matchSetsObj[setId];
+                        let tabBtn = document.createElement('button');
+                        tabBtn.className = `flex-1 py-1.5 px-2 text-[11px] font-black cursor-pointer whitespace-nowrap transition-all border-b-2 ${Number(setId) === Number(activeSetId) ? 'bg-[#1b1c20] text-[#00FFA3] border-[#00FFA3]' : 'bg-transparent text-gray-400 border-transparent hover:text-white'}`;
+                        tabBtn.innerText = sObj.name;
+                        tabBtn.onclick = () => {
+                            sessionStorage.setItem('active_set_id', setId);
+                            renderActiveSetMatches(matchSetsObj[setId]);
+                        };
+                        tabsBar.appendChild(tabBtn);
+                    });
+                } else {
+                    tabsBar.style.display = 'none';
+                }
+
+                renderActiveSetMatches(matchSetsObj[activeSetId]);
+            });
+        }
+
+        function renderActiveSetMatches(setObj) {
+            if(!setObj) return;
+            let body = document.getElementById('matchlist-body');
+            body.innerHTML = '';
+
+            let matches = setObj.matches || {};
+            let activeMatchIdx = Number(setObj.activeMatchIdx || 1);
+            let count = setObj.matchesCount || 7;
+
+            for (let i = 1; i <= count; i++) {
+                let m = matches[i] || {};
+                let t1Players = m.t1Players || [m.t1Player || "미정"];
+                let t2Players = m.t2Players || [m.t2Player || "미정"];
+                
+                let t1Str = t1Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
+                let t2Str = t2Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
+                let mapName = m.mapName || "맵 미정";
+                let winner = m.winner || "";
+
+                let isCurrent = (i === activeMatchIdx);
+
+                let row = document.createElement('div');
+                // 💡 글씨를 큼직하게 키운 매치리스트 카드 디자인 (텍스트 13px~14px 적용)
+                row.className = `flex items-center justify-between p-2 rounded-lg border transition-all ${isCurrent ? 'active-match-highlight bg-[#14261e]' : 'bg-[#141518] border-[#2c2d33]'}`;
+
+                let leftColor = winner === 't1' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'text-white font-black' : 'text-gray-300 font-bold');
+                let rightColor = winner === 't2' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'text-white font-black' : 'text-gray-300 font-bold');
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2 w-[35%] truncate">
+                        <span class="text-[11px] font-black px-1.5 py-0.5 rounded ${isCurrent ? 'bg-[#00FFA3] text-black' : 'bg-[#2c2d33] text-gray-400'}">${i}</span>
+                        <span class="text-[13.5px] truncate ${leftColor}" title="${t1Str}">${t1Str}</span>
+                    </div>
+                    <div class="text-[12px] font-extrabold text-[#94a3b8] truncate text-center w-[30%] px-1">
+                        ${mapName}
+                    </div>
+                    <div class="flex items-center justify-end gap-2 w-[35%] truncate text-right">
+                        <span class="text-[13.5px] truncate ${rightColor}" title="${t2Str}">${t2Str}</span>
+                        ${winner ? `<span class="text-[10px] text-[#00FFA3] font-black shrink-0">승</span>` : ''}
+                    </div>
+                `;
+                body.appendChild(row);
+            }
         }
     </script>
-</head>
-<body class="flex items-start justify-start p-4 font-sans">
-    <div id="list-wrapper">
-        <div id="sets-wrapper" class="flex items-start gap-4 overflow-x-auto"></div>
-    </div>
 </body>
 </html>
