@@ -111,6 +111,7 @@
             document.getElementById('btn-logout').addEventListener('click', () => {
                 localStorage.removeItem('starcraft_room_id');
                 localStorage.removeItem('starcraft_room_pin');
+                localStorage.removeItem('starcraft_active_tab');
                 window.location.href = window.location.pathname;
             });
 
@@ -147,6 +148,7 @@
             });
 
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
+            document.getElementById('btn-[#btn-save-manual-score]')?.addEventListener('click', saveManualScoreboard);
             document.getElementById('btn-save-manual-score').addEventListener('click', saveManualScoreboard);
 
             ['man-title', 'man-t1-name', 'man-t1-score', 'man-t2-score', 'man-t2-name', 'man-p1-name', 'man-p1-score', 'man-p2-score', 'man-p2-name', 'man-pos1', 'man-pos2', 'cb-show-title', 'cb-show-team', 'cb-show-player', 'cb-show-bottom'].forEach(id => {
@@ -332,8 +334,13 @@
             }
         };
 
+        /* 탭 상태 저장 및 전환 함수 */
         function switchTab(tabId) {
             if (!tabId) return;
+            
+            // 로컬 스토리지에 현재 활성화된 탭 저장
+            localStorage.setItem('starcraft_active_tab', tabId);
+
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-[#00FFA3]', 'text-black', 'font-bold');
@@ -360,6 +367,10 @@
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('console-main-content').classList.remove('hidden');
             document.getElementById('room-display-name').innerText = "현재 방: [ " + roomId + " ]";
+
+            // 저장되어 있던 활성 탭 복원 (없으면 기본값 roster)
+            const savedTab = localStorage.getItem('starcraft_active_tab') || 'roster';
+            switchTab(savedTab);
 
             generateOverlayUrls(roomId);
             loadRoomData(roomId);
