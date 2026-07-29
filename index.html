@@ -16,23 +16,22 @@
             border: 2px solid #00FFA3 !important;
         }
 
-        /* 콘솔 내부 미니 스코어보드 미리보기용 스타일 */
         .preview-scoreboard {
             width: 320px;
-            background: #1b1c20;
-            border: 2px solid #3c3d44;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
             display: flex;
             flex-direction: column;
             position: relative;
         }
         .preview-leg-left {
             background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 68% 100%, 0% 100%);
+            clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 0% 100%);
         }
         .preview-leg-right {
             background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 32% 100%);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 28% 100%);
         }
         .row-hidden {
             display: none !important;
@@ -150,7 +149,6 @@
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
             document.getElementById('btn-save-manual-score').addEventListener('click', saveManualScoreboard);
 
-            // 실시간 미리보기 동기화를 위한 입력 폼 이벤트 리스너 추가
             ['man-title', 'man-t1-name', 'man-t1-score', 'man-t2-score', 'man-t2-name', 'man-p1-name', 'man-p1-score', 'man-p2-score', 'man-p2-name', 'man-pos1', 'man-pos2', 'cb-show-title', 'cb-show-team', 'cb-show-player', 'cb-show-bottom'].forEach(id => {
                 let el = document.getElementById(id);
                 if(el) {
@@ -176,7 +174,6 @@
             document.getElementById('btn-save-teams').addEventListener('click', saveTeamNames);
         };
 
-        // 콘솔 입력값 기반 실시간 미리보기 렌더링 함수
         window.updateScoreboardPreviewFromConsole = function() {
             let showTitle = document.getElementById('cb-show-title').checked;
             let showTeam = document.getElementById('cb-show-team').checked;
@@ -1493,18 +1490,17 @@
                             </button>
                         </div>
 
-                        <!-- 오른쪽: 실시간 미니 미리보기 패널 -->
+                        <!-- 오른쪽: 실시간 미니 미리보기 패널 (투명 격자 바탕 적용) -->
                         <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col items-center justify-center">
                             <span class="text-xs font-bold text-[#00FFA3] mb-3 self-start">🔍 스코어보드 실시간 미리보기</span>
-                            <div class="bg-black/50 p-4 rounded-xl border border-[#2c2d33] flex items-center justify-center w-full overflow-hidden">
+                            <div class="p-4 rounded-xl border border-[#2c2d33] flex items-center justify-center w-full overflow-hidden" style="background-image: linear-gradient(45deg, #121316 25%, transparent 25%), linear-gradient(-45deg, #121316 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #121316 75%), linear-gradient(-45deg, transparent 75%, #121316 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;">
                                 
-                                <!-- 실제 오버레이와 동일한 구조의 미리보기 박스 -->
                                 <div class="preview-scoreboard text-white font-sans scale-90 origin-top">
                                     <div id="prev-row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0 overflow-hidden">
                                         <span id="prev-text-title" class="text-[#00FFA3] font-black tracking-wider text-[11px] drop-shadow-md">[1세트]</span>
                                     </div>
                                     
-                                    <div id="prev-row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden">
+                                    <div id="prev-row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
                                         <div id="prev-bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white text-[12px]" style="background-color: #1d3557;">
                                             <span id="prev-text-team1" class="relative z-10 drop-shadow-md">1팀</span>
                                         </div>
@@ -1519,7 +1515,7 @@
                                         </div>
                                     </div>
 
-                                    <div id="prev-row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden">
+                                    <div id="prev-row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
                                         <div id="prev-bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-gray-200 text-[11.5px]" style="background-color: #1d3557;">
                                             <div class="absolute inset-0 bg-black/30"></div>
                                             <span id="prev-text-player1" class="relative z-10 drop-shadow-md">선수1</span>
@@ -1538,18 +1534,18 @@
                                         </div>
                                     </div>
                                     
-                                    <div id="prev-row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden">
-                                        <div class="absolute inset-y-0 left-0 w-[45%] preview-leg-left flex items-end px-2 pb-1">
+                                    <div id="prev-row-bottom" class="h-[42px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bg-transparent">
+                                        <div class="absolute inset-y-0 left-0 w-[38%] preview-leg-left flex items-end px-2 pb-1">
                                             <div id="prev-text-pos1" class="text-[#00FFA3] text-[11px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P12</div>
                                         </div>
-                                        <div class="absolute inset-y-0 right-0 w-[45%] preview-leg-right flex items-end justify-end px-2 pb-1">
+                                        <div class="absolute inset-y-0 right-0 w-[38%] preview-leg-right flex items-end justify-end px-2 pb-1">
                                             <div id="prev-text-pos2" class="text-[#00FFA3] text-[11px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;"></div>
                                         </div>
                                     </div>
                                 </div>
 
                             </div>
-                            <span class="text-[10px] text-gray-400 mt-2">※ 체크박스나 입력값을 바꾸면 즉시 반영됩니다.</span>
+                            <span class="text-[10px] text-gray-400 mt-2">※ 체커보드 배경(격자)은 투명 영역을 의미합니다.</span>
                         </div>
                     </div>
 
