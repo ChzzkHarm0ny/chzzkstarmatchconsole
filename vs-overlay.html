@@ -31,7 +31,6 @@
         const db = getDatabase(app);
         
         let fadeTimer = null;
-        let lastVsDataStr = "";
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -55,8 +54,6 @@
                 let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
                 if (vs) {
-                    let currentVsStr = JSON.stringify(vs);
-                    
                     let t1Arr = Array.isArray(vs.t1) ? vs.t1 : [vs.t1];
                     let t2Arr = Array.isArray(vs.t2) ? vs.t2 : [vs.t2];
                     
@@ -68,10 +65,8 @@
                         if(vs.map.url) document.getElementById('map-img').src = vs.map.url;
                     }
 
-                    if (currentVsStr !== lastVsDataStr) {
-                        lastVsDataStr = currentVsStr;
-                        triggerFadeAnimation();
-                    }
+                    // 수신된 모든 송출 이벤트에서 애니메이션이 100% 재재생되도록 호출
+                    triggerFadeAnimation();
                 }
             });
         };
@@ -112,8 +107,19 @@
 
         function triggerFadeAnimation() {
             let container = document.getElementById('vs-wrapper');
-            container.classList.add('active');
+            if (!container) return;
+
+            // 1. 기존 타이머 제거
             if (fadeTimer) clearTimeout(fadeTimer);
+
+            // 2. 순간적으로 active를 끄고 Reflow를 발생시켜 트랜지션 초기화
+            container.classList.remove('active');
+            void container.offsetWidth; 
+
+            // 3. active 클래스를 다시 부여하여 등장 애니메이션 강제 재실행
+            container.classList.add('active');
+
+            // 4. 6초 후 페이드 아웃
             fadeTimer = setTimeout(() => {
                 container.classList.remove('active');
             }, 6000);
