@@ -7,7 +7,6 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
-        /* 전체 박스 배경을 투명하게 설정하고 테두리 제거 */
         .minimap-scoreboard {
             width: 320px;
             background: transparent !important;
@@ -18,16 +17,16 @@
             position: relative;
         }
 
-        /* 왼쪽 다리 도형 (오른쪽 안쪽이 사다리꼴로 파임) */
+        /* 사진 속 비율에 맞춘 왼쪽 다리 (오른쪽 안쪽 사다리꼴 파임) */
         .leg-left {
             background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 0% 100%);
+            clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 0% 100%);
         }
 
-        /* 오른쪽 다리 도형 (왼쪽 안쪽이 사다리꼴로 파임) */
+        /* 사진 속 비율에 맞춘 오른쪽 다리 (왼쪽 안쪽 사다리꼴 파임) */
         .leg-right {
             background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 100%);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 28% 100%);
         }
 
         .row-hidden {
@@ -77,14 +76,14 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (가운데가 뻥 뚫린 하단 독립 다리 공간) -->
-        <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bg-transparent">
-            <!-- 왼쪽 다리 + P12 텍스트 -->
-            <div class="absolute inset-y-0 left-0 w-[45%] leg-left flex items-end px-2 pb-1">
+        <!-- 4. 위치표시 (사진 비율에 맞춘 사다리꼴 파임 다리) -->
+        <div id="row-bottom" class="h-[42px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bg-transparent">
+            <!-- 왼쪽 다리 -->
+            <div class="absolute inset-y-0 left-0 w-[38%] leg-left flex items-end px-2 pb-1">
                 <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P12</div>
             </div>
-            <!-- 오른쪽 다리 + P5 텍스트 -->
-            <div class="absolute inset-y-0 right-0 w-[45%] leg-right flex items-end justify-end px-2 pb-1">
+            <!-- 오른쪽 다리 -->
+            <div class="absolute inset-y-0 right-0 w-[38%] leg-right flex items-end justify-end px-2 pb-1">
                 <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;"></div>
             </div>
         </div>
