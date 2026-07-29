@@ -6,8 +6,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
+        
+        /* 💡 박스 폭을 380px로 넉넉하게 늘려 글자가 잘리지 않도록 개선 */
         .match-list-container {
-            width: 320px;
+            width: 380px;
             background: rgba(18, 19, 22, 0.95);
             border: 1px solid #2c2d33;
             border-radius: 12px;
@@ -20,12 +22,17 @@
             background-color: rgba(0, 255, 163, 0.15) !important;
             border: 2px solid #00FFA3 !important;
         }
+
+        /* 💡 스타크래프트 종족별 고유 색상 정의 */
+        .race-color-protoss { color: #FFE000 !important; } /* 프로토스 노랑 */
+        .race-color-terran { color: #00AFFF !important; }  /* 테란 하늘색 */
+        .race-color-zerg { color: #FF4545 !important; }    /* 저그 빨강 */
     </style>
 </head>
 <body class="flex items-start justify-start p-0">
     <div id="matchlist-wrapper" class="match-list-container text-white">
         <!-- 상단 헤더 -->
-        <div id="matchlist-header" class="bg-[#1b1c20] px-3.5 py-2.5 border-b border-[#2c2d33] flex items-center justify-between">
+        <div id="matchlist-header" class="bg-[#1b1c20] px-4 py-2.5 border-b border-[#2c2d33] flex items-center justify-between">
             <span id="league-title-text" class="text-xs font-black text-[#00FFA3] tracking-wide">스타크래프트 프로리그</span>
             <div class="flex gap-1">
                 <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
@@ -36,8 +43,8 @@
         <!-- 세트 탭 목록 -->
         <div id="matchset-tabs-bar" class="flex bg-[#0b0c0e] border-b border-[#2c2d33] overflow-x-auto"></div>
 
-        <!-- 매치 목록 바디 (글씨 크기를 시원하게 확대) -->
-        <div id="matchlist-body" class="p-2.5 flex flex-col gap-2 max-h-[380px] overflow-y-auto"></div>
+        <!-- 매치 목록 바디 -->
+        <div id="matchlist-body" class="p-3 flex flex-col gap-2 max-h-[420px] overflow-y-auto"></div>
     </div>
 
     <script type="module">
@@ -61,11 +68,28 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
 
+        let playerRaceMap = {}; // 선수별 종족 저장 맵
+
         if (roomId) {
             const roomRef = ref(db, "rooms/" + roomId);
-            onValue(roomRef, (snapshot) => {
+            onValue(roomRef, async (snapshot) => {
                 const data = snapshot.val() || {};
                 let ms = data.matchState || {};
+
+                // 구글 시트에서 선수 목록(종족 정보 포함)을 가져와 매핑 구축
+                if (data.settings && data.settings.gasUrl) {
+                    try {
+                        let res = await fetch(data.settings.gasUrl + "?action=getData");
+                        let sheetData = await res.json();
+                        if (sheetData.players) {
+                            sheetData.players.forEach(p => {
+                                playerRaceMap[p.name] = p.race; // 예: "시폰케이크" -> "프로토스"
+                            });
+                        }
+                    } catch (e) {
+                        console.error("종족 매핑 데이터 로드 실패", e);
+                    }
+                }
 
                 let wrapper = document.getElementById('matchlist-wrapper');
                 if (wrapper) {
@@ -89,7 +113,6 @@
                 let activeSetId = Number(sessionStorage.getItem('active_set_id') || setKeys[0] || 1);
                 if(!matchSetsObj[activeSetId]) activeSetId = Number(setKeys[0] || 1);
 
-                // 세트 탭 렌더링
                 let tabsBar = document.getElementById('matchset-tabs-bar');
                 tabsBar.innerHTML = '';
                 if (setKeys.length > 1) {
@@ -111,6 +134,15 @@
 
                 renderActiveSetMatches(matchSetsObj[activeSetId]);
             });
+        }
+
+        // 종족에 따른 CSS 클래스 반환 함수
+        function getRaceColorClass(playerName) {
+            let race = playerRaceMap[playerName];
+            if (race === '프로토스') return 'race-color-protoss';
+            if (race === '테란') return 'race-color-terran';
+            if (race === '저그') return 'race-color-zerg';
+            return 'text-white'; // 정보가 없으면 기본 흰색
         }
 
         function renderActiveSetMatches(setObj) {
@@ -135,22 +167,25 @@
                 let isCurrent = (i === activeMatchIdx);
 
                 let row = document.createElement('div');
-                // 💡 글씨를 큼직하게 키운 매치리스트 카드 디자인 (텍스트 13px~14px 적용)
-                row.className = `flex items-center justify-between p-2 rounded-lg border transition-all ${isCurrent ? 'active-match-highlight bg-[#14261e]' : 'bg-[#141518] border-[#2c2d33]'}`;
+                row.className = `flex items-center justify-between px-3 py-2 rounded-lg border transition-all ${isCurrent ? 'active-match-highlight bg-[#14261e]' : 'bg-[#141518] border-[#2c2d33]'}`;
 
-                let leftColor = winner === 't1' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'text-white font-black' : 'text-gray-300 font-bold');
-                let rightColor = winner === 't2' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'text-white font-black' : 'text-gray-300 font-bold');
+                // 첫 번째 선수 이름 기준으로 종족 색상 적용
+                let primaryT1 = t1Players.find(x => x !== "-" && x !== "미정") || "";
+                let primaryT2 = t2Players.find(x => x !== "-" && x !== "미정") || "";
+
+                let t1ColorClass = winner === 't1' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'font-black ' + getRaceColorClass(primaryT1) : 'font-bold ' + getRaceColorClass(primaryT1));
+                let t2ColorClass = winner === 't2' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'font-black ' + getRaceColorClass(primaryT2) : 'font-bold ' + getRaceColorClass(primaryT2));
 
                 row.innerHTML = `
-                    <div class="flex items-center gap-2 w-[35%] truncate">
-                        <span class="text-[11px] font-black px-1.5 py-0.5 rounded ${isCurrent ? 'bg-[#00FFA3] text-black' : 'bg-[#2c2d33] text-gray-400'}">${i}</span>
-                        <span class="text-[13.5px] truncate ${leftColor}" title="${t1Str}">${t1Str}</span>
+                    <div class="flex items-center gap-2.5 w-[38%] overflow-hidden">
+                        <span class="text-[11px] font-black px-1.5 py-0.5 rounded shrink-0 ${isCurrent ? 'bg-[#00FFA3] text-black' : 'bg-[#2c2d33] text-gray-400'}">${i}</span>
+                        <span class="text-[13.5px] truncate tracking-tight ${t1ColorClass}" title="${t1Str}">${t1Str}</span>
                     </div>
-                    <div class="text-[12px] font-extrabold text-[#94a3b8] truncate text-center w-[30%] px-1">
+                    <div class="text-[12px] font-extrabold text-[#94a3b8] truncate text-center w-[28%] px-1">
                         ${mapName}
                     </div>
-                    <div class="flex items-center justify-end gap-2 w-[35%] truncate text-right">
-                        <span class="text-[13.5px] truncate ${rightColor}" title="${t2Str}">${t2Str}</span>
+                    <div class="flex items-center justify-end gap-2 w-[34%] overflow-hidden text-right">
+                        <span class="text-[13.5px] truncate tracking-tight ${t2ColorClass}" title="${t2Str}">${t2Str}</span>
                         ${winner ? `<span class="text-[10px] text-[#00FFA3] font-black shrink-0">승</span>` : ''}
                     </div>
                 `;
