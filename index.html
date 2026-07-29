@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
     <title>CHZZK StarCraft Console - Secure Login</title>
@@ -14,6 +14,24 @@
         .active-match-row {
             background-color: rgba(0, 255, 163, 0.08) !important;
             border: 2px solid #00FFA3 !important;
+        }
+
+        /* 다크 / 라이트 모드 CSS 가변 테마 정의 */
+        body.light-theme {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        body.light-theme .bg-\[\#141518\] { background-color: #ffffff !important; }
+        body.light-theme .bg-\[\#1b1c20\] { background-color: #f8fafc !important; }
+        body.light-theme .bg-\[\#0b0c0e\] { background-color: #e2e8f0 !important; }
+        body.light-theme .border-\[\#2c2d33\] { border-color: #cbd5e1 !important; }
+        body.light-theme .text-white { color: #0f172a !important; }
+        body.light-theme .text-gray-300 { color: #334155 !important; }
+        body.light-theme .text-gray-400 { color: #64748b !important; }
+        body.light-theme input, body.light-theme select {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
         }
 
         .preview-scoreboard {
@@ -86,7 +104,28 @@
             return "으로";
         }
 
+        window.toggleThemeMode = function() {
+            const body = document.body;
+            const btn = document.getElementById('btn-theme-toggle');
+            if (body.classList.contains('light-theme')) {
+                body.classList.remove('light-theme');
+                localStorage.setItem('starcraft_theme', 'dark');
+                if (btn) btn.innerText = "🌙 다크모드";
+            } else {
+                body.classList.add('light-theme');
+                localStorage.setItem('starcraft_theme', 'light');
+                if (btn) btn.innerText = "☀️ 라이트모드";
+            }
+        };
+
         window.onload = function() {
+            const savedTheme = localStorage.getItem('starcraft_theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                const btn = document.getElementById('btn-theme-toggle');
+                if (btn) btn.innerText = "☀️ 라이트모드";
+            }
+
             const urlParams = new URLSearchParams(window.location.search);
             const urlRoom = urlParams.get('room');
             const savedPin = localStorage.getItem('starcraft_room_pin') || "";
@@ -159,7 +198,12 @@
             });
 
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
-            document.getElementById('btn-save-manual-score').addEventListener('click', saveManualScoreboard);
+
+            /* 스코어 수동 반영 버튼 단일 연결 (경로 분리) */
+            const btnManualScore = document.getElementById('btn-save-manual-score');
+            if (btnManualScore) {
+                btnManualScore.onclick = saveManualScoreboard;
+            }
 
             ['man-title', 'man-t1-name', 'man-t1-score', 'man-t2-score', 'man-t2-name', 'man-p1-name', 'man-p1-score', 'man-p2-score', 'man-p2-name', 'man-pos1', 'man-pos2', 'cb-show-title', 'cb-show-team', 'cb-show-player', 'cb-show-bottom'].forEach(id => {
                 let el = document.getElementById(id);
@@ -1261,7 +1305,6 @@
             });
         }
 
-        /* 💡 타임스탬프 추가로 재송출시 매번 무조건 실행되도록 보정 */
         function saveVsMatchState() {
             if (!currentRoomId) return;
             let val = document.getElementById('vs-match-select').value;
@@ -1293,7 +1336,7 @@
                 t1: t1DataArr,
                 t2: t2DataArr,
                 map: { name: mapObj.name, url: mapObj.url || "" },
-                timestamp: Date.now() // ✨ 매번 새로운 신호를 발생시키는 핵심 타임스탬프
+                timestamp: Date.now()
             };
 
             set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
@@ -1356,6 +1399,7 @@
                     CHZZK STARCRAFT CONSOLE
                 </span>
                 <div class="flex items-center gap-3">
+                    <button id="btn-theme-toggle" onclick="toggleThemeMode()" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-3 py-1 rounded text-xs font-bold cursor-pointer">🌙 다크모드</button>
                     <span id="room-display-name" class="text-xs font-bold text-[#00FFA3]"></span>
                     <button id="btn-logout" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-3 py-1 rounded text-xs cursor-pointer">방 나가기</button>
                 </div>
