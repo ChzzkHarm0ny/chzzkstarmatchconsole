@@ -16,7 +16,6 @@
             border: 2px solid #00FFA3 !important;
         }
 
-        /* 💡 라이트모드 완벽 대응 테마 스타일 */
         body.light-theme {
             background-color: #f1f5f9 !important;
             color: #0f172a !important;
@@ -226,12 +225,15 @@
                 saveMatchSetsConfigToFirebase();
             });
 
+            /* 💡 방 전체 데이터 초기화 시 수동 스코어 데이터(manualScore)까지 함께 삭제되도록 수정 */
             document.getElementById('btn-reset-all-room').addEventListener('click', () => {
-                if (confirm("⚠️ 정말로 이 방의 모든 데이터를 초기상태로 되돌리시겠습니까?")) {
+                if (confirm("⚠️ 정말로 이 방의 모든 대진 및 수동 스코어 데이터를 초기상태로 되돌리시겠습니까?")) {
                     if (currentRoomId) {
-                        remove(ref(db, "rooms/" + currentRoomId + "/matchState")).then(() => {
+                        let p1 = remove(ref(db, "rooms/" + currentRoomId + "/matchState"));
+                        let p2 = remove(ref(db, "rooms/" + currentRoomId + "/manualScore"));
+                        Promise.all([p1, p2]).then(() => {
                             localStorage.removeItem('starcraft_inited_' + currentRoomId);
-                            alert("방 데이터가 초기화되었습니다.");
+                            alert("방 데이터가 모두 초기화되었습니다.");
                             location.reload();
                         });
                     }
