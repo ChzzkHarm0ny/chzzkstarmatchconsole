@@ -105,12 +105,12 @@
                                 // [핵심 수정] "-" 일 경우 자리만 차지하고 투명하게 보이도록 처리
                                 let t1Html = t1Players.map(p => {
                                     if(p === "-") return `<div class="truncate text-transparent select-none">-</div>`;
-                                    return `<div class="truncate ${getRaceClass(p)} ${winner === 't2' ? 'player-loser' : ''}">${p}</div>`;
+                                    return `<div class="truncate text-xl font-bold ${getRaceClass(p)} ${winner === 't2' ? 'player-loser' : ''}">${p}</div>`;
                                 }).join('');
 
                                 let t2Html = t2Players.map(p => {
                                     if(p === "-") return `<div class="truncate text-transparent select-none">-</div>`;
-                                    return `<div class="truncate ${getRaceClass(p)} ${winner === 't1' ? 'player-loser' : ''}">${p}</div>`;
+                                    return `<div class="truncate text-xl font-bold ${getRaceClass(p)} ${winner === 't1' ? 'player-loser' : ''}">${p}</div>`;
                                 }).join('');
 
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
