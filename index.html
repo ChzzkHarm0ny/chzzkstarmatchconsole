@@ -89,6 +89,8 @@
         let team2Name = "2팀";
         let team1Color = "#1d3557";
         let team2Color = "#6a1b1b";
+        let player1Color = "#1d3557";
+        let player2Color = "#6a1b1b";
         let leagueTitleText = "스타크래프트 프로리그";
         let playerRaceMap = {};
 
@@ -203,6 +205,15 @@
                 btnManualScore.onclick = saveManualScoreboard;
             }
 
+            // 대시보드 2번 탭 내 선수 칸 색상 변경 감지 연결
+            ['input-player1-color', 'input-player2-color'].forEach(id => {
+                let el = document.getElementById(id);
+                if(el) {
+                    el.addEventListener('input', updateScoreboardPreviewFromConsole);
+                    el.addEventListener('change', savePlayerColorsToFirebase);
+                }
+            });
+
             ['man-title', 'man-t1-name', 'man-t1-score', 'man-t2-score', 'man-t2-name', 'man-p1-name', 'man-p1-score', 'man-p2-score', 'man-p2-name', 'man-pos1', 'man-pos2', 'cb-show-title', 'cb-show-team', 'cb-show-player', 'cb-show-bottom'].forEach(id => {
                 let el = document.getElementById(id);
                 if(el) {
@@ -246,9 +257,13 @@
 
             let t1Col = document.getElementById('input-team1-color')?.value || "#1d3557";
             let t2Col = document.getElementById('input-team2-color')?.value || "#6a1b1b";
+            let p1Col = document.getElementById('input-player1-color')?.value || "#1d3557";
+            let p2Col = document.getElementById('input-player2-color')?.value || "#6a1b1b";
 
-            ['prev-bg-team1', 'prev-bg-player1'].forEach(id => { let el = document.getElementById(id); if(el) el.style.backgroundColor = t1Col; });
-            ['prev-bg-team2', 'prev-bg-player2'].forEach(id => { let el = document.getElementById(id); if(el) el.style.backgroundColor = t2Col; });
+            let bgT1 = document.getElementById('prev-bg-team1'); if(bgT1) bgT1.style.backgroundColor = t1Col;
+            let bgT2 = document.getElementById('prev-bg-team2'); if(bgT2) bgT2.style.backgroundColor = t2Col;
+            let bgP1 = document.getElementById('prev-bg-player1'); if(bgP1) bgP1.style.backgroundColor = p1Col;
+            let bgP2 = document.getElementById('prev-bg-player2'); if(bgP2) bgP2.style.backgroundColor = p2Col;
 
             let titleVal = document.getElementById('man-title')?.value || "";
             let t1NameVal = document.getElementById('man-t1-name')?.value || "";
@@ -290,6 +305,23 @@
             let elPos2 = document.getElementById('prev-text-pos2');
             if(elPos2) elPos2.innerText = pos2Val;
         };
+
+        window.setPlayerColorPreset = function(targetPlayer, hexCode) {
+            if (targetPlayer === 1) {
+                document.getElementById('input-player1-color').value = hexCode;
+            } else {
+                document.getElementById('input-player2-color').value = hexCode;
+            }
+            updateScoreboardPreviewFromConsole();
+            savePlayerColorsToFirebase();
+        };
+
+        function savePlayerColorsToFirebase() {
+            if (!currentRoomId) return;
+            let p1Col = document.getElementById('input-player1-color').value;
+            let p2Col = document.getElementById('input-player2-color').value;
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/playerColors"), { player1Color: p1Col, player2Color: p2Col });
+        }
 
         async function verifyAndEnterRoom(roomId, pin, isAutoLogin) {
             const roomRef = ref(db, "rooms/" + roomId);
@@ -467,6 +499,13 @@
                         document.getElementById('input-team2-name').value = team2Name;
                         document.getElementById('input-team1-color').value = team1Color;
                         document.getElementById('input-team2-color').value = team2Color;
+                    }
+
+                    if(ms.playerColors) {
+                        player1Color = ms.playerColors.player1Color || "#1d3557";
+                        player2Color = ms.playerColors.player2Color || "#6a1b1b";
+                        document.getElementById('input-player1-color').value = player1Color;
+                        document.getElementById('input-player2-color').value = player2Color;
                     }
 
                     if(ms.matchSetsConfig) {
@@ -1469,6 +1508,28 @@
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-bottom" checked class="accent-[#00FFA3]"> 위치표시</label>
                             </div>
 
+                            <!-- 💡 [추가] 2번 탭에서 바로 조절할 수 있는 선수 칸 배경색 설정 영역 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
+                                <div class="flex items-center justify-between bg-[#1b1c20] p-2 rounded border border-[#2c2d33]">
+                                    <span class="text-xs text-blue-400 font-bold">1번 선수 칸 배경색</span>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="input-player1-color" value="#1d3557" class="w-7 h-7 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
+                                        <button onclick="setPlayerColorPreset(1, '#1d3557')" class="px-1.5 py-0.5 bg-blue-900 text-white rounded text-[10px]">블루</button>
+                                        <button onclick="setPlayerColorPreset(1, '#6a1b1b')" class="px-1.5 py-0.5 bg-red-900 text-white rounded text-[10px]">레드</button>
+                                        <button onclick="setPlayerColorPreset(1, '#1e4620')" class="px-1.5 py-0.5 bg-green-900 text-white rounded text-[10px]">그린</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between bg-[#1b1c20] p-2 rounded border border-[#2c2d33]">
+                                    <span class="text-xs text-red-400 font-bold">2번 선수 칸 배경색</span>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="input-player2-color" value="#6a1b1b" class="w-7 h-7 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
+                                        <button onclick="setPlayerColorPreset(2, '#1d3557')" class="px-1.5 py-0.5 bg-blue-900 text-white rounded text-[10px]">블루</button>
+                                        <button onclick="setPlayerColorPreset(2, '#6a1b1b')" class="px-1.5 py-0.5 bg-red-900 text-white rounded text-[10px]">레드</button>
+                                        <button onclick="setPlayerColorPreset(2, '#1e4620')" class="px-1.5 py-0.5 bg-green-900 text-white rounded text-[10px]">그린</button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="flex flex-col gap-3 bg-[#141518] p-4 rounded-lg border border-[#2c2d33]">
                                 <div class="flex items-center gap-3">
                                     <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">공지</span>
@@ -1571,12 +1632,12 @@
                                         </div>
                                     </div>
                                     
-                                    <div id="prev-row-bottom" class="h-[42px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bg-transparent">
-                                        <div class="absolute inset-y-0 left-0 w-[38%] preview-leg-left flex items-end px-2 pb-1">
-                                            <div id="prev-text-pos1" class="text-[#00FFA3] text-[11px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P12</div>
+                                    <div id="prev-row-bottom" class="h-[42px] shrink-0 relative flex justify-between items-end px-2.5 pb-1.5 overflow-hidden bg-transparent">
+                                        <div class="absolute inset-y-0 left-0 w-[38%] preview-leg-left flex items-end px-2.5 pb-1.5">
+                                            <div id="prev-text-pos1" class="text-[#00FFA3] text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P5</div>
                                         </div>
-                                        <div class="absolute inset-y-0 right-0 w-[38%] preview-leg-right flex items-end justify-end px-2 pb-1">
-                                            <div id="prev-text-pos2" class="text-[#00FFA3] text-[11px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;"></div>
+                                        <div class="absolute inset-y-0 right-0 w-[38%] preview-leg-right flex items-end justify-end px-2.5 pb-1.5">
+                                            <div id="prev-text-pos2" class="text-[#00FFA3] text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">Z3</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1610,7 +1671,7 @@
                                 <span id="prev-map-name" class="text-[10px] text-gray-300 font-bold">맵 이름</span>
                             </div>
                             <div class="flex items-center gap-3 flex-1 justify-start">
-                                <img id="prev-p2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-12 h-12 object-cover rounded border border-[#2c2d33]">
+                                <img id="prev-p2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33]">
                                 <div class="text-left">
                                     <div id="prev-p2-name" class="text-sm font-black text-white">선수2</div>
                                     <div id="prev-p2-race" class="text-xs font-bold text-gray-400">종족</div>
