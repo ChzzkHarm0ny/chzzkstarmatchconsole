@@ -60,7 +60,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // 💡 [관리자 전용 마스터 인증키] 필요시 이 값을 변경하면 모든 사용자의 인증이 재검증됩니다.
         const MASTER_ADMIN_KEY = "chzzkumc0124";
 
         const firebaseConfig = {
@@ -1086,7 +1085,7 @@
                             </table>
                         </div>
                         <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#2c2d33] hover:bg-[#3c3d44] text-white font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
-                            📥 ${setObj.name} 대진 및 현재 경기 반영 (VS 화면에 적용/스코어 임시입력)
+                            📥 ${setObj.name} 대진 반영 (매치리스트용 현재 경기 지정)
                         </button>
                     </div>
                 `;
@@ -1293,7 +1292,7 @@
             saveMatchSetsConfigToFirebase();
             updateVsMatchDropdownOptions();
 
-            alert(s.name + " 대진이 기록 및 갱신되었습니다!");
+            alert(s.name + " 대진이 저장되었습니다! (매치리스트 반영 완료)");
         };
 
         window.saveManualScoreboard = function() {
