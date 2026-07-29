@@ -17,20 +17,16 @@
             position: relative;
         }
 
-        /* 하단 파츠: 양쪽 발만 남기고 가운데 사다리꼴 공간을 완벽하게 뚫어버리는 clip-path 좌표 */
-        .bottom-cutout {
+        /* 왼쪽 다리 도형 (오른쪽 안쪽이 사다리꼴로 파임) */
+        .leg-left {
             background-color: #0b0c0e;
-            clip-path: polygon(
-                0% 0%, 
-                24% 0%, 
-                68% 100%, 
-                0% 100%,
-                0% 0%,
-                100% 0%,
-                100% 100%,
-                32% 100%,
-                76% 0%
-            );
+            clip-path: polygon(0% 0%, 100% 0%, 68% 100%, 0% 100%);
+        }
+
+        /* 오른쪽 다리 도형 (왼쪽 안쪽이 사다리꼴로 파임) */
+        .leg-right {
+            background-color: #0b0c0e;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 32% 100%);
         }
 
         .row-hidden {
@@ -80,10 +76,16 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (가운데가 뻥 뚫린 하단 다리 공간) -->
-        <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bottom-cutout">
-            <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P12</div>
-            <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;"></div>
+        <!-- 4. 위치표시 (좌우 독립된 두 개의 다리 도형으로 분리 배치) -->
+        <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden">
+            <!-- 왼쪽 다리 + P12 텍스트 -->
+            <div class="absolute inset-y-0 left-0 w-[45%] leg-left flex items-end px-2 pb-1">
+                <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P12</div>
+            </div>
+            <!-- 오른쪽 다리 + P5 텍스트 -->
+            <div class="absolute inset-y-0 right-0 w-[45%] leg-right flex items-end justify-end px-2 pb-1">
+                <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;"></div>
+            </div>
         </div>
 
     </div>
