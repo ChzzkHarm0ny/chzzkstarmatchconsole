@@ -1445,10 +1445,10 @@
                 <div class="flex flex-col gap-6 mb-6">
                     <div id="match-sets-wrapper" class="w-full"></div>
 
-                    <!-- [수동 스코어보드 입력 패널 + 실시간 미리보기 통합 영역] -->
-                    <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
-                        <!-- 왼쪽: 입력 제어 패널 (UI 정돈 개편) -->
-                        <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col gap-3">
+                    <!-- [수동 스코어보드 입력 패널 + 실시간 미리보기 세로배치 구조] -->
+                    <div class="flex flex-col gap-4">
+                        <!-- 위쪽: 넉넉한 폭의 수동 입력 제어 패널 -->
+                        <div class="bg-[#1b1c20] p-5 rounded-xl border border-[#2c2d33] flex flex-col gap-4">
                             <div class="flex flex-col sm:flex-row items-center justify-between border-b border-[#2c2d33] pb-3 gap-2">
                                 <div>
                                     <h3 class="text-sm font-bold text-[#00FFA3] whitespace-nowrap">스코어보드 직접 입력 (수동 제어)</h3>
@@ -1460,77 +1460,85 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-3 text-[11px] font-bold text-gray-300 bg-[#0b0c0e] p-2 rounded-lg border border-[#2c2d33] overflow-x-auto whitespace-nowrap">
-                                <span class="text-white bg-[#2c2d33] px-2 py-0.5 rounded">표시 설정</span>
+                            <div class="flex items-center gap-4 text-[11px] font-bold text-gray-300 bg-[#0b0c0e] p-2.5 rounded-lg border border-[#2c2d33] overflow-x-auto whitespace-nowrap">
+                                <span class="text-white bg-[#2c2d33] px-2.5 py-0.5 rounded">표시 설정</span>
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-title" checked class="accent-[#00FFA3]"> 공지</label>
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-team" checked class="accent-[#00FFA3]"> 팀명</label>
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-player" checked class="accent-[#00FFA3]"> 선수명</label>
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-bottom" checked class="accent-[#00FFA3]"> 위치표시</label>
                             </div>
 
-                            <!-- 수동 입력 그리드 정돈 -->
-                            <div class="flex flex-col gap-2.5 mt-1 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
+                            <!-- 한 줄로 펼쳐지는 와이드 정돈 레이아웃 -->
+                            <div class="flex flex-col gap-3 bg-[#141518] p-4 rounded-lg border border-[#2c2d33]">
                                 
                                 <!-- 공지 입력 -->
                                 <div class="flex items-center gap-3">
-                                    <span class="w-16 text-xs text-gray-400 font-bold shrink-0 text-right">공지</span>
-                                    <input type="text" id="man-title" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-[#00FFA3] font-bold" placeholder="예: [1세트]">
+                                    <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">공지</span>
+                                    <input type="text" id="man-title" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-xs text-center text-[#00FFA3] font-bold" placeholder="예: [1세트]">
                                 </div>
 
-                                <!-- 팀 로우 입력 -->
-                                <div class="flex items-center gap-3 bg-[#1b1c20] p-2 rounded border border-[#2c2d33]">
-                                    <span class="w-16 text-xs text-gray-400 font-bold shrink-0 text-right">팀 로우</span>
-                                    <div class="grid grid-cols-[1fr_auto_auto_auto_auto_auto_1fr] items-center gap-1.5 flex-1 min-w-0">
-                                        <input type="text" id="man-t1-name" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold truncate" placeholder="1팀">
-                                        <button onclick="changeManualScore(1, -1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                        <input type="number" id="man-t1-score" class="w-8 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
-                                        <button onclick="changeManualScore(1, 1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">+</button>
-                                        <span class="text-gray-500 font-bold text-xs px-0.5">:</span>
-                                        <button onclick="changeManualScore(2, -1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                        <input type="number" id="man-t2-score" class="w-8 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
-                                        <button onclick="changeManualScore(2, 1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">+</button>
-                                        <input type="text" id="man-t2-name" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold truncate" placeholder="2팀">
+                                <!-- 팀 로우 입력 (와이드 한 줄 가로 정렬) -->
+                                <div class="flex items-center gap-3 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
+                                    <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">팀 로우</span>
+                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                        <input type="text" id="man-t1-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="1팀">
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <button onclick="changeManualScore(1, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
+                                            <input type="number" id="man-t1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <button onclick="changeManualScore(1, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
+                                        </div>
+                                        <span class="text-gray-500 font-black text-xs px-1 shrink-0">:</span>
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <button onclick="changeManualScore(2, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
+                                            <input type="number" id="man-t2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <button onclick="changeManualScore(2, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
+                                        </div>
+                                        <input type="text" id="man-t2-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="2팀">
                                     </div>
                                 </div>
 
-                                <!-- 선수 로우 입력 -->
-                                <div class="flex items-center gap-3 bg-[#1b1c20] p-2 rounded border border-[#2c2d33]">
-                                    <span class="w-16 text-xs text-gray-400 font-bold shrink-0 text-right">선수 로우</span>
-                                    <div class="grid grid-cols-[1fr_auto_auto_auto_auto_auto_1fr] items-center gap-1.5 flex-1 min-w-0">
-                                        <input type="text" id="man-p1-name" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold truncate" placeholder="선수 1">
-                                        <button onclick="changeManualScore(3, -1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                        <input type="number" id="man-p1-score" class="w-8 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
-                                        <button onclick="changeManualScore(3, 1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">+</button>
-                                        <span class="text-gray-500 font-bold text-xs px-0.5">:</span>
-                                        <button onclick="changeManualScore(4, -1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                        <input type="number" id="man-p2-score" class="w-8 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
-                                        <button onclick="changeManualScore(4, 1)" class="w-6 h-7 bg-[#2c2d33] rounded text-white font-black text-xs cursor-pointer">+</button>
-                                        <input type="text" id="man-p2-name" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-xs text-center text-white font-bold truncate" placeholder="선수 2">
+                                <!-- 선수 로우 입력 (와이드 한 줄 가로 정렬) -->
+                                <div class="flex items-center gap-3 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
+                                    <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">선수 로우</span>
+                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                        <input type="text" id="man-p1-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="선수 1">
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <button onclick="changeManualScore(3, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
+                                            <input type="number" id="man-p1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <button onclick="changeManualScore(3, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
+                                        </div>
+                                        <span class="text-gray-500 font-black text-xs px-1 shrink-0">:</span>
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <button onclick="changeManualScore(4, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
+                                            <input type="number" id="man-p2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <button onclick="changeManualScore(4, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
+                                        </div>
+                                        <input type="text" id="man-p2-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="선수 2">
                                     </div>
                                 </div>
 
                                 <!-- 위치 로우 입력 -->
                                 <div class="flex items-center gap-3">
-                                    <span class="w-16 text-xs text-gray-400 font-bold shrink-0 text-right">위치 로우</span>
-                                    <div class="flex items-center justify-between gap-2 flex-1">
-                                        <input type="text" id="man-pos1" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1.5 text-xs text-center text-yellow-400 font-bold" placeholder="예: P12">
-                                        <span class="text-[11px] text-gray-500 font-bold">◀ 좌 / 우 ▶</span>
-                                        <input type="text" id="man-pos2" class="w-24 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1.5 text-xs text-center text-yellow-400 font-bold" placeholder="예: P5">
+                                    <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">위치 로우</span>
+                                    <div class="flex items-center justify-between gap-3 flex-1">
+                                        <input type="text" id="man-pos1" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-yellow-400 font-bold" placeholder="예: P12">
+                                        <span class="text-xs text-gray-500 font-bold">◀ 좌 / 우 위치 표시 ▶</span>
+                                        <input type="text" id="man-pos2" class="w-32 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-yellow-400 font-bold" placeholder="예: P5">
                                     </div>
                                 </div>
                             </div>
 
-                            <button id="btn-save-manual-score" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-2.5 mt-1 rounded-lg text-xs cursor-pointer shadow-lg transition-all border border-[#00e692]">
+                            <button id="btn-save-manual-score" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-3 mt-1 rounded-lg text-xs cursor-pointer shadow-lg transition-all border border-[#00e692]">
                                 🎯 스코어보드 오버레이 실시간 수동 반영
                             </button>
                         </div>
 
-                        <!-- 오른쪽: 실시간 미니 미리보기 패널 -->
+                        <!-- 아래쪽: 실시간 미니 미리보기 패널 (세로 배치) -->
                         <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col items-center justify-center">
                             <span class="text-xs font-bold text-[#00FFA3] mb-3 self-start">🔍 스코어보드 실시간 미리보기</span>
-                            <div class="p-4 rounded-xl border border-[#2c2d33] flex items-center justify-center w-full overflow-hidden" style="background-image: linear-gradient(45deg, #121316 25%, transparent 25%), linear-gradient(-45deg, #121316 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #121316 75%), linear-gradient(-45deg, transparent 75%, #121316 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;">
+                            <div class="p-6 rounded-xl border border-[#2c2d33] flex items-center justify-center w-full overflow-hidden" style="background-image: linear-gradient(45deg, #121316 25%, transparent 25%), linear-gradient(-45deg, #121316 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #121316 75%), linear-gradient(-45deg, transparent 75%, #121316 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;">
                                 
-                                <div class="preview-scoreboard text-white font-sans scale-90 origin-top">
+                                <div class="preview-scoreboard text-white font-sans scale-100">
                                     <div id="prev-row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0 overflow-hidden">
                                         <span id="prev-text-title" class="text-[#00FFA3] font-black tracking-wider text-[11px] drop-shadow-md">[1세트]</span>
                                     </div>
