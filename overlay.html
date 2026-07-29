@@ -2,86 +2,42 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK Minimap Scoreboard Overlay</title>
+    <title>CHZZK Match List Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
-        
-        .minimap-scoreboard {
+        .match-list-container {
             width: 320px;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
+            background: rgba(18, 19, 22, 0.95);
+            border: 1px solid #2c2d33;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
-            position: relative;
         }
-
-        .leg-left {
-            background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 0% 100%);
-        }
-
-        .leg-right {
-            background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 28% 100%);
-        }
-
-        .row-hidden {
-            display: none !important;
+        .active-match-highlight {
+            background-color: rgba(0, 255, 163, 0.15) !important;
+            border: 2px solid #00FFA3 !important;
         }
     </style>
 </head>
 <body class="flex items-start justify-start p-0">
-    <div id="scoreboard-wrapper" class="minimap-scoreboard text-white font-sans">
-        
-        <!-- 1. 공지 -->
-        <div id="row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0 overflow-hidden">
-            <span id="text-title" class="text-[#00FFA3] font-black tracking-wider text-[11px] drop-shadow-md origin-center transition-all">[1세트]</span>
-        </div>
-        
-        <!-- 2. 팀 로우 -->
-        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
-            <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white text-[12px]" style="background-color: #1d3557;">
-                <span id="text-team1" class="relative z-10 drop-shadow-md origin-center transition-all">1팀</span>
-            </div>
-            <div id="bg-score-t1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
-                <span id="score-team1" class="relative z-10 text-white text-[13px] font-black drop-shadow-md">0</span>
-            </div>
-            <div id="bg-score-t2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
-                <span id="score-team2" class="relative z-10 text-white text-[13px] font-black drop-shadow-md">0</span>
-            </div>
-            <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white text-[12px]" style="background-color: #6a1b1b;">
-                <span id="text-team2" class="relative z-10 drop-shadow-md origin-center transition-all">2팀</span>
+    <div id="matchlist-wrapper" class="match-list-container text-white">
+        <!-- 상단 헤더 -->
+        <div id="matchlist-header" class="bg-[#1b1c20] px-3.5 py-2.5 border-b border-[#2c2d33] flex items-center justify-between">
+            <span id="league-title-text" class="text-xs font-black text-[#00FFA3] tracking-wide">스타크래프트 프로리그</span>
+            <div class="flex gap-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#00FFA3] inline-block"></span>
             </div>
         </div>
 
-        <!-- 3. 선수 로우 -->
-        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
-            <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-[11.5px]" style="background-color: #0C48CC;">
-                <span id="text-player1" class="relative z-10 drop-shadow-md font-bold origin-center transition-all" style="color: #ffffff;">선수1</span>
-            </div>
-            <div id="bg-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]" style="background-color: #0C48CC;">
-                <span id="score-player1" class="relative z-10 text-[12px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
-            </div>
-            <div id="bg-score-p2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]" style="background-color: #F40404;">
-                <span id="score-player2" class="relative z-10 text-[12px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
-            </div>
-            <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-[11.5px]" style="background-color: #F40404;">
-                <span id="text-player2" class="relative z-10 drop-shadow-md font-bold origin-center transition-all" style="color: #ffffff;">선수2</span>
-            </div>
-        </div>
-        
-        <!-- 4. 위치 표시 -->
-        <div id="row-bottom" class="h-[42px] shrink-0 relative flex justify-between items-end px-2.5 pb-1.5 overflow-hidden bg-transparent">
-            <div class="absolute inset-y-0 left-0 w-[38%] leg-left flex items-end px-2.5 pb-1.5">
-                <div id="text-pos1" class="text-[#00FFA3] text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P5</div>
-            </div>
-            <div class="absolute inset-y-0 right-0 w-[38%] leg-right flex items-end justify-end px-2.5 pb-1.5">
-                <div id="text-pos2" class="text-[#00FFA3] text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">Z3</div>
-            </div>
-        </div>
+        <!-- 세트 탭 목록 -->
+        <div id="matchset-tabs-bar" class="flex bg-[#0b0c0e] border-b border-[#2c2d33] overflow-x-auto"></div>
 
+        <!-- 매치 목록 바디 -->
+        <div id="matchlist-body" class="p-2.5 flex flex-col gap-2 max-h-[380px] overflow-y-auto"></div>
     </div>
 
     <script type="module">
@@ -102,28 +58,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        function renderTextFit(id, text, defaultSize) {
-            let el = document.getElementById(id);
-            if (!el) return;
-            el.innerText = text;
-            el.style.whiteSpace = "nowrap";
-            
-            let len = (text || "").length;
-            if (len >= 18) {
-                el.style.fontSize = (defaultSize - 3) + "px";
-                el.style.transform = "scaleX(0.7)";
-            } else if (len >= 12) {
-                el.style.fontSize = (defaultSize - 2) + "px";
-                el.style.transform = "scaleX(0.8)";
-            } else if (len >= 8) {
-                el.style.fontSize = (defaultSize - 1) + "px";
-                el.style.transform = "scaleX(0.9)";
-            } else {
-                el.style.fontSize = defaultSize + "px";
-                el.style.transform = "scaleX(1)";
-            }
-        }
-
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
 
@@ -132,74 +66,94 @@
             onValue(roomRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 let ms = data.matchState || {};
-                
-                let scoreboardEl = document.getElementById('scoreboard-wrapper');
-                if (scoreboardEl) {
-                    if (ms.scoreVisible === false) {
-                        scoreboardEl.style.opacity = '0';
+
+                let wrapper = document.getElementById('matchlist-wrapper');
+                if (wrapper) {
+                    if (ms.listVisible === false) {
+                        wrapper.style.opacity = '0';
                         return;
                     } else {
-                        scoreboardEl.style.opacity = '1';
+                        wrapper.style.opacity = '1';
                     }
                 }
 
-                let manual = data.manualScore || {
-                    showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
-                    title: "[1세트]", 
-                    t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
-                    p1Name: "선수1", p1Score: 0, p2Score: 0, p2Name: "선수2",
-                    pos1: "", pos2: ""
+                if (ms.leagueTitle) {
+                    document.getElementById('league-title-text').innerText = ms.leagueTitle;
+                }
+
+                let matchSetsObj = ms.matchSetsObj || ms.matchSetsConfig || {
+                    1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {} }
                 };
 
-                let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
-                let playerColors = ms.playerColors || { player1Color: "#0C48CC", player2Color: "#F40404", player1TextColor: "#ffffff", player2TextColor: "#ffffff" };
+                let setKeys = Object.keys(matchSetsObj).sort((a,b)=>a-b);
+                let activeSetId = Number(sessionStorage.getItem('active_set_id') || setKeys[0] || 1);
+                if(!matchSetsObj[activeSetId]) activeSetId = Number(setKeys[0] || 1);
 
-                let rowTitle = document.getElementById('row-title');
-                if (rowTitle) rowTitle.style.display = manual.showTitle === false ? 'none' : 'flex';
+                let tabsBar = document.getElementById('matchset-tabs-bar');
+                tabsBar.innerHTML = '';
+                if (setKeys.length > 1) {
+                    tabsBar.style.display = 'flex';
+                    setKeys.forEach(setId => {
+                        let sObj = matchSetsObj[setId];
+                        let tabBtn = document.createElement('button');
+                        tabBtn.className = `flex-1 py-1.5 px-2 text-[11px] font-black cursor-pointer whitespace-nowrap transition-all border-b-2 ${Number(setId) === Number(activeSetId) ? 'bg-[#1b1c20] text-[#00FFA3] border-[#00FFA3]' : 'bg-transparent text-gray-400 border-transparent hover:text-white'}`;
+                        tabBtn.innerText = sObj.name;
+                        tabBtn.onclick = () => {
+                            sessionStorage.setItem('active_set_id', setId);
+                            renderActiveSetMatches(matchSetsObj[setId]);
+                        };
+                        tabsBar.appendChild(tabBtn);
+                    });
+                } else {
+                    tabsBar.style.display = 'none';
+                }
 
-                let rowTeam = document.getElementById('row-team');
-                if (rowTeam) rowTeam.style.display = manual.showTeam === false ? 'none' : 'grid';
-
-                let rowPlayer = document.getElementById('row-player');
-                if (rowPlayer) rowPlayer.style.display = manual.showPlayer === false ? 'none' : 'grid';
-
-                let rowBottom = document.getElementById('row-bottom');
-                if (rowBottom) rowBottom.style.display = manual.showBottom === false ? 'none' : 'flex';
-
-                let bgT1 = document.getElementById('bg-team1'); if(bgT1) bgT1.style.backgroundColor = teamNames.team1Color || "#1d3557";
-                let bgT2 = document.getElementById('bg-team2'); if(bgT2) bgT2.style.backgroundColor = teamNames.team2Color || "#6a1b1b";
-                let bgSt1 = document.getElementById('bg-score-t1'); if(bgSt1) bgSt1.style.backgroundColor = teamNames.team1Color || "#1d3557";
-                let bgSt2 = document.getElementById('bg-score-t2'); if(bgSt2) bgSt2.style.backgroundColor = teamNames.team2Color || "#6a1b1b";
-
-                let bgP1 = document.getElementById('bg-player1'); if(bgP1) bgP1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
-                let bgP2 = document.getElementById('bg-player2'); if(bgP2) bgP2.style.backgroundColor = playerColors.player2Color || "#F40404";
-                let bgSp1 = document.getElementById('bg-score-p1'); if(bgSp1) bgSp1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
-                let bgSp2 = document.getElementById('bg-score-p2'); if(bgSp2) bgSp2.style.backgroundColor = playerColors.player2Color || "#F40404";
-
-                let txtP1 = document.getElementById('text-player1');
-                let scP1 = document.getElementById('score-player1');
-                if(txtP1) txtP1.style.color = playerColors.player1TextColor || "#ffffff";
-                if(scP1) scP1.style.color = playerColors.player1TextColor || "#ffffff";
-
-                let txtP2 = document.getElementById('text-player2');
-                let scP2 = document.getElementById('score-player2');
-                if(txtP2) txtP2.style.color = playerColors.player2TextColor || "#ffffff";
-                if(scP2) scP2.style.color = playerColors.player2TextColor || "#ffffff";
-
-                renderTextFit('text-title', manual.title || "", 11);
-                renderTextFit('text-team1', manual.t1Name || "", 12);
-                document.getElementById('score-team1').innerText = manual.t1Score || "0";
-                document.getElementById('score-team2').innerText = manual.t2Score || "0";
-                renderTextFit('text-team2', manual.t2Name || "", 12);
-
-                renderTextFit('text-player1', manual.p1Name || "", 11.5);
-                document.getElementById('score-player1').innerText = manual.p1Score || "0";
-                document.getElementById('score-player2').innerText = manual.p2Score || "0";
-                renderTextFit('text-player2', manual.p2Name || "", 11.5);
-
-                document.getElementById('text-pos1').innerText = manual.pos1 || "";
-                document.getElementById('text-pos2').innerText = manual.pos2 || "";
+                renderActiveSetMatches(matchSetsObj[activeSetId]);
             });
+        }
+
+        function renderActiveSetMatches(setObj) {
+            if(!setObj) return;
+            let body = document.getElementById('matchlist-body');
+            body.innerHTML = '';
+
+            let matches = setObj.matches || {};
+            let activeMatchIdx = Number(setObj.activeMatchIdx || 1);
+            let count = setObj.matchesCount || 7;
+
+            for (let i = 1; i <= count; i++) {
+                let m = matches[i] || {};
+                let t1Players = m.t1Players || [m.t1Player || "미정"];
+                let t2Players = m.t2Players || [m.t2Player || "미정"];
+                
+                let t1Str = t1Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
+                let t2Str = t2Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
+                let mapName = m.mapName || "맵 미정";
+                let winner = m.winner || "";
+
+                let isCurrent = (i === activeMatchIdx);
+
+                let row = document.createElement('div');
+                row.className = `flex items-center justify-between p-2 rounded-lg border transition-all ${isCurrent ? 'active-match-highlight bg-[#14261e]' : 'bg-[#141518] border-[#2c2d33]'}`;
+
+                let leftColor = winner === 't1' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'text-white font-black' : 'text-gray-300 font-bold');
+                let rightColor = winner === 't2' ? 'text-[#00FFA3] font-black' : (isCurrent ? 'text-white font-black' : 'text-gray-300 font-bold');
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2 w-[35%] truncate">
+                        <span class="text-[11px] font-black px-1.5 py-0.5 rounded ${isCurrent ? 'bg-[#00FFA3] text-black' : 'bg-[#2c2d33] text-gray-400'}">${i}</span>
+                        <span class="text-[12.5px] truncate ${leftColor}" title="${t1Str}">${t1Str}</span>
+                    </div>
+                    <div class="text-[11.5px] font-extrabold text-[#94a3b8] truncate text-center w-[30%] px-1">
+                        ${mapName}
+                    </div>
+                    <div class="flex items-center justify-end gap-2 w-[35%] truncate text-right">
+                        <span class="text-[12.5px] truncate ${rightColor}" title="${t2Str}">${t2Str}</span>
+                        ${winner ? `<span class="text-[10px] text-[#00FFA3] font-black shrink-0">승</span>` : ''}
+                    </div>
+                `;
+                body.appendChild(row);
+            }
         }
     </script>
 </body>
