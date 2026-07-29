@@ -17,18 +17,19 @@
             position: relative;
         }
 
-        /* 하단 파츠: 양쪽 발만 검은색이고 가운데 표시된 사다리꼴 영역은 투명하게 뚫리도록 설정 */
+        /* 하단 파츠: 양쪽 발만 남기고 가운데 사다리꼴 공간을 완벽하게 뚫어버리는 clip-path 좌표 */
         .bottom-cutout {
             background-color: #0b0c0e;
             clip-path: polygon(
                 0% 0%, 
                 24% 0%, 
-                32% 100%, 
                 68% 100%, 
-                76% 0%, 
-                100% 0%, 
-                100% 100%, 
-                0% 100%
+                0% 100%,
+                0% 0%,
+                100% 0%,
+                100% 100%,
+                32% 100%,
+                76% 0%
             );
         }
 
@@ -50,12 +51,10 @@
             <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white" style="background-color: #1d3557;">
                 <span id="text-team1" class="relative z-10 font-black drop-shadow-md origin-center transition-all">1팀</span>
             </div>
-            <div id="bg-score-t1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]" style="background-color: #1d3557;">
-                <div class="absolute inset-0 bg-black/30"></div>
+            <div id="bg-score-t1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
                 <span id="score-team1" class="relative z-10 text-white text-[14px] font-black drop-shadow-md">0</span>
             </div>
-            <div id="bg-score-t2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]" style="background-color: #6a1b1b;">
-                <div class="absolute inset-0 bg-black/30"></div>
+            <div id="bg-score-t2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
                 <span id="score-team2" class="relative z-10 text-white text-[14px] font-black drop-shadow-md">0</span>
             </div>
             <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white" style="background-color: #6a1b1b;">
@@ -69,12 +68,10 @@
                 <div class="absolute inset-0 bg-black/30"></div>
                 <span id="text-player1" class="relative z-10 font-black drop-shadow-md origin-center transition-all">선수1</span>
             </div>
-            <div id="bg-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]" style="background-color: #1d3557;">
-                <div class="absolute inset-0 bg-black/50"></div>
+            <div id="bg-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
                 <span id="score-player1" class="relative z-10 text-gray-100 text-[13px] font-black drop-shadow-md">0</span>
             </div>
-            <div id="bg-score-p2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]" style="background-color: #6a1b1b;">
-                <div class="absolute inset-0 bg-black/50"></div>
+            <div id="bg-score-p2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
                 <span id="score-player2" class="relative z-10 text-gray-100 text-[13px] font-black drop-shadow-md">0</span>
             </div>
             <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-gray-200" style="background-color: #6a1b1b;">
@@ -83,10 +80,10 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (하단 중앙이 뻥 뚫린 다리 공간) -->
+        <!-- 4. 위치표시 (가운데가 뻥 뚫린 하단 다리 공간) -->
         <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bottom-cutout">
-            <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;">P12</div>
-            <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
+            <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P12</div>
+            <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;"></div>
         </div>
 
     </div>
