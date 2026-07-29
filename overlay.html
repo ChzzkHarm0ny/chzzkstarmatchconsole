@@ -79,7 +79,7 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            card.className = "flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md w-[420px] shrink-0";
+                            card.className = "flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-2xl shadow-2xl backdrop-blur-md w-[420px] shrink-0";
                             
                             let headerHtml = `
                                 <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-3 text-center">
@@ -92,7 +92,7 @@
                                 </div>
                             `;
 
-                            let bodyHtml = `<div class="p-3 flex flex-col gap-2 max-h-[500px] overflow-y-auto">`;
+                            let bodyHtml = `<div class="p-3 flex flex-col gap-2">`;
                             let activeMatchIdx = setObj.activeMatchIdx || 1;
                             
                             for (let i = 1; i <= setObj.matchesCount; i++) {
