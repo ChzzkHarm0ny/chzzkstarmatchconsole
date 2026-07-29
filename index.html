@@ -1507,7 +1507,7 @@
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-bottom" checked class="accent-[#00FFA3]"> 위치표시</label>
                             </div>
 
-                            <!-- 💡 [2번 탭에 배치된 리마스터 색상 팔레트가 적용된 선수 칸 배경색 설정 영역] -->
+                            <!-- 💡 [2번 탭] 전체 리마스터 색상 22가지 팔레트가 적용된 선수 칸 배경색 설정 영역 -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
                                 <div class="flex flex-col gap-2 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
                                     <div class="flex items-center justify-between">
@@ -1515,15 +1515,29 @@
                                         <input type="color" id="input-player1-color" value="#0C48CC" class="w-7 h-7 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
                                     </div>
                                     <div class="flex gap-1 flex-wrap">
-                                        <span class="text-[9px] text-gray-400 self-center mr-0.5">리마스터:</span>
+                                        <span class="text-[9px] text-gray-400 self-center mr-0.5">리마스터 칩:</span>
                                         <button onclick="setPlayerColorPreset(1, '#F40404')" class="px-1.5 py-0.5 bg-[#F40404] text-white rounded text-[9px] font-bold">빨강</button>
                                         <button onclick="setPlayerColorPreset(1, '#0C48CC')" class="px-1.5 py-0.5 bg-[#0C48CC] text-white rounded text-[9px] font-bold">파랑</button>
-                                        <button onclick="setPlayerColorPreset(1, '#088008')" class="px-1.5 py-0.5 bg-[#088008] text-white rounded text-[9px] font-bold">초록</button>
+                                        <button onclick="setPlayerColorPreset(1, '#2CB494')" class="px-1.5 py-0.5 bg-[#2CB494] text-black rounded text-[9px] font-bold">청록</button>
                                         <button onclick="setPlayerColorPreset(1, '#88409C')" class="px-1.5 py-0.5 bg-[#88409C] text-white rounded text-[9px] font-bold">보라</button>
-                                        <button onclick="setPlayerColorPreset(1, '#F88C14')" class="px-1.5 py-0.5 bg-[#F88C14] text-white rounded text-[9px] font-bold">주황</button>
+                                        <button onclick="setPlayerColorPreset(1, '#F88C14')" class="px-1.5 py-0.5 bg-[#F88C14] text-black rounded text-[9px] font-bold">주황</button>
                                         <button onclick="setPlayerColorPreset(1, '#703014')" class="px-1.5 py-0.5 bg-[#703014] text-white rounded text-[9px] font-bold">갈색</button>
                                         <button onclick="setPlayerColorPreset(1, '#CCE0D0')" class="px-1.5 py-0.5 bg-[#CCE0D0] text-black rounded text-[9px] font-bold">하양</button>
                                         <button onclick="setPlayerColorPreset(1, '#FCFC38')" class="px-1.5 py-0.5 bg-[#FCFC38] text-black rounded text-[9px] font-bold">노랑</button>
+                                        <button onclick="setPlayerColorPreset(1, '#088008')" class="px-1.5 py-0.5 bg-[#088008] text-white rounded text-[9px] font-bold">초록</button>
+                                        <button onclick="setPlayerColorPreset(1, '#FCFC7C')" class="px-1.5 py-0.5 bg-[#FCFC7C] text-black rounded text-[9px] font-bold">연노랑</button>
+                                        <button onclick="setPlayerColorPreset(1, '#ECC4B0')" class="px-1.5 py-0.5 bg-[#ECC4B0] text-black rounded text-[9px] font-bold">살구</button>
+                                        <button onclick="setPlayerColorPreset(1, '#4068D4')" class="px-1.5 py-0.5 bg-[#4068D4] text-white rounded text-[9px] font-bold">진청</button>
+                                        <button onclick="setPlayerColorPreset(1, '#74A47C')" class="px-1.5 py-0.5 bg-[#74A47C] text-black rounded text-[9px] font-bold">연초록</button>
+                                        <button onclick="setPlayerColorPreset(1, '#7290B8')" class="px-1.5 py-0.5 bg-[#7290B8] text-white rounded text-[9px] font-bold">청회색</button>
+                                        <button onclick="setPlayerColorPreset(1, '#00E4FC')" class="px-1.5 py-0.5 bg-[#00E4FC] text-black rounded text-[9px] font-bold">시안</button>
+                                        <button onclick="setPlayerColorPreset(1, '#FFC4E4')" class="px-1.5 py-0.5 bg-[#FFC4E4] text-black rounded text-[9px] font-bold">분홍</button>
+                                        <button onclick="setPlayerColorPreset(1, '#808000')" class="px-1.5 py-0.5 bg-[#808000] text-white rounded text-[9px] font-bold">올리브</button>
+                                        <button onclick="setPlayerColorPreset(1, '#D2F53C')" class="px-1.5 py-0.5 bg-[#D2F53C] text-black rounded text-[9px] font-bold">라임</button>
+                                        <button onclick="setPlayerColorPreset(1, '#000080')" class="px-1.5 py-0.5 bg-[#000080] text-white rounded text-[9px] font-bold">네이비</button>
+                                        <button onclick="setPlayerColorPreset(1, '#F032E6')" class="px-1.5 py-0.5 bg-[#F032E6] text-white rounded text-[9px] font-bold">마젠타</button>
+                                        <button onclick="setPlayerColorPreset(1, '#808080')" class="px-1.5 py-0.5 bg-[#808080] text-white rounded text-[9px] font-bold">회색</button>
+                                        <button onclick="setPlayerColorPreset(1, '#3C3C3C')" class="px-1.5 py-0.5 bg-[#3C3C3C] text-white rounded text-[9px] font-bold">검정</button>
                                     </div>
                                 </div>
                                 <div class="flex flex-col gap-2 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
@@ -1532,15 +1546,29 @@
                                         <input type="color" id="input-player2-color" value="#F40404" class="w-7 h-7 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
                                     </div>
                                     <div class="flex gap-1 flex-wrap">
-                                        <span class="text-[9px] text-gray-400 self-center mr-0.5">리마스터:</span>
+                                        <span class="text-[9px] text-gray-400 self-center mr-0.5">리마스터 칩:</span>
                                         <button onclick="setPlayerColorPreset(2, '#F40404')" class="px-1.5 py-0.5 bg-[#F40404] text-white rounded text-[9px] font-bold">빨강</button>
                                         <button onclick="setPlayerColorPreset(2, '#0C48CC')" class="px-1.5 py-0.5 bg-[#0C48CC] text-white rounded text-[9px] font-bold">파랑</button>
-                                        <button onclick="setPlayerColorPreset(2, '#088008')" class="px-1.5 py-0.5 bg-[#088008] text-white rounded text-[9px] font-bold">초록</button>
+                                        <button onclick="setPlayerColorPreset(2, '#2CB494')" class="px-1.5 py-0.5 bg-[#2CB494] text-black rounded text-[9px] font-bold">청록</button>
                                         <button onclick="setPlayerColorPreset(2, '#88409C')" class="px-1.5 py-0.5 bg-[#88409C] text-white rounded text-[9px] font-bold">보라</button>
-                                        <button onclick="setPlayerColorPreset(2, '#F88C14')" class="px-1.5 py-0.5 bg-[#F88C14] text-white rounded text-[9px] font-bold">주황</button>
+                                        <button onclick="setPlayerColorPreset(2, '#F88C14')" class="px-1.5 py-0.5 bg-[#F88C14] text-black rounded text-[9px] font-bold">주황</button>
                                         <button onclick="setPlayerColorPreset(2, '#703014')" class="px-1.5 py-0.5 bg-[#703014] text-white rounded text-[9px] font-bold">갈색</button>
                                         <button onclick="setPlayerColorPreset(2, '#CCE0D0')" class="px-1.5 py-0.5 bg-[#CCE0D0] text-black rounded text-[9px] font-bold">하양</button>
                                         <button onclick="setPlayerColorPreset(2, '#FCFC38')" class="px-1.5 py-0.5 bg-[#FCFC38] text-black rounded text-[9px] font-bold">노랑</button>
+                                        <button onclick="setPlayerColorPreset(2, '#088008')" class="px-1.5 py-0.5 bg-[#088008] text-white rounded text-[9px] font-bold">초록</button>
+                                        <button onclick="setPlayerColorPreset(2, '#FCFC7C')" class="px-1.5 py-0.5 bg-[#FCFC7C] text-black rounded text-[9px] font-bold">연노랑</button>
+                                        <button onclick="setPlayerColorPreset(2, '#ECC4B0')" class="px-1.5 py-0.5 bg-[#ECC4B0] text-black rounded text-[9px] font-bold">살구</button>
+                                        <button onclick="setPlayerColorPreset(2, '#4068D4')" class="px-1.5 py-0.5 bg-[#4068D4] text-white rounded text-[9px] font-bold">진청</button>
+                                        <button onclick="setPlayerColorPreset(2, '#74A47C')" class="px-1.5 py-0.5 bg-[#74A47C] text-black rounded text-[9px] font-bold">연초록</button>
+                                        <button onclick="setPlayerColorPreset(2, '#7290B8')" class="px-1.5 py-0.5 bg-[#7290B8] text-white rounded text-[9px] font-bold">청회색</button>
+                                        <button onclick="setPlayerColorPreset(2, '#00E4FC')" class="px-1.5 py-0.5 bg-[#00E4FC] text-black rounded text-[9px] font-bold">시안</button>
+                                        <button onclick="setPlayerColorPreset(2, '#FFC4E4')" class="px-1.5 py-0.5 bg-[#FFC4E4] text-black rounded text-[9px] font-bold">분홍</button>
+                                        <button onclick="setPlayerColorPreset(2, '#808000')" class="px-1.5 py-0.5 bg-[#808000] text-white rounded text-[9px] font-bold">올리브</button>
+                                        <button onclick="setPlayerColorPreset(2, '#D2F53C')" class="px-1.5 py-0.5 bg-[#D2F53C] text-black rounded text-[9px] font-bold">라임</button>
+                                        <button onclick="setPlayerColorPreset(2, '#000080')" class="px-1.5 py-0.5 bg-[#000080] text-white rounded text-[9px] font-bold">네이비</button>
+                                        <button onclick="setPlayerColorPreset(2, '#F032E6')" class="px-1.5 py-0.5 bg-[#F032E6] text-white rounded text-[9px] font-bold">마젠타</button>
+                                        <button onclick="setPlayerColorPreset(2, '#808080')" class="px-1.5 py-0.5 bg-[#808080] text-white rounded text-[9px] font-bold">회색</button>
+                                        <button onclick="setPlayerColorPreset(2, '#3C3C3C')" class="px-1.5 py-0.5 bg-[#3C3C3C] text-white rounded text-[9px] font-bold">검정</button>
                                     </div>
                                 </div>
                             </div>
