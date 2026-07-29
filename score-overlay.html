@@ -7,11 +7,12 @@
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
         
+        /* 전체 박스 배경을 투명하게 설정하고 테두리 제거 */
         .minimap-scoreboard {
             width: 320px;
-            background: #1b1c20;
-            border: 2px solid #3c3d44;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -43,7 +44,7 @@
         </div>
         
         <!-- 2. 팀이름 및 스코어 (팀 로우) -->
-        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden">
+        <div id="row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
             <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white" style="background-color: #1d3557;">
                 <span id="text-team1" class="relative z-10 font-black drop-shadow-md origin-center transition-all">1팀</span>
             </div>
@@ -59,7 +60,7 @@
         </div>
 
         <!-- 3. 선수이름 및 스코어 (선수 로우) -->
-        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden">
+        <div id="row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
             <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-gray-200" style="background-color: #1d3557;">
                 <div class="absolute inset-0 bg-black/30"></div>
                 <span id="text-player1" class="relative z-10 font-black drop-shadow-md origin-center transition-all">선수1</span>
@@ -76,8 +77,8 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (좌우 독립된 두 개의 다리 도형으로 분리 배치) -->
-        <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden">
+        <!-- 4. 위치표시 (가운데가 뻥 뚫린 하단 독립 다리 공간) -->
+        <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bg-transparent">
             <!-- 왼쪽 다리 + P12 텍스트 -->
             <div class="absolute inset-y-0 left-0 w-[45%] leg-left flex items-end px-2 pb-1">
                 <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P12</div>
