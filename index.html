@@ -16,6 +16,7 @@
             border: 2px solid #00FFA3 !important;
         }
 
+        /* 💡 라이트모드 완벽 대응 테마 스타일 */
         body.light-theme {
             background-color: #f1f5f9 !important;
             color: #0f172a !important;
@@ -26,12 +27,14 @@
         body.light-theme .border-\[\#2c2d33\] { border-color: #cbd5e1 !important; }
         body.light-theme .text-white { color: #0f172a !important; }
         body.light-theme .text-gray-300 { color: #334155 !important; }
-        body.light-theme .text-gray-400 { color: #64748b !important; }
+        body.light-theme .text-gray-400 { color: #475569 !important; }
         body.light-theme input, body.light-theme select {
             background-color: #ffffff !important;
             color: #0f172a !important;
             border-color: #cbd5e1 !important;
         }
+        body.light-theme table tr th { color: #475569 !important; }
+        body.light-theme table tr td { color: #0f172a !important; }
 
         .preview-scoreboard {
             width: 320px;
@@ -89,8 +92,10 @@
         let team2Name = "2팀";
         let team1Color = "#1d3557";
         let team2Color = "#6a1b1b";
-        let player1Color = "#1d3557";
-        let player2Color = "#6a1b1b";
+        let player1Color = "#0C48CC";
+        let player2Color = "#F40404";
+        let player1TextColor = "#ffffff";
+        let player2TextColor = "#ffffff";
         let leagueTitleText = "스타크래프트 프로리그";
         let playerRaceMap = {};
 
@@ -117,6 +122,41 @@
                 localStorage.setItem('starcraft_theme', 'light');
                 if (btn) btn.innerText = "☀️ 라이트모드";
             }
+        };
+
+        let activeTargetPlayer = 1;
+        window.openColorModal = function(playerNum) {
+            activeTargetPlayer = playerNum;
+            document.getElementById('color-modal').classList.remove('hidden');
+        };
+        window.closeColorModal = function() {
+            document.getElementById('color-modal').classList.add('hidden');
+        };
+        window.selectColorFromModal = function(hexCode) {
+            if (activeTargetPlayer === 1) {
+                player1Color = hexCode;
+                document.getElementById('p1-color-preview').style.backgroundColor = hexCode;
+            } else {
+                player2Color = hexCode;
+                document.getElementById('p2-color-preview').style.backgroundColor = hexCode;
+            }
+            updateScoreboardPreviewFromConsole();
+            savePlayerColorsToFirebase();
+            closeColorModal();
+        };
+
+        window.setPlayerTextColor = function(playerNum, color) {
+            if (playerNum === 1) {
+                player1TextColor = color;
+                document.getElementById('btn-p1-text-white').className = color === '#ffffff' ? 'px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold' : 'px-2 py-0.5 bg-[#2c2d33] text-gray-300 rounded text-[10px] font-bold';
+                document.getElementById('btn-p1-text-black').className = color === '#000000' ? 'px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold' : 'px-2 py-0.5 bg-[#2c2d33] text-gray-300 rounded text-[10px] font-bold';
+            } else {
+                player2TextColor = color;
+                document.getElementById('btn-p2-text-white').className = color === '#ffffff' ? 'px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold' : 'px-2 py-0.5 bg-[#2c2d33] text-gray-300 rounded text-[10px] font-bold';
+                document.getElementById('btn-p2-text-black').className = color === '#000000' ? 'px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold' : 'px-2 py-0.5 bg-[#2c2d33] text-gray-300 rounded text-[10px] font-bold';
+            }
+            updateScoreboardPreviewFromConsole();
+            savePlayerColorsToFirebase();
         };
 
         window.onload = function() {
@@ -205,14 +245,6 @@
                 btnManualScore.onclick = saveManualScoreboard;
             }
 
-            ['input-player1-color', 'input-player2-color'].forEach(id => {
-                let el = document.getElementById(id);
-                if(el) {
-                    el.addEventListener('input', updateScoreboardPreviewFromConsole);
-                    el.addEventListener('change', savePlayerColorsToFirebase);
-                }
-            });
-
             ['man-title', 'man-t1-name', 'man-t1-score', 'man-t2-score', 'man-t2-name', 'man-p1-name', 'man-p1-score', 'man-p2-score', 'man-p2-name', 'man-pos1', 'man-pos2', 'cb-show-title', 'cb-show-team', 'cb-show-player', 'cb-show-bottom'].forEach(id => {
                 let el = document.getElementById(id);
                 if(el) {
@@ -256,13 +288,29 @@
 
             let t1Col = document.getElementById('input-team1-color')?.value || "#1d3557";
             let t2Col = document.getElementById('input-team2-color')?.value || "#6a1b1b";
-            let p1Col = document.getElementById('input-player1-color')?.value || "#1d3557";
-            let p2Col = document.getElementById('input-player2-color')?.value || "#6a1b1b";
 
             let bgT1 = document.getElementById('prev-bg-team1'); if(bgT1) bgT1.style.backgroundColor = t1Col;
             let bgT2 = document.getElementById('prev-bg-team2'); if(bgT2) bgT2.style.backgroundColor = t2Col;
-            let bgP1 = document.getElementById('prev-bg-player1'); if(bgP1) bgP1.style.backgroundColor = p1Col;
-            let bgP2 = document.getElementById('prev-bg-player2'); if(bgP2) bgP2.style.backgroundColor = p2Col;
+            
+            let bgP1 = document.getElementById('prev-bg-player1'); 
+            let bgSp1 = document.getElementById('prev-score-p1');
+            if(bgP1) bgP1.style.backgroundColor = player1Color;
+            if(bgSp1) bgSp1.style.backgroundColor = player1Color;
+
+            let bgP2 = document.getElementById('prev-bg-player2'); 
+            let bgSp2 = document.getElementById('prev-score-p2');
+            if(bgP2) bgP2.style.backgroundColor = player2Color;
+            if(bgSp2) bgSp2.style.backgroundColor = player2Color;
+
+            let txtP1 = document.getElementById('prev-text-player1');
+            let scP1 = document.getElementById('prev-score-player1');
+            if(txtP1) txtP1.style.color = player1TextColor;
+            if(scP1) scP1.style.color = player1TextColor;
+
+            let txtP2 = document.getElementById('prev-text-player2');
+            let scP2 = document.getElementById('prev-score-player2');
+            if(txtP2) txtP2.style.color = player2TextColor;
+            if(scP2) scP2.style.color = player2TextColor;
 
             let titleVal = document.getElementById('man-title')?.value || "";
             let t1NameVal = document.getElementById('man-t1-name')?.value || "";
@@ -305,21 +353,14 @@
             if(elPos2) elPos2.innerText = pos2Val;
         };
 
-        window.setPlayerColorPreset = function(targetPlayer, hexCode) {
-            if (targetPlayer === 1) {
-                document.getElementById('input-player1-color').value = hexCode;
-            } else {
-                document.getElementById('input-player2-color').value = hexCode;
-            }
-            updateScoreboardPreviewFromConsole();
-            savePlayerColorsToFirebase();
-        };
-
         function savePlayerColorsToFirebase() {
             if (!currentRoomId) return;
-            let p1Col = document.getElementById('input-player1-color').value;
-            let p2Col = document.getElementById('input-player2-color').value;
-            set(ref(db, "rooms/" + currentRoomId + "/matchState/playerColors"), { player1Color: p1Col, player2Color: p2Col });
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/playerColors"), { 
+                player1Color: player1Color, 
+                player2Color: player2Color,
+                player1TextColor: player1TextColor,
+                player2TextColor: player2TextColor
+            });
         }
 
         async function verifyAndEnterRoom(roomId, pin, isAutoLogin) {
@@ -501,10 +542,15 @@
                     }
 
                     if(ms.playerColors) {
-                        player1Color = ms.playerColors.player1Color || "#1d3557";
-                        player2Color = ms.playerColors.player2Color || "#6a1b1b";
-                        document.getElementById('input-player1-color').value = player1Color;
-                        document.getElementById('input-player2-color').value = player2Color;
+                        player1Color = ms.playerColors.player1Color || "#0C48CC";
+                        player2Color = ms.playerColors.player2Color || "#F40404";
+                        player1TextColor = ms.playerColors.player1TextColor || "#ffffff";
+                        player2TextColor = ms.playerColors.player2TextColor || "#ffffff";
+
+                        document.getElementById('p1-color-preview').style.backgroundColor = player1Color;
+                        document.getElementById('p2-color-preview').style.backgroundColor = player2Color;
+                        setPlayerTextColor(1, player1TextColor);
+                        setPlayerTextColor(2, player2TextColor);
                     }
 
                     if(ms.matchSetsConfig) {
@@ -1375,6 +1421,42 @@
     </script>
 </head>
 <body class="bg-[#0b0c0e] text-white p-6 font-sans">
+    
+    <!-- 팝업 모달창 (리마스터 22가지 색상 선택) -->
+    <div id="color-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="bg-[#141518] border border-[#2c2d33] p-6 rounded-2xl w-[420px] shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-[#2c2d33] pb-3">
+                <h3 class="text-sm font-bold text-[#00FFA3]">🎨 스타크래프트 리마스터 색상 선택</h3>
+                <button onclick="closeColorModal()" class="text-gray-400 hover:text-white font-bold text-sm cursor-pointer">✕ 닫기</button>
+            </div>
+            <p class="text-xs text-gray-300">원하시는 리마스터 고유 색상을 선택해주세요.</p>
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="selectColorFromModal('#F40404')" class="p-2 bg-[#F40404] text-white rounded text-xs font-bold shadow hover:opacity-80">빨강</button>
+                <button onclick="selectColorFromModal('#0C48CC')" class="p-2 bg-[#0C48CC] text-white rounded text-xs font-bold shadow hover:opacity-80">파랑</button>
+                <button onclick="selectColorFromModal('#2CB494')" class="p-2 bg-[#2CB494] text-black rounded text-xs font-bold shadow hover:opacity-80">청록</button>
+                <button onclick="selectColorFromModal('#88409C')" class="p-2 bg-[#88409C] text-white rounded text-xs font-bold shadow hover:opacity-80">보라</button>
+                <button onclick="selectColorFromModal('#F88C14')" class="p-2 bg-[#F88C14] text-black rounded text-xs font-bold shadow hover:opacity-80">주황</button>
+                <button onclick="selectColorFromModal('#703014')" class="p-2 bg-[#703014] text-white rounded text-xs font-bold shadow hover:opacity-80">갈색</button>
+                <button onclick="selectColorFromModal('#CCE0D0')" class="p-2 bg-[#CCE0D0] text-black rounded text-xs font-bold shadow hover:opacity-80">하양</button>
+                <button onclick="selectColorFromModal('#FCFC38')" class="p-2 bg-[#FCFC38] text-black rounded text-xs font-bold shadow hover:opacity-80">노랑</button>
+                <button onclick="selectColorFromModal('#088008')" class="p-2 bg-[#088008] text-white rounded text-xs font-bold shadow hover:opacity-80">초록</button>
+                <button onclick="selectColorFromModal('#FCFC7C')" class="p-2 bg-[#FCFC7C] text-black rounded text-xs font-bold shadow hover:opacity-80">연노랑</button>
+                <button onclick="selectColorFromModal('#ECC4B0')" class="p-2 bg-[#ECC4B0] text-black rounded text-xs font-bold shadow hover:opacity-80">살구</button>
+                <button onclick="selectColorFromModal('#4068D4')" class="p-2 bg-[#4068D4] text-white rounded text-xs font-bold shadow hover:opacity-80">진청</button>
+                <button onclick="selectColorFromModal('#74A47C')" class="p-2 bg-[#74A47C] text-black rounded text-xs font-bold shadow hover:opacity-80">연초록</button>
+                <button onclick="selectColorFromModal('#7290B8')" class="p-2 bg-[#7290B8] text-white rounded text-xs font-bold shadow hover:opacity-80">청회색</button>
+                <button onclick="selectColorFromModal('#00E4FC')" class="p-2 bg-[#00E4FC] text-black rounded text-xs font-bold shadow hover:opacity-80">시안</button>
+                <button onclick="selectColorFromModal('#FFC4E4')" class="p-2 bg-[#FFC4E4] text-black rounded text-xs font-bold shadow hover:opacity-80">분홍</button>
+                <button onclick="selectColorFromModal('#808000')" class="p-2 bg-[#808000] text-white rounded text-xs font-bold shadow hover:opacity-80">올리브</button>
+                <button onclick="selectColorFromModal('#D2F53C')" class="p-2 bg-[#D2F53C] text-black rounded text-xs font-bold shadow hover:opacity-80">라임</button>
+                <button onclick="selectColorFromModal('#000080')" class="p-2 bg-[#000080] text-white rounded text-xs font-bold shadow hover:opacity-80">네이비</button>
+                <button onclick="selectColorFromModal('#F032E6')" class="p-2 bg-[#F032E6] text-white rounded text-xs font-bold shadow hover:opacity-80">마젠타</button>
+                <button onclick="selectColorFromModal('#808080')" class="p-2 bg-[#808080] text-white rounded text-xs font-bold shadow hover:opacity-80">회색</button>
+                <button onclick="selectColorFromModal('#3C3C3C')" class="p-2 bg-[#3C3C3C] text-white rounded text-xs font-bold shadow hover:opacity-80">검정</button>
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-5xl mx-auto">
         <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
             <h1 class="text-2xl font-bold mb-2 text-[#00FFA3]">CHZZK STARCRAFT CONSOLE</h1>
@@ -1507,68 +1589,31 @@
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-bottom" checked class="accent-[#00FFA3]"> 위치표시</label>
                             </div>
 
-                            <!-- 💡 [2번 탭] 전체 리마스터 색상 22가지 팔레트가 적용된 선수 칸 배경색 설정 영역 -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#141518] p-3 rounded-lg border border-[#2c2d33]">
-                                <div class="flex flex-col gap-2 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
+                                <div class="flex flex-col gap-2 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33]">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-xs text-blue-400 font-bold">1번 선수 칸 배경색</span>
-                                        <input type="color" id="input-player1-color" value="#0C48CC" class="w-7 h-7 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
+                                        <span class="text-xs text-white font-bold">1번 선수 칸 배경색</span>
+                                        <div onclick="openColorModal(1)" id="p1-color-preview" class="w-8 h-8 rounded-lg border border-[#2c2d33] cursor-pointer shadow-md hover:scale-105 transition-transform" style="background-color: #0C48CC;" title="클릭하여 색상 변경"></div>
                                     </div>
-                                    <div class="flex gap-1 flex-wrap">
-                                        <span class="text-[9px] text-gray-400 self-center mr-0.5">리마스터 칩:</span>
-                                        <button onclick="setPlayerColorPreset(1, '#F40404')" class="px-1.5 py-0.5 bg-[#F40404] text-white rounded text-[9px] font-bold">빨강</button>
-                                        <button onclick="setPlayerColorPreset(1, '#0C48CC')" class="px-1.5 py-0.5 bg-[#0C48CC] text-white rounded text-[9px] font-bold">파랑</button>
-                                        <button onclick="setPlayerColorPreset(1, '#2CB494')" class="px-1.5 py-0.5 bg-[#2CB494] text-black rounded text-[9px] font-bold">청록</button>
-                                        <button onclick="setPlayerColorPreset(1, '#88409C')" class="px-1.5 py-0.5 bg-[#88409C] text-white rounded text-[9px] font-bold">보라</button>
-                                        <button onclick="setPlayerColorPreset(1, '#F88C14')" class="px-1.5 py-0.5 bg-[#F88C14] text-black rounded text-[9px] font-bold">주황</button>
-                                        <button onclick="setPlayerColorPreset(1, '#703014')" class="px-1.5 py-0.5 bg-[#703014] text-white rounded text-[9px] font-bold">갈색</button>
-                                        <button onclick="setPlayerColorPreset(1, '#CCE0D0')" class="px-1.5 py-0.5 bg-[#CCE0D0] text-black rounded text-[9px] font-bold">하양</button>
-                                        <button onclick="setPlayerColorPreset(1, '#FCFC38')" class="px-1.5 py-0.5 bg-[#FCFC38] text-black rounded text-[9px] font-bold">노랑</button>
-                                        <button onclick="setPlayerColorPreset(1, '#088008')" class="px-1.5 py-0.5 bg-[#088008] text-white rounded text-[9px] font-bold">초록</button>
-                                        <button onclick="setPlayerColorPreset(1, '#FCFC7C')" class="px-1.5 py-0.5 bg-[#FCFC7C] text-black rounded text-[9px] font-bold">연노랑</button>
-                                        <button onclick="setPlayerColorPreset(1, '#ECC4B0')" class="px-1.5 py-0.5 bg-[#ECC4B0] text-black rounded text-[9px] font-bold">살구</button>
-                                        <button onclick="setPlayerColorPreset(1, '#4068D4')" class="px-1.5 py-0.5 bg-[#4068D4] text-white rounded text-[9px] font-bold">진청</button>
-                                        <button onclick="setPlayerColorPreset(1, '#74A47C')" class="px-1.5 py-0.5 bg-[#74A47C] text-black rounded text-[9px] font-bold">연초록</button>
-                                        <button onclick="setPlayerColorPreset(1, '#7290B8')" class="px-1.5 py-0.5 bg-[#7290B8] text-white rounded text-[9px] font-bold">청회색</button>
-                                        <button onclick="setPlayerColorPreset(1, '#00E4FC')" class="px-1.5 py-0.5 bg-[#00E4FC] text-black rounded text-[9px] font-bold">시안</button>
-                                        <button onclick="setPlayerColorPreset(1, '#FFC4E4')" class="px-1.5 py-0.5 bg-[#FFC4E4] text-black rounded text-[9px] font-bold">분홍</button>
-                                        <button onclick="setPlayerColorPreset(1, '#808000')" class="px-1.5 py-0.5 bg-[#808000] text-white rounded text-[9px] font-bold">올리브</button>
-                                        <button onclick="setPlayerColorPreset(1, '#D2F53C')" class="px-1.5 py-0.5 bg-[#D2F53C] text-black rounded text-[9px] font-bold">라임</button>
-                                        <button onclick="setPlayerColorPreset(1, '#000080')" class="px-1.5 py-0.5 bg-[#000080] text-white rounded text-[9px] font-bold">네이비</button>
-                                        <button onclick="setPlayerColorPreset(1, '#F032E6')" class="px-1.5 py-0.5 bg-[#F032E6] text-white rounded text-[9px] font-bold">마젠타</button>
-                                        <button onclick="setPlayerColorPreset(1, '#808080')" class="px-1.5 py-0.5 bg-[#808080] text-white rounded text-[9px] font-bold">회색</button>
-                                        <button onclick="setPlayerColorPreset(1, '#3C3C3C')" class="px-1.5 py-0.5 bg-[#3C3C3C] text-white rounded text-[9px] font-bold">검정</button>
+                                    <div class="flex items-center justify-between pt-1 border-t border-[#2c2d33]/50">
+                                        <span class="text-[11px] text-gray-400">글씨 폰트 색상</span>
+                                        <div class="flex gap-1">
+                                            <button id="btn-p1-text-white" onclick="setPlayerTextColor(1, '#ffffff')" class="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold cursor-pointer">흰색</button>
+                                            <button id="btn-p1-text-black" onclick="setPlayerTextColor(1, '#000000')" class="px-2 py-0.5 bg-[#2c2d33] text-gray-300 rounded text-[10px] font-bold cursor-pointer">검정</button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="flex flex-col gap-2 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
+                                <div class="flex flex-col gap-2 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33]">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-xs text-red-400 font-bold">2번 선수 칸 배경색</span>
-                                        <input type="color" id="input-player2-color" value="#F40404" class="w-7 h-7 bg-transparent cursor-pointer rounded border border-[#2c2d33]">
+                                        <span class="text-xs text-white font-bold">2번 선수 칸 배경색</span>
+                                        <div onclick="openColorModal(2)" id="p2-color-preview" class="w-8 h-8 rounded-lg border border-[#2c2d33] cursor-pointer shadow-md hover:scale-105 transition-transform" style="background-color: #F40404;" title="클릭하여 색상 변경"></div>
                                     </div>
-                                    <div class="flex gap-1 flex-wrap">
-                                        <span class="text-[9px] text-gray-400 self-center mr-0.5">리마스터 칩:</span>
-                                        <button onclick="setPlayerColorPreset(2, '#F40404')" class="px-1.5 py-0.5 bg-[#F40404] text-white rounded text-[9px] font-bold">빨강</button>
-                                        <button onclick="setPlayerColorPreset(2, '#0C48CC')" class="px-1.5 py-0.5 bg-[#0C48CC] text-white rounded text-[9px] font-bold">파랑</button>
-                                        <button onclick="setPlayerColorPreset(2, '#2CB494')" class="px-1.5 py-0.5 bg-[#2CB494] text-black rounded text-[9px] font-bold">청록</button>
-                                        <button onclick="setPlayerColorPreset(2, '#88409C')" class="px-1.5 py-0.5 bg-[#88409C] text-white rounded text-[9px] font-bold">보라</button>
-                                        <button onclick="setPlayerColorPreset(2, '#F88C14')" class="px-1.5 py-0.5 bg-[#F88C14] text-black rounded text-[9px] font-bold">주황</button>
-                                        <button onclick="setPlayerColorPreset(2, '#703014')" class="px-1.5 py-0.5 bg-[#703014] text-white rounded text-[9px] font-bold">갈색</button>
-                                        <button onclick="setPlayerColorPreset(2, '#CCE0D0')" class="px-1.5 py-0.5 bg-[#CCE0D0] text-black rounded text-[9px] font-bold">하양</button>
-                                        <button onclick="setPlayerColorPreset(2, '#FCFC38')" class="px-1.5 py-0.5 bg-[#FCFC38] text-black rounded text-[9px] font-bold">노랑</button>
-                                        <button onclick="setPlayerColorPreset(2, '#088008')" class="px-1.5 py-0.5 bg-[#088008] text-white rounded text-[9px] font-bold">초록</button>
-                                        <button onclick="setPlayerColorPreset(2, '#FCFC7C')" class="px-1.5 py-0.5 bg-[#FCFC7C] text-black rounded text-[9px] font-bold">연노랑</button>
-                                        <button onclick="setPlayerColorPreset(2, '#ECC4B0')" class="px-1.5 py-0.5 bg-[#ECC4B0] text-black rounded text-[9px] font-bold">살구</button>
-                                        <button onclick="setPlayerColorPreset(2, '#4068D4')" class="px-1.5 py-0.5 bg-[#4068D4] text-white rounded text-[9px] font-bold">진청</button>
-                                        <button onclick="setPlayerColorPreset(2, '#74A47C')" class="px-1.5 py-0.5 bg-[#74A47C] text-black rounded text-[9px] font-bold">연초록</button>
-                                        <button onclick="setPlayerColorPreset(2, '#7290B8')" class="px-1.5 py-0.5 bg-[#7290B8] text-white rounded text-[9px] font-bold">청회색</button>
-                                        <button onclick="setPlayerColorPreset(2, '#00E4FC')" class="px-1.5 py-0.5 bg-[#00E4FC] text-black rounded text-[9px] font-bold">시안</button>
-                                        <button onclick="setPlayerColorPreset(2, '#FFC4E4')" class="px-1.5 py-0.5 bg-[#FFC4E4] text-black rounded text-[9px] font-bold">분홍</button>
-                                        <button onclick="setPlayerColorPreset(2, '#808000')" class="px-1.5 py-0.5 bg-[#808000] text-white rounded text-[9px] font-bold">올리브</button>
-                                        <button onclick="setPlayerColorPreset(2, '#D2F53C')" class="px-1.5 py-0.5 bg-[#D2F53C] text-black rounded text-[9px] font-bold">라임</button>
-                                        <button onclick="setPlayerColorPreset(2, '#000080')" class="px-1.5 py-0.5 bg-[#000080] text-white rounded text-[9px] font-bold">네이비</button>
-                                        <button onclick="setPlayerColorPreset(2, '#F032E6')" class="px-1.5 py-0.5 bg-[#F032E6] text-white rounded text-[9px] font-bold">마젠타</button>
-                                        <button onclick="setPlayerColorPreset(2, '#808080')" class="px-1.5 py-0.5 bg-[#808080] text-white rounded text-[9px] font-bold">회색</button>
-                                        <button onclick="setPlayerColorPreset(2, '#3C3C3C')" class="px-1.5 py-0.5 bg-[#3C3C3C] text-white rounded text-[9px] font-bold">검정</button>
+                                    <div class="flex items-center justify-between pt-1 border-t border-[#2c2d33]/50">
+                                        <span class="text-[11px] text-gray-400">글씨 폰트 색상</span>
+                                        <div class="flex gap-1">
+                                            <button id="btn-p2-text-white" onclick="setPlayerTextColor(2, '#ffffff')" class="px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold cursor-pointer">흰색</button>
+                                            <button id="btn-p2-text-black" onclick="setPlayerTextColor(2, '#000000')" class="px-2 py-0.5 bg-[#2c2d33] text-gray-300 rounded text-[10px] font-bold cursor-pointer">검정</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1657,21 +1702,17 @@
                                     </div>
 
                                     <div id="prev-row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
-                                        <div id="prev-bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-gray-200 text-[11.5px]" style="background-color: #1d3557;">
-                                            <div class="absolute inset-0 bg-black/30"></div>
-                                            <span id="prev-text-player1" class="relative z-10 drop-shadow-md">선수1</span>
+                                        <div id="prev-bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-[11.5px]" style="background-color: #0C48CC;">
+                                            <span id="prev-text-player1" class="relative z-10 drop-shadow-md font-bold" style="color: #ffffff;">선수1</span>
                                         </div>
-                                        <div class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
-                                            <div class="absolute inset-0 bg-black/50"></div>
-                                            <span id="prev-score-player1" class="relative z-10 text-gray-100 text-[12px] font-black drop-shadow-md">0</span>
+                                        <div id="prev-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]" style="background-color: #0C48CC;">
+                                            <span id="prev-score-player1" class="relative z-10 text-[12px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
                                         </div>
-                                        <div class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
-                                            <div class="absolute inset-0 bg-black/50"></div>
-                                            <span id="prev-score-player2" class="relative z-10 text-gray-100 text-[12px] font-black drop-shadow-md">0</span>
+                                        <div id="prev-score-p2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]" style="background-color: #F40404;">
+                                            <span id="prev-score-player2" class="relative z-10 text-[12px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
                                         </div>
-                                        <div id="prev-bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-gray-200 text-[11.5px]" style="background-color: #6a1b1b;">
-                                            <div class="absolute inset-0 bg-black/30"></div>
-                                            <span id="prev-text-player2" class="relative z-10 drop-shadow-md">2팀</span>
+                                        <div id="prev-bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-[11.5px]" style="background-color: #F40404;">
+                                            <span id="prev-text-player2" class="relative z-10 drop-shadow-md font-bold" style="color: #ffffff;">선수2</span>
                                         </div>
                                     </div>
                                     
