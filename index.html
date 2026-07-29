@@ -16,7 +16,6 @@
             border: 2px solid #00FFA3 !important;
         }
 
-        /* 다크 / 라이트 모드 CSS 가변 테마 정의 */
         body.light-theme {
             background-color: #f1f5f9 !important;
             color: #0f172a !important;
@@ -199,7 +198,6 @@
 
             document.getElementById('btn-save-selection').addEventListener('click', saveSelectionConfig);
 
-            /* 스코어 수동 반영 버튼 단일 연결 (경로 분리) */
             const btnManualScore = document.getElementById('btn-save-manual-score');
             if (btnManualScore) {
                 btnManualScore.onclick = saveManualScoreboard;
@@ -471,15 +469,11 @@
                         document.getElementById('input-team2-color').value = team2Color;
                     }
 
-                    if(ms.vsMatch && ms.vsMatch.t1) {
-                        let t1Arr = Array.isArray(ms.vsMatch.t1) ? ms.vsMatch.t1 : [ms.vsMatch.t1];
-                        let t2Arr = Array.isArray(ms.vsMatch.t2) ? ms.vsMatch.t2 : [ms.vsMatch.t2];
-                        let t1ImgName = t1Arr.find(x => x.name !== "-" && x.name !== "미정")?.name || "선수1";
-                        let t2ImgName = t2Arr.find(x => x.name !== "-" && x.name !== "미정")?.name || "선수2";
-                        let p1Text = t1Arr.filter(x => x.name !== "-" && x.name !== "미정").map(x=>x.name).join(', ') || "미정";
-                        let p2Text = t2Arr.filter(x => x.name !== "-" && x.name !== "미정").map(x=>x.name).join(', ') || "미정";
-                        updateVsPreview(t1ImgName, t2ImgName, ms.vsMatch.map?.name, p1Text, p2Text);
+                    if(ms.matchSetsConfig) {
+                        matchSetsObj = ms.matchSetsConfig;
                     }
+
+                    updateVsMatchDropdownOptions();
 
                     let manual = data.manualScore || {
                         showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
@@ -512,7 +506,6 @@
                     renderSelectionUI();
                     renderMatchSetTabs();
                     renderMatchSetPanels();
-                    updateVsMatchDropdownOptions();
                     updateScoreboardPreviewFromConsole();
                 }
             });
@@ -1187,11 +1180,6 @@
                 };
             }
 
-            let currentMatchData = matches[activeMatchIdx];
-            if (currentMatchData && currentMatchData.winner !== "" && activeMatchIdx < s.matchesCount) {
-                activeMatchIdx += 1;
-            }
-
             s.matches = matches;
             s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
@@ -1200,39 +1188,7 @@
             saveMatchSetsConfigToFirebase();
             updateVsMatchDropdownOptions();
 
-            let activeMatch = matches[activeMatchIdx];
-            if (activeMatch) {
-                let p1Text = activeMatch.t1Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
-                let p2Text = activeMatch.t2Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
-                let t1ImgName = activeMatch.t1Players.find(x => x !== "-" && x !== "미정") || "선수1";
-                let t2ImgName = activeMatch.t2Players.find(x => x !== "-" && x !== "미정") || "선수2";
-
-                updateVsPreview(t1ImgName, t2ImgName, activeMatch.mapName, p1Text, p2Text);
-                
-                let vsSelect = document.getElementById('vs-match-select');
-                if(vsSelect) {
-                    let targetVal = setId + "-" + activeMatchIdx;
-                    for(let opt of vsSelect.options) {
-                        if(opt.value === targetVal) {
-                            vsSelect.value = targetVal;
-                            break;
-                        }
-                    }
-                }
-                
-                document.getElementById('man-title').value = `[${s.name.split(' ')[0]}]`;
-                
-                let r1 = playerRaceMap[t1ImgName] || "";
-                let r1Initial = r1 === "프로토스" ? "P" : (r1 === "테란" ? "T" : (r1 === "저그" ? "Z" : ""));
-                let r2 = playerRaceMap[t2ImgName] || "";
-                let r2Initial = r2 === "프로토스" ? "P" : (r2 === "테란" ? "T" : (r2 === "저그" ? "Z" : ""));
-
-                document.getElementById('man-p1-name').value = p1Text + (r1Initial ? `(${r1Initial})` : "");
-                document.getElementById('man-p2-name').value = p2Text + (r2Initial ? `(${r2Initial})` : "");
-                updateScoreboardPreviewFromConsole();
-            }
-
-            alert(s.name + " 대진이 기록되었습니다! (하단의 스코어보드 입력 패널에 이름이 자동 채워졌습니다)");
+            alert(s.name + " 대진이 기록 및 갱신되었습니다!");
         };
 
         window.saveManualScoreboard = function() {
@@ -1384,9 +1340,9 @@
     <div class="max-w-5xl mx-auto">
         <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
             <h1 class="text-2xl font-bold mb-2 text-[#00FFA3]">CHZZK STARCRAFT CONSOLE</h1>
-            <p class="text-gray-400 text-sm mb-6">사용 중이신 <b>방 이름</b>을 입력하고 입장하세요. (기존 방은 비밀번호 생략 가능)</p>
+            <p class="text-gray-400 text-sm mb-6">사용 중이신 <b>방 이름</b>을 입력하고 입장하세요. (예: starmatch1)</p>
             <div class="max-w-xs mx-auto flex flex-col gap-3">
-                <input type="text" id="input-room-id" placeholder="방 이름 (예: jaeho_broadcast)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <input type="text" id="input-room-id" placeholder="방 이름 (예: starmatch1)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
                 <input type="password" id="input-room-pin" placeholder="비밀번호 (선택사항, 신규 방만 설정)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
                 <button id="btn-enter-room" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold py-2.5 rounded text-sm cursor-pointer">입장하기</button>
             </div>
@@ -1654,7 +1610,7 @@
                                 <span id="prev-map-name" class="text-[10px] text-gray-300 font-bold">맵 이름</span>
                             </div>
                             <div class="flex items-center gap-3 flex-1 justify-start">
-                                <img id="prev-p2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33]">
+                                <img id="prev-p2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-12 h-12 object-cover rounded border border-[#2c2d33]">
                                 <div class="text-left">
                                     <div id="prev-p2-name" class="text-sm font-black text-white">선수2</div>
                                     <div id="prev-p2-race" class="text-xs font-bold text-gray-400">종족</div>
