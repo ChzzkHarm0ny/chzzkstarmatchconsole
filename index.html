@@ -1261,6 +1261,7 @@
             });
         }
 
+        /* 💡 타임스탬프 추가로 재송출시 매번 무조건 실행되도록 보정 */
         function saveVsMatchState() {
             if (!currentRoomId) return;
             let val = document.getElementById('vs-match-select').value;
@@ -1291,7 +1292,8 @@
             let vsData = {
                 t1: t1DataArr,
                 t2: t2DataArr,
-                map: { name: mapObj.name, url: mapObj.url || "" }
+                map: { name: mapObj.name, url: mapObj.url || "" },
+                timestamp: Date.now() // ✨ 매번 새로운 신호를 발생시키는 핵심 타임스탬프
             };
 
             set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
@@ -1447,7 +1449,6 @@
 
                     <!-- [수동 스코어보드 입력 패널 + 실시간 미리보기 세로배치 구조] -->
                     <div class="flex flex-col gap-4">
-                        <!-- 위쪽: 넉넉한 폭의 수동 입력 제어 패널 -->
                         <div class="bg-[#1b1c20] p-5 rounded-xl border border-[#2c2d33] flex flex-col gap-4">
                             <div class="flex flex-col sm:flex-row items-center justify-between border-b border-[#2c2d33] pb-3 gap-2">
                                 <div>
@@ -1468,16 +1469,12 @@
                                 <label class="flex items-center gap-1.5 cursor-pointer hover:text-white"><input type="checkbox" id="cb-show-bottom" checked class="accent-[#00FFA3]"> 위치표시</label>
                             </div>
 
-                            <!-- 한 줄로 펼쳐지는 와이드 정돈 레이아웃 -->
                             <div class="flex flex-col gap-3 bg-[#141518] p-4 rounded-lg border border-[#2c2d33]">
-                                
-                                <!-- 공지 입력 -->
                                 <div class="flex items-center gap-3">
                                     <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">공지</span>
                                     <input type="text" id="man-title" class="flex-1 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-xs text-center text-[#00FFA3] font-bold" placeholder="예: [1세트]">
                                 </div>
 
-                                <!-- 팀 로우 입력 (와이드 한 줄 가로 정렬) -->
                                 <div class="flex items-center gap-3 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
                                     <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">팀 로우</span>
                                     <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -1497,7 +1494,6 @@
                                     </div>
                                 </div>
 
-                                <!-- 선수 로우 입력 (와이드 한 줄 가로 정렬) -->
                                 <div class="flex items-center gap-3 bg-[#1b1c20] p-2.5 rounded border border-[#2c2d33]">
                                     <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">선수 로우</span>
                                     <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -1517,7 +1513,6 @@
                                     </div>
                                 </div>
 
-                                <!-- 위치 로우 입력 -->
                                 <div class="flex items-center gap-3">
                                     <span class="w-20 text-xs text-gray-400 font-bold shrink-0 text-right">위치 로우</span>
                                     <div class="flex items-center justify-between gap-3 flex-1">
@@ -1533,7 +1528,6 @@
                             </button>
                         </div>
 
-                        <!-- 아래쪽: 실시간 미니 미리보기 패널 (세로 배치) -->
                         <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col items-center justify-center">
                             <span class="text-xs font-bold text-[#00FFA3] mb-3 self-start">🔍 스코어보드 실시간 미리보기</span>
                             <div class="p-6 rounded-xl border border-[#2c2d33] flex items-center justify-center w-full overflow-hidden" style="background-image: linear-gradient(45deg, #121316 25%, transparent 25%), linear-gradient(-45deg, #121316 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #121316 75%), linear-gradient(-45deg, transparent 75%, #121316 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;">
