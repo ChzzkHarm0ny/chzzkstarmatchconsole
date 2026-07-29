@@ -179,9 +179,9 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const urlRoom = urlParams.get('room');
-            const savedPin = localStorage.getItem('starcraft_room_pin'] || "";
+            const savedPin = localStorage.getItem('starcraft_room_pin') || "";
             
-            if (urlRoom && (isAuth || savedPin)) {
+            if (urlRoom && (isAuth || savedPin.length > 0)) {
                 document.getElementById('input-room-id').value = urlRoom;
                 verifyAndEnterRoom(urlRoom, savedPin, true);
             } else {
@@ -1919,7 +1919,6 @@
                         </ol>
                     </div>
 
-                    <!-- 💡 요청하신 크레딧 문구 및 채널 링크 추가 -->
                     <div class="mt-8 pt-4 border-t border-[#2c2d33] text-center text-gray-400 text-[11px]">
                         본 콘솔은 치지직 스트리머 <a href="https://chzzk.naver.com/39dda2e694fe6797cb9e6a12e84c2808" target="_blank" class="text-[#00FFA3] font-bold hover:underline">엄크술사</a>에 의해 제작되었습니다.
                     </div>
