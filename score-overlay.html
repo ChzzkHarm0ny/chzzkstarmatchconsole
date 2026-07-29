@@ -17,17 +17,17 @@
             position: relative;
         }
 
-        /* 하단 파츠: 양쪽은 검은색 다리, 가운데 사다리꼴 공간은 빈 공간(투명)으로 파이도록 설정 */
+        /* 하단 파츠: 양쪽 발만 검은색이고 가운데 표시된 사다리꼴 영역은 투명하게 뚫리도록 설정 */
         .bottom-cutout {
             background-color: #0b0c0e;
             clip-path: polygon(
                 0% 0%, 
+                24% 0%, 
+                32% 100%, 
+                68% 100%, 
+                76% 0%, 
                 100% 0%, 
                 100% 100%, 
-                76% 100%, 
-                68% 0%, 
-                32% 0%, 
-                24% 100%, 
                 0% 100%
             );
         }
@@ -83,7 +83,7 @@
             </div>
         </div>
         
-        <!-- 4. 위치표시 (하단 사다리꼴 파인 다리 공간) -->
+        <!-- 4. 위치표시 (하단 중앙이 뻥 뚫린 다리 공간) -->
         <div id="row-bottom" class="h-[35px] shrink-0 relative flex justify-between items-end px-2 pb-1 overflow-hidden bottom-cutout">
             <div id="text-pos1" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;">P12</div>
             <div id="text-pos2" class="text-[#00FFA3] text-[12px] font-black tracking-wider" style="text-shadow: 1px 1px 2px black;"></div>
