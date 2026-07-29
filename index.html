@@ -60,6 +60,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
+        // 💡 [관리자 전용 마스터 인증키] 유사시 이 문자열만 변경하시면 기존 인증이 모두 해제되고 재검증을 요구합니다.
+        const MASTER_ADMIN_KEY = "chzzkumc0124";
+
         const firebaseConfig = {
             apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
             authDomain: "starcraft-console.firebaseapp.com",
@@ -169,13 +172,14 @@
             const urlParams = new URLSearchParams(window.location.search);
             const urlRoom = urlParams.get('room');
             const savedPin = localStorage.getItem('starcraft_room_pin') || "";
+            const isAuth = localStorage.getItem('starcraft_master_auth') === MASTER_ADMIN_KEY;
             
-            if (urlRoom) {
+            if (urlRoom && isAuth) {
                 document.getElementById('input-room-id').value = urlRoom;
                 verifyAndEnterRoom(urlRoom, savedPin, true);
             } else {
                 const savedRoom = localStorage.getItem('starcraft_room_id');
-                if (savedRoom) {
+                if (savedRoom && isAuth) {
                     window.location.href = `?room=${savedRoom}`;
                 } else {
                     showLoginScreen();
@@ -185,11 +189,20 @@
             document.getElementById('btn-enter-room').addEventListener('click', async () => {
                 let roomInput = document.getElementById('input-room-id').value.trim();
                 let pinInput = document.getElementById('input-room-pin').value.trim();
+                let authInput = document.getElementById('input-master-auth').value.trim();
 
                 if (!roomInput) {
                     alert("방 이름을 입력해주세요!");
                     return;
                 }
+
+                if (authInput !== MASTER_ADMIN_KEY) {
+                    alert("⚠️ 관리자 인증키가 일치하지 않습니다. 올바른 키를 입력해주세요.");
+                    return;
+                }
+
+                // 인증 성공 시 로컬에 저장하여 다음부터는 자동 통과
+                localStorage.setItem('starcraft_master_auth', MASTER_ADMIN_KEY);
 
                 let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
                 const newUrl = `${window.location.pathname}?room=${roomId}`;
@@ -201,6 +214,7 @@
             document.getElementById('btn-logout').addEventListener('click', () => {
                 localStorage.removeItem('starcraft_room_id');
                 localStorage.removeItem('starcraft_room_pin');
+                localStorage.removeItem('starcraft_master_auth'); // 로그아웃 시 인증 권한도 함께 해제하려면 이 줄 주석 해제 (원하시면 유지)
                 localStorage.removeItem('starcraft_active_tab');
                 window.location.href = window.location.pathname;
             });
@@ -225,7 +239,6 @@
                 saveMatchSetsConfigToFirebase();
             });
 
-            /* 💡 방 전체 데이터 초기화 시 수동 스코어 데이터(manualScore)까지 함께 삭제되도록 수정 */
             document.getElementById('btn-reset-all-room').addEventListener('click', () => {
                 if (confirm("⚠️ 정말로 이 방의 모든 대진 및 수동 스코어 데이터를 초기상태로 되돌리시겠습니까?")) {
                     if (currentRoomId) {
@@ -1462,11 +1475,12 @@
     <div class="max-w-5xl mx-auto">
         <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
             <h1 class="text-2xl font-bold mb-2 text-[#00FFA3]">CHZZK STARCRAFT CONSOLE</h1>
-            <p class="text-gray-400 text-sm mb-6">사용 중이신 <b>방 이름</b>을 입력하고 입장하세요. (예: starmatch1)</p>
+            <p class="text-gray-400 text-sm mb-6">사용하실 <b>방 이름</b>, <b>방 비밀번호</b> 및 <b>관리자 인증키</b>를 입력하세요.</p>
             <div class="max-w-xs mx-auto flex flex-col gap-3">
                 <input type="text" id="input-room-id" placeholder="방 이름 (예: starmatch1)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
-                <input type="password" id="input-room-pin" placeholder="비밀번호 (선택사항, 신규 방만 설정)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
-                <button id="btn-enter-room" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold py-2.5 rounded text-sm cursor-pointer">입장하기</button>
+                <input type="password" id="input-room-pin" placeholder="방 비밀번호 (선택사항, 신규 방만 설정)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <input type="password" id="input-master-auth" placeholder="관리자 인증키 입력" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-[#00FFA3] font-bold focus:outline-none">
+                <button id="btn-enter-room" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold py-2.5 rounded text-sm cursor-pointer">인증 및 입장하기</button>
             </div>
         </div>
 
