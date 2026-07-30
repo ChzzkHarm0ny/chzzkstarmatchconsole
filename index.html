@@ -168,24 +168,22 @@
                 if (btn) btn.innerText = "☀️ 라이트모드";
             }
 
-            const isAuth = localStorage.getItem('starcraft_master_auth') === MASTER_ADMIN_KEY;
+            // 💡 기존 브라우저 전체 인증키 강제 검사 제거 (신규 생성 시에만 체크하도록 변경)
             const authInputGroup = document.getElementById('auth-input-group');
-            if (isAuth) {
-                authInputGroup.classList.add('hidden');
-            } else {
-                authInputGroup.classList.remove('hidden');
+            if (authInputGroup) {
+                authInputGroup.classList.remove('hidden'); // 항상 입력창은 보여주되, 신규 생성일 때만 검사
             }
 
             const urlParams = new URLSearchParams(window.location.search);
             const urlRoom = urlParams.get('room');
             const savedPin = localStorage.getItem('starcraft_room_pin') || "";
             
-            if (urlRoom && (isAuth || savedPin.length > 0)) {
+            if (urlRoom) {
                 document.getElementById('input-room-id').value = urlRoom;
                 verifyAndEnterRoom(urlRoom, savedPin, true);
             } else {
                 const savedRoom = localStorage.getItem('starcraft_room_id');
-                if (savedRoom && isAuth) {
+                if (savedRoom) {
                     window.location.href = `?room=${savedRoom}`;
                 } else {
                     showLoginScreen();
@@ -202,15 +200,21 @@
                     return;
                 }
 
-                if (localStorage.getItem('starcraft_master_auth') !== MASTER_ADMIN_KEY) {
+                let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
+                
+                // 💡 방이 이미 존재하는지 확인
+                const roomRef = ref(db, "rooms/" + roomId);
+                const snapshot = await get(roomRef);
+                const roomData = snapshot.val();
+
+                // 방이 존재하지 않는 '완전 신규 방'인 경우에만 관리자 인증키 검사
+                if (!roomData) {
                     if (authInput !== MASTER_ADMIN_KEY) {
-                        alert("⚠️ 관리자 인증키가 일치하지 않습니다. 올바른 키를 입력해주세요.");
+                        alert("⚠️ 존재하지 않는 신규 방입니다. 방을 새로 생성하려면 올바른 관리자 인증키를 입력해주세요.");
                         return;
                     }
-                    localStorage.setItem('starcraft_master_auth', MASTER_ADMIN_KEY);
                 }
 
-                let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
                 const newUrl = `${window.location.pathname}?room=${roomId}`;
                 window.history.pushState({ path: newUrl }, '', newUrl);
 
@@ -1480,13 +1484,13 @@
     <div class="max-w-5xl mx-auto">
         <div id="login-section" class="hidden bg-[#141518] p-10 rounded-2xl border border-[#2c2d33] text-center shadow-2xl mt-20">
             <h1 class="text-2xl font-bold mb-2 text-[#00FFA3]">CHZZK STARCRAFT CONSOLE</h1>
-            <p class="text-gray-400 text-sm mb-6">사용하실 <b>방 이름</b>과 <b>방 비밀번호</b>를 입력하세요. (최초 접속 시 인증키 필요)</p>
+            <p class="text-gray-400 text-sm mb-6">사용하실 <b>방 이름</b>과 <b>방 비밀번호</b>를 입력하세요. <br><span class="text-xs text-yellow-400">💡 존재하지 않는 신규 방 생성 시에만 관리자 인증키가 필요합니다.</span></p>
             <div class="max-w-xs mx-auto flex flex-col gap-3">
                 <input type="text" id="input-room-id" placeholder="방 이름 (예: starmatch1)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
-                <input type="password" id="input-room-pin" placeholder="방 비밀번호 (선택사항, 신규 방만 설정)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <input type="password" id="input-room-pin" placeholder="방 비밀번호 (PIN)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
                 
-                <div id="auth-input-group" class="hidden">
-                    <input type="password" id="input-master-auth" placeholder="관리자 인증키 (최초 1회 필수)" class="w-full bg-[#0b0c0e] border border-yellow-500/50 rounded px-3 py-2 text-sm text-yellow-400 font-bold focus:outline-none">
+                <div id="auth-input-group">
+                    <input type="password" id="input-master-auth" placeholder="관리자 인증키 (신규 방 생성 시에만 필수)" class="w-full bg-[#0b0c0e] border border-yellow-500/50 rounded px-3 py-2 text-sm text-yellow-400 font-bold focus:outline-none">
                 </div>
 
                 <button id="btn-enter-room" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-bold py-2.5 rounded text-sm cursor-pointer">입장하기</button>
@@ -1602,7 +1606,7 @@
                                 <div class="flex items-center gap-2">
                                     <button id="btn-toggle-score" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐</button>
                                     <input type="text" id="score-url-input" readonly class="w-28 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
-                                    <button id="btn-copy-score-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
+                                    <button id="btn-copy-score-url" class="bg-[#2c2d33] text-white px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                                 </div>
                             </div>
 
