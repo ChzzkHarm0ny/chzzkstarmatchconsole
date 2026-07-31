@@ -60,7 +60,11 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        const MASTER_ADMIN_KEY = "chzzkumc0124";
+        // [보안 수정] 마스터키를 브라우저 코드에 그대로 두면 개발자도구로 누구나 확인할 수 있어서 제거했습니다.
+        // 실제 키 값은 Apps Script 프로젝트의 스크립트 속성(Script Properties)에만 저장하고,
+        // 아래 URL은 그 검증 결과("맞다/틀리다")만 돌려주는 웹앱 주소입니다.
+        // ⚠️ 배포 후 아래 URL을 본인의 Apps Script 웹앱 URL로 반드시 교체하세요.
+        const ROOM_AUTH_URL = "https://script.google.com/macros/s/AKfycbwFSMBiDHsY0Ap_wWtUFuRhA12Os8N_JBMebIbv9cHpzHND0tJHbIxXQlc1re7_MXWT/exec";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
@@ -99,6 +103,20 @@
         let player2TextColor = "#ffffff";
         let leagueTitleText = "스타크래프트 프로리그";
         let playerRaceMap = {};
+
+        // [보안 수정] 마스터키가 맞는지는 더 이상 브라우저가 스스로 판단하지 않고,
+        // 키 값을 알고 있는 Apps Script 서버에 물어보고 그 결과(true/false)만 받습니다.
+        async function verifyMasterKeyOnServer(inputKey) {
+            if (!inputKey) return false;
+            try {
+                let res = await fetch(ROOM_AUTH_URL + "?action=verifyMasterKey&key=" + encodeURIComponent(inputKey));
+                let data = await res.json();
+                return data.valid === true;
+            } catch (e) {
+                alert("인증 서버 연결에 실패했습니다. 네트워크 상태를 확인하거나 잠시 후 다시 시도해주세요.");
+                return false;
+            }
+        }
 
         function getJosaRo(name) {
             if (!name) return "로";
@@ -168,7 +186,9 @@
                 if (btn) btn.innerText = "☀️ 라이트모드";
             }
 
-            const isAuth = localStorage.getItem('starcraft_master_auth') === MASTER_ADMIN_KEY;
+            // [보안 수정] 예전엔 실제 키 값을 localStorage에 그대로 저장해 비교했는데,
+            // 이제는 "서버 검증을 통과했음"을 뜻하는 고정 플래그 문자열만 저장/비교합니다.
+            const isAuth = localStorage.getItem('starcraft_master_auth') === "verified";
             const authInputGroup = document.getElementById('auth-input-group');
             if (isAuth) {
                 authInputGroup.classList.add('hidden');
@@ -202,12 +222,13 @@
                     return;
                 }
 
-                if (localStorage.getItem('starcraft_master_auth') !== MASTER_ADMIN_KEY) {
-                    if (authInput !== MASTER_ADMIN_KEY) {
+                if (localStorage.getItem('starcraft_master_auth') !== "verified") {
+                    const ok = await verifyMasterKeyOnServer(authInput);
+                    if (!ok) {
                         alert("⚠️ 관리자 인증키가 일치하지 않습니다. 올바른 키를 입력해주세요.");
                         return;
                     }
-                    localStorage.setItem('starcraft_master_auth', MASTER_ADMIN_KEY);
+                    localStorage.setItem('starcraft_master_auth', "verified");
                 }
 
                 let roomId = roomInput.replace(/[^a-zA-Z0-9가-힣-_]/g, '');
@@ -237,11 +258,16 @@
                     return;
                 }
                 let newId = Math.max(...keys.map(Number)) + 1;
-                matchSetsObj[newId] = { id: newId, name: newId + "세트 (매치)", matchesCount: 7, matches: {} };
+                let newSet = { id: newId, name: newId + "세트 (매치)", matchesCount: 7, matches: {} };
+                matchSetsObj[newId] = newSet;
                 renderMatchSetTabs();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
-                saveMatchSetsConfigToFirebase();
+                // [구조 통일] 전체를 덮어쓰는 matchSetsConfig 대신, 이 세트 하나만 개별 경로에 씁니다.
+                // 다른 스태프가 동시에 다른 세트를 편집 중이어도 서로 덮어쓸 일이 없습니다.
+                if (currentRoomId) {
+                    set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + newId), newSet);
+                }
             });
 
             document.getElementById('btn-reset-all-room').addEventListener('click', () => {
@@ -389,7 +415,9 @@
             const roomData = snapshot.val();
 
             if (roomData && roomData.password) {
-                if (pin && roomData.password !== pin) {
+                // [보안 수정] 기존에는 pin이 빈 값이면 이 검사 자체를 건너뛰어 누구나 그냥
+                // 입장할 수 있었습니다. 이제 비밀번호가 걸린 방이면 PIN이 정확히 일치해야만 통과합니다.
+                if (roomData.password !== pin) {
                     alert("방 비밀번호(PIN)가 일치하지 않습니다!");
                     if (isAutoLogin) {
                         localStorage.removeItem('starcraft_room_id');
@@ -399,9 +427,13 @@
                     return;
                 }
             } else {
-                let finalPin = pin ? pin : "0000";
-                await set(ref(db, "rooms/" + roomId + "/password"), finalPin);
-                pin = finalPin;
+                // [보안 수정] 새 방을 만들 때 PIN을 비워두면 "0000"으로 자동 설정되던 것을 제거하고,
+                // 반드시 직접 PIN을 입력하도록 강제합니다.
+                if (!pin) {
+                    alert("새로운 방입니다. 이 방에서 사용할 비밀번호(PIN)를 입력해주세요!");
+                    return;
+                }
+                await set(ref(db, "rooms/" + roomId + "/password"), pin);
             }
 
             localStorage.setItem('starcraft_room_id', roomId);
@@ -471,7 +503,6 @@
                 matchSetsObj[setId].matches = {};
                 matchSetsObj[setId].activeMatchIdx = 1;
                 set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), matchSetsObj[setId]);
-                saveMatchSetsConfigToFirebase();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
                 alert("초기화되었습니다.");
@@ -544,6 +575,16 @@
                     if(ms.selectedMapPool) selectedMapPool = ms.selectedMapPool;
                     if(ms.matchSetsObj) matchSetsObj = ms.matchSetsObj;
 
+                    // [1회성 마이그레이션] 이전 버전에서 matchSetsConfig 경로에만 저장돼있던 방을 위한 호환 처리.
+                    // matchSetsObj가 비어있는데 matchSetsConfig에 데이터가 남아있으면 그때만 옮겨옵니다.
+                    // 정상적으로 matchSetsObj가 있는 방이라면 이 블록은 실행되지 않습니다.
+                    if ((!ms.matchSetsObj || Object.keys(ms.matchSetsObj).length === 0) && ms.matchSetsConfig) {
+                        matchSetsObj = ms.matchSetsConfig;
+                        Object.keys(matchSetsObj).forEach(setId => {
+                            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), matchSetsObj[setId]);
+                        });
+                    }
+
                     if(ms.leagueTitle) {
                         leagueTitleText = ms.leagueTitle;
                         document.getElementById('input-league-title').value = leagueTitleText;
@@ -571,10 +612,6 @@
                         document.getElementById('p2-color-preview').style.backgroundColor = player2Color;
                         setPlayerTextColor(1, player1TextColor);
                         setPlayerTextColor(2, player2TextColor);
-                    }
-
-                    if(ms.matchSetsConfig) {
-                        matchSetsObj = ms.matchSetsConfig;
                     }
 
                     updateVsMatchDropdownOptions();
@@ -679,8 +716,20 @@
         }
 
         function renderSelectionUI() {
+            reconcileTeamRosters();
             renderPlayerSelectionGrid();
             renderMapGrid();
+        }
+
+        // [사이드이펙트 분리] 참가자로 선택됐지만 아직 어느 팀에도 없는 선수를 1팀으로 기본 배정합니다.
+        // 예전엔 renderPlayerSelectionGrid()가 화면을 그리는 도중에 이 작업을 같이 했는데,
+        // 렌더 함수는 상태를 읽기만 해야 하므로 별도 함수로 분리해 렌더 진입 전에 한 번만 실행합니다.
+        function reconcileTeamRosters() {
+            selectedRoster.forEach(name => {
+                if (!team1Roster.includes(name) && !team2Roster.includes(name)) {
+                    team1Roster.push(name);
+                }
+            });
         }
 
         function renderPlayerSelectionGrid() {
@@ -780,10 +829,6 @@
 
                     let inTeam1 = team1Roster.includes(name);
                     let inTeam2 = team2Roster.includes(name);
-                    if (!inTeam1 && !inTeam2) {
-                        team1Roster.push(name);
-                        inTeam1 = true;
-                    }
 
                     let card = document.createElement('div');
                     card.className = "border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all " + (inTeam1 ? "bg-[#142233] border-blue-500/50" : "bg-[#331414] border-red-500/50");
@@ -967,16 +1012,10 @@
                     activeSetId = Number(keys[0]);
                 }
 
-                saveMatchSetsConfigToFirebase();
                 renderMatchSetTabs();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
             }
-        }
-
-        function saveMatchSetsConfigToFirebase() {
-            if (!currentRoomId) return;
-            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsConfig"), matchSetsObj);
         }
 
         function switchMatchSetTab(setId) {
@@ -1289,7 +1328,6 @@
             matchSetsObj[setId] = s;
 
             set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s);
-            saveMatchSetsConfigToFirebase();
             updateVsMatchDropdownOptions();
 
             alert(s.name + " 대진이 저장되었습니다! (매치리스트 반영 완료)");
@@ -1483,7 +1521,7 @@
             <p class="text-gray-400 text-sm mb-6">사용하실 <b>방 이름</b>, <b>방 비밀번호(PIN)</b>와 <b>관리자 인증키</b>를 입력하세요.</p>
             <div class="max-w-xs mx-auto flex flex-col gap-3">
                 <input type="text" id="input-room-id" placeholder="방 이름 (예: starmatch1)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
-                <input type="password" id="input-room-pin" placeholder="방 비밀번호 (PIN)" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <input type="password" id="input-room-pin" placeholder="방 비밀번호 (PIN) - 필수 입력" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-2 text-sm text-white focus:outline-none">
                 
                 <div id="auth-input-group" class="hidden">
                     <input type="password" id="input-master-auth" placeholder="관리자 인증키 (최초 1회 필수)" class="w-full bg-[#0b0c0e] border border-yellow-500/50 rounded px-3 py-2 text-sm text-yellow-400 font-bold focus:outline-none">
