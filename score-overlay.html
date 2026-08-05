@@ -78,10 +78,10 @@
             </div>
             <div class="absolute inset-0 z-20 frame-middle pointer-events-none"></div>
             <div class="absolute inset-0 z-30 grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center h-full">
-                <div id="text-player1" class="px-2 truncate font-bold text-[13px]" style="color: #ffffff;">선수1</div>
+                <div id="text-player1" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">선수1</div>
                 <div class="flex items-center justify-center font-black drop-shadow-md"><span id="score-player1" style="color:#ffffff;">0</span></div>
                 <div class="flex items-center justify-center font-black drop-shadow-md"><span id="score-player2" style="color:#ffffff;">0</span></div>
-                <div id="text-player2" class="px-2 truncate font-bold text-[13px]" style="color: #ffffff;">선수2</div>
+                <div id="text-player2" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">선수2</div>
             </div>
         </div>
 
@@ -195,10 +195,10 @@
                 document.getElementById('score-team2').innerText = manual.t2Score || "0";
                 renderTextFit('text-team2', manual.t2Name || "", 13.5);     
 
-                renderTextFit('text-player1', manual.p1Name || "", 13);     
+                renderTextFit('text-player1', manual.p1Name || "", 16);     
                 document.getElementById('score-player1').innerText = manual.p1Score || "0";
                 document.getElementById('score-player2').innerText = manual.p2Score || "0";
-                renderTextFit('text-player2', manual.p2Name || "", 13);     
+                renderTextFit('text-player2', manual.p2Name || "", 16);     
             });
         }
     </script>
