@@ -30,7 +30,7 @@
             background-repeat: no-repeat;
         }
 
-        /* 하단 프레임 (직사각형 공간을 채우거나 새로 만드신 이미지) */
+        /* 하단 프레임 (안쪽 검은 배경을 제거하여 완전히 비어있도록 설정) */
         .frame-bottom {
             background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_bottom.png');
             background-size: 100% 100%;
@@ -85,9 +85,8 @@
             </div>
         </div>
 
-        <!-- [4] 하단 프레임 영역 (bottom 프레임이 정상 출력됨) -->
+        <!-- [4] 하단 프레임 영역 (배경 박스를 완전히 제거하여 투명하게 뚫림) -->
         <div id="row-bottom" class="relative w-full h-[42px] shrink-0">
-            <div class="absolute inset-0 z-10 bg-[#111111]"></div>
             <div class="absolute inset-0 z-20 frame-bottom pointer-events-none"></div>
         </div>
 
