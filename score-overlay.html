@@ -32,17 +32,17 @@
         /* 3분할 프레임 이미지 매핑 */
         .frame-top {
             background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_top.png');
-            height: 24px; /* 상단 공지 프레임 높이 */
+            height: 24px; 
         }
 
         .frame-middle {
             background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_middle.png');
-            height: 28px; /* 팀 및 선수 칸 프레임 높이 (필요시 조절 가능) */
+            height: 28px; 
         }
 
         .frame-bottom {
             background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_bottom.png');
-            height: 42px; /* 하단 위치 프레임 높이 */
+            height: 42px; 
         }
 
         .leg-left {
@@ -68,21 +68,21 @@
             <span id="text-title" class="text-[#00FFA3] font-black tracking-wider text-[13px] drop-shadow-md origin-center transition-all">[1세트]</span>
         </div>
         
-        <!-- [2] 팀 영역 (middle 프레임 공통 사용) -->
+        <!-- [2] 팀 영역 (middle 프레임) -->
         <div id="row-team" class="frame-row frame-middle grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center shrink-0">
-            <!-- 1팀 배경색 레이어 -->
+            <!-- 1팀 배경색 레이어 (프레임 뒤쪽에 깔림) -->
             <div id="bg-team1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #1d3557;"></div>
             <div id="text-team1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[13.5px] drop-shadow-md">1팀</div>
             
             <div class="relative z-10 flex items-center justify-center text-white text-[15px] font-black drop-shadow-md"><span id="score-team1">0</span></div>
             <div class="relative z-10 flex items-center justify-center text-white text-[15px] font-black drop-shadow-md"><span id="score-team2">0</span></div>
             
-            <!-- 2팀 배경색 레이어 -->
+            <!-- 2팀 배경색 레이어 (프레임 뒤쪽에 깔림) -->
             <div id="bg-team2" class="absolute inset-y-0 right-0 w-[42%] z-0" style="background-color: #6a1b1b;"></div>
             <div id="text-team2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[13.5px] drop-shadow-md">2팀</div>
         </div>
 
-        <!-- [3] 선수 영역 (middle 프레임 공통 사용) -->
+        <!-- [3] 선수 영역 (middle 프레임) -->
         <div id="row-player" class="frame-row frame-middle grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center shrink-0">
             <!-- 1번 선수 배경색 레이어 -->
             <div id="bg-player1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #0C48CC;"></div>
@@ -178,7 +178,6 @@
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
                 let playerColors = ms.playerColors || { player1Color: "#0C48CC", player2Color: "#F40404", player1TextColor: "#ffffff", player2TextColor: "#ffffff" };
 
-                // 행별 표시 여부 토글 적용
                 let rowTitle = document.getElementById('row-title');
                 if (rowTitle) rowTitle.style.display = manual.showTitle === false ? 'none' : 'flex';
 
@@ -191,11 +190,9 @@
                 let rowBottom = document.getElementById('row-bottom');
                 if (rowBottom) rowBottom.style.display = manual.showBottom === false ? 'none' : 'flex';
 
-                // 팀 배경색 적용
                 let bgT1 = document.getElementById('bg-team1'); if(bgT1) bgT1.style.backgroundColor = teamNames.team1Color || "#1d3557";
                 let bgT2 = document.getElementById('bg-team2'); if(bgT2) bgT2.style.backgroundColor = teamNames.team2Color || "#6a1b1b";
 
-                // 선수 배경색 및 폰트 컬러 적용
                 let bgP1 = document.getElementById('bg-player1'); if(bgP1) bgP1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
                 let bgP2 = document.getElementById('bg-player2'); if(bgP2) bgP2.style.backgroundColor = playerColors.player2Color || "#F40404";
                 let scoreP1Box = document.getElementById('score-p1-box'); if(scoreP1Box) scoreP1Box.style.backgroundColor = playerColors.player1Color || "#0C48CC";
@@ -211,7 +208,6 @@
                 if(txtP2) txtP2.style.color = playerColors.player2TextColor || "#ffffff";
                 if(scP2) scP2.style.color = playerColors.player2TextColor || "#ffffff";
 
-                // 텍스트 매핑
                 renderTextFit('text-title', manual.title || "", 13);         
                 renderTextFit('text-team1', manual.t1Name || "", 13.5);     
                 document.getElementById('score-team1').innerText = manual.t1Score || "0";
