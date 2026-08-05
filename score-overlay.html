@@ -24,27 +24,14 @@
             background-repeat: no-repeat;
         }
 
-        /* 공통으로 사용하는 투명 middle 프레임 (팀 칸, 선수 칸에 각각 적용) */
         .frame-middle {
             background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_middle.png');
             background-size: 100% 100%;
             background-repeat: no-repeat;
         }
 
-        .frame-bottom {
-            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_bottom.png');
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-        }
-
-        .leg-left {
-            background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 0% 100%);
-        }
-
-        .leg-right {
-            background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 28% 100%);
+        .row-hidden {
+            display: none !important;
         }
     </style>
 </head>
@@ -60,7 +47,7 @@
             </div>
         </div>
         
-        <!-- [2] 팀 영역 (middle 프레임 첫 번째 사용) -->
+        <!-- [2] 팀 영역 -->
         <div id="row-team" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
                 <div id="bg-team1" style="background-color: #1d3557;"></div>
@@ -76,7 +63,7 @@
             </div>
         </div>
 
-        <!-- [3] 선수 영역 (middle 프레임 두 번째 사용) -->
+        <!-- [3] 선수 영역 (마지막 칸) -->
         <div id="row-player" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
                 <div id="bg-player1" class="col-span-2" style="background-color: #0C48CC;"></div>
@@ -88,19 +75,6 @@
                 <div class="flex items-center justify-center font-black drop-shadow-md"><span id="score-player1" style="color:#ffffff;">0</span></div>
                 <div class="flex items-center justify-center font-black drop-shadow-md"><span id="score-player2" style="color:#ffffff;">0</span></div>
                 <div id="text-player2" class="px-2 truncate font-bold text-[13px]" style="color: #ffffff;">선수2</div>
-            </div>
-        </div>
-        
-        <!-- [4] 하단 위치 표시 영역 -->
-        <div id="row-bottom" class="relative w-full h-[42px] shrink-0">
-            <div class="absolute inset-0 z-10 flex justify-between">
-                <div class="w-[38%] leg-left"></div>
-                <div class="w-[38%] leg-right"></div>
-            </div>
-            <div class="absolute inset-0 z-20 frame-bottom pointer-events-none"></div>
-            <div class="absolute inset-0 z-30 flex justify-between items-end px-3 pb-1.5 h-full">
-                <div id="text-pos1" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]">P5</div>
-                <div id="text-pos2" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]">Z3</div>
             </div>
         </div>
 
@@ -166,11 +140,10 @@
                 }
 
                 let manual = data.manualScore || {
-                    showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
+                    showTitle: true, showTeam: true, showPlayer: true,
                     title: "[1세트]", 
                     t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
-                    p1Name: "선수1", p1Score: 0, p2Score: 0, p2Name: "선수2",
-                    pos1: "", pos2: ""
+                    p1Name: "선수1", p1Score: 0, p2Score: 0, p2Name: "선수2"
                 };
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
@@ -184,9 +157,6 @@
 
                 let rowPlayer = document.getElementById('row-player');
                 if (rowPlayer) rowPlayer.style.display = manual.showPlayer === false ? 'none' : 'block';
-
-                let rowBottom = document.getElementById('row-bottom');
-                if (rowBottom) rowBottom.style.display = manual.showBottom === false ? 'none' : 'block';
 
                 let bgT1 = document.getElementById('bg-team1'); if(bgT1) bgT1.style.backgroundColor = teamNames.team1Color || "#1d3557";
                 let bgT2 = document.getElementById('bg-team2'); if(bgT2) bgT2.style.backgroundColor = teamNames.team2Color || "#6a1b1b";
@@ -214,9 +184,6 @@
                 document.getElementById('score-player1').innerText = manual.p1Score || "0";
                 document.getElementById('score-player2').innerText = manual.p2Score || "0";
                 renderTextFit('text-player2', manual.p2Name || "", 13);     
-
-                document.getElementById('text-pos1').innerText = manual.pos1 || "";
-                document.getElementById('text-pos2').innerText = manual.pos2 || "";
             });
         }
     </script>
