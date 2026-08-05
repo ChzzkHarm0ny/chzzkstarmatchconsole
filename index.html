@@ -45,7 +45,7 @@
             position: relative;
         }
 
-        /* 콘솔 미리보기용 3분할 프레임 매핑 */
+        /* 콘솔 미리보기용 프레임 매핑 */
         .preview-frame-top {
             background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_top.png');
             background-size: 100% 100%;
@@ -65,14 +65,6 @@
             height: 42px;
         }
 
-        .preview-leg-left {
-            background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 0% 100%);
-        }
-        .preview-leg-right {
-            background-color: #0b0c0e;
-            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 28% 100%);
-        }
         .row-hidden {
             display: none !important;
         }
@@ -346,9 +338,11 @@
             let t1Col = document.getElementById('input-team1-color')?.value || "#1d3557";
             let t2Col = document.getElementById('input-team2-color')?.value || "#6a1b1b";
 
+            // 팀 영역 통일 배경 적용
             let bgT1 = document.getElementById('prev-bg-team1'); if(bgT1) bgT1.style.backgroundColor = t1Col;
             let bgT2 = document.getElementById('prev-bg-team2'); if(bgT2) bgT2.style.backgroundColor = t2Col;
             
+            // 선수 영역 배경 적용
             let bgP1 = document.getElementById('prev-bg-player1'); 
             let bgSp1 = document.getElementById('prev-score-p1');
             if(bgP1) bgP1.style.backgroundColor = player1Color;
@@ -359,6 +353,7 @@
             if(bgP2) bgP2.style.backgroundColor = player2Color;
             if(bgSp2) bgSp2.style.backgroundColor = player2Color;
 
+            // 선수 글씨 폰트 색상 적용
             let txtP1 = document.getElementById('prev-text-player1');
             let scP1 = document.getElementById('prev-score-player1');
             if(txtP1) txtP1.style.color = player1TextColor;
@@ -369,15 +364,21 @@
             if(txtP2) txtP2.style.color = player2TextColor;
             if(scP2) scP2.style.color = player2TextColor;
 
+            // 하단 종족/위치 글씨 색상을 선수 배경색과 일치
+            let elPos1 = document.getElementById('prev-text-pos1');
+            let elPos2 = document.getElementById('prev-text-pos2');
+            if(elPos1) elPos1.style.color = player1Color;
+            if(elPos2) elPos2.style.color = player2Color;
+
             let titleVal = document.getElementById('man-title')?.value || "";
             let t1NameVal = document.getElementById('man-t1-name')?.value || "";
-            let t1ScVal = document.getElementById('man-t1-score')?.value || "0";
-            let t2ScVal = document.getElementById('man-t2-score')?.value || "0";
+            let t1ScVal = document.getElementById('man-t1-score')?.value || "";
+            let t2ScVal = document.getElementById('man-t2-score')?.value || "";
             let t2NameVal = document.getElementById('man-t2-name')?.value || "";
 
             let p1NameVal = document.getElementById('man-p1-name')?.value || "";
-            let p1ScVal = document.getElementById('man-p1-score')?.value || "0";
-            let p2ScVal = document.getElementById('man-p2-score')?.value || "0";
+            let p1ScVal = document.getElementById('man-p1-score')?.value || "";
+            let p2ScVal = document.getElementById('man-p2-score')?.value || "";
             let p2NameVal = document.getElementById('man-p2-name')?.value || "";
 
             let pos1Val = document.getElementById('man-pos1')?.value || "";
@@ -404,9 +405,7 @@
             let elP2 = document.getElementById('prev-text-player2');
             if(elP2) elP2.innerText = p2NameVal;
 
-            let elPos1 = document.getElementById('prev-text-pos1');
             if(elPos1) elPos1.innerText = pos1Val;
-            let elPos2 = document.getElementById('prev-text-pos2');
             if(elPos2) elPos2.innerText = pos2Val;
         };
 
@@ -622,8 +621,8 @@
 
                     let manual = data.manualScore || {
                         showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
-                        title: "[1세트]", t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
-                        p1Name: "선수1", p1Score: 0, p2Score: 0, p2Name: "선수2", pos1: "", pos2: ""
+                        title: "[1세트]", t1Name: "1팀", t1Score: "", t2Score: "", t2Name: "2팀",
+                        p1Name: "선수1", p1Score: "", p2Score: "", p2Name: "선수2", pos1: "", pos2: ""
                     };
                     document.getElementById('cb-show-title').checked = manual.showTitle;
                     document.getElementById('cb-show-team').checked = manual.showTeam;
@@ -632,13 +631,13 @@
 
                     document.getElementById('man-title').value = manual.title || "";
                     document.getElementById('man-t1-name').value = manual.t1Name || "";
-                    document.getElementById('man-t1-score').value = manual.t1Score || 0;
-                    document.getElementById('man-t2-score').value = manual.t2Score || 0;
+                    document.getElementById('man-t1-score').value = manual.t1Score !== undefined ? manual.t1Score : "";
+                    document.getElementById('man-t2-score').value = manual.t2Score !== undefined ? manual.t2Score : "";
                     document.getElementById('man-t2-name').value = manual.t2Name || "";
 
                     document.getElementById('man-p1-name').value = manual.p1Name || "";
-                    document.getElementById('man-p1-score').value = manual.p1Score || 0;
-                    document.getElementById('man-p2-score').value = manual.p2Score || 0;
+                    document.getElementById('man-p1-score').value = manual.p1Score !== undefined ? manual.p1Score : "";
+                    document.getElementById('man-p2-score').value = manual.p2Score !== undefined ? manual.p2Score : "";
                     document.getElementById('man-p2-name').value = manual.p2Name || "";
 
                     document.getElementById('man-pos1').value = manual.pos1 || "";
@@ -1694,13 +1693,13 @@
                                         <input type="text" id="man-t1-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="1팀">
                                         <div class="flex items-center gap-1 shrink-0">
                                             <button onclick="changeManualScore(1, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                            <input type="number" id="man-t1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <input type="text" id="man-t1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="">
                                             <button onclick="changeManualScore(1, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
                                         </div>
                                         <span class="text-gray-500 font-black text-xs px-1 shrink-0">:</span>
                                         <div class="flex items-center gap-1 shrink-0">
                                             <button onclick="changeManualScore(2, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                            <input type="number" id="man-t2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <input type="text" id="man-t2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="">
                                             <button onclick="changeManualScore(2, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
                                         </div>
                                         <input type="text" id="man-t2-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="2팀">
@@ -1713,13 +1712,13 @@
                                         <input type="text" id="man-p1-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="선수 1">
                                         <div class="flex items-center gap-1 shrink-0">
                                             <button onclick="changeManualScore(3, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                            <input type="number" id="man-p1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <input type="text" id="man-p1-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="">
                                             <button onclick="changeManualScore(3, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
                                         </div>
                                         <span class="text-gray-500 font-black text-xs px-1 shrink-0">:</span>
                                         <div class="flex items-center gap-1 shrink-0">
                                             <button onclick="changeManualScore(4, -1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">-</button>
-                                            <input type="number" id="man-p2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="0">
+                                            <input type="text" id="man-p2-score" class="w-10 bg-[#0b0c0e] border border-[#2c2d33] rounded py-1 text-xs text-center text-white font-black" value="">
                                             <button onclick="changeManualScore(4, 1)" class="w-7 h-7 bg-[#2c2d33] hover:bg-[#3c3d44] rounded text-white font-black text-xs cursor-pointer">+</button>
                                         </div>
                                         <input type="text" id="man-p2-name" class="flex-1 min-w-0 bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-center text-white font-bold" placeholder="선수 2">
@@ -1741,7 +1740,7 @@
                             </button>
                         </div>
 
-                        <!-- 💡 3분할 프레임 디자인이 적용된 콘솔 내부 실시간 미리보기 영역 -->
+                        <!-- 💡 3분할 프레임 디자인 및 배경 통일이 적용된 콘솔 내부 실시간 미리보기 영역 -->
                         <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col items-center justify-center">
                             <span class="text-xs font-bold text-[#00FFA3] mb-3 self-start">🔍 스코어보드 실시간 미리보기</span>
                             <div class="p-6 rounded-xl border border-[#2c2d33] flex items-center justify-center w-full overflow-hidden" style="background-image: linear-gradient(45deg, #121316 25%, transparent 25%), linear-gradient(-45deg, #121316 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #121316 75%), linear-gradient(-45deg, transparent 75%, #121316 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;">
@@ -1752,34 +1751,30 @@
                                         <span id="prev-text-title" class="text-[#00FFA3] font-black tracking-wider text-[11px] drop-shadow-md">[1세트]</span>
                                     </div>
                                     
-                                    <!-- 팀 로우 프레임 -->
+                                    <!-- 팀 로우 프레임 (중앙 스코어까지 팀 색상 통일) -->
                                     <div id="prev-row-team" class="preview-frame-middle grid grid-cols-[1fr_32px_32px_1fr] font-black text-center items-center shrink-0 overflow-hidden relative">
-                                        <div id="prev-bg-team1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #1d3557;"></div>
+                                        <div id="prev-bg-team1" class="absolute inset-y-0 left-0 w-[50%] z-0" style="background-color: #1d3557;"></div>
                                         <div id="prev-text-team1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md">1팀</div>
-                                        <div class="relative z-10 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team1">0</span></div>
-                                        <div class="relative z-10 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team2">0</span></div>
-                                        <div id="prev-bg-team2" class="absolute inset-y-0 right-0 w-[42%] z-0" style="background-color: #6a1b1b;"></div>
+                                        <div class="relative z-10 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team1"></span></div>
+                                        <div class="relative z-10 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team2"></span></div>
+                                        <div id="prev-bg-team2" class="absolute inset-y-0 right-0 w-[50%] z-0" style="background-color: #6a1b1b;"></div>
                                         <div id="prev-text-team2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md">2팀</div>
                                     </div>
 
                                     <!-- 선수 로우 프레임 -->
                                     <div id="prev-row-player" class="preview-frame-middle grid grid-cols-[1fr_32px_32px_1fr] font-black text-center items-center shrink-0 overflow-hidden relative">
-                                        <div id="prev-bg-player1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #0C48CC;"></div>
-                                        <div id="prev-text-player1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[11.5px]" style="color: #ffffff;">선수1</div>
-                                        <div id="prev-score-p1" class="relative z-10 flex items-center justify-center font-black drop-shadow-md" style="background-color: #0C48CC; color: #ffffff;"><span id="prev-score-player1">0</span></div>
-                                        <div id="prev-score-p2" class="relative z-10 flex items-center justify-center font-black drop-shadow-md" style="background-color: #F40404; color: #ffffff;"><span id="prev-score-player2">0</span></div>
-                                        <div id="prev-bg-player2" class="absolute inset-y-0 right-0 w-[42%] z-0" style="background-color: #F40404;"></div>
-                                        <div id="prev-text-player2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[11.5px]" style="color: #ffffff;">선수2</div>
+                                        <div id="prev-bg-player1" class="absolute inset-y-0 left-0 w-[50%] z-0" style="background-color: #0C48CC;"></div>
+                                        <div id="prev-text-player1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[14px]" style="color: #ffffff;">선수1</div>
+                                        <div id="prev-score-p1" class="relative z-10 flex items-center justify-center font-black drop-shadow-md text-[14px]" style="background-color: #0C48CC; color: #ffffff;"><span id="prev-score-player1"></span></div>
+                                        <div id="prev-score-p2" class="relative z-10 flex items-center justify-center font-black drop-shadow-md text-[14px]" style="background-color: #F40404; color: #ffffff;"><span id="prev-score-player2"></span></div>
+                                        <div id="prev-bg-player2" class="absolute inset-y-0 right-0 w-[50%] z-0" style="background-color: #F40404;"></div>
+                                        <div id="prev-text-player2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[14px]" style="color: #ffffff;">선수2</div>
                                     </div>
                                     
-                                    <!-- 하단 위치 프레임 -->
-                                    <div id="prev-row-bottom" class="preview-frame-bottom shrink-0 relative flex justify-between items-end px-2.5 pb-1.5 overflow-hidden bg-transparent">
-                                        <div class="absolute inset-y-0 left-0 w-[38%] preview-leg-left flex items-end px-2.5 pb-1.5">
-                                            <div id="prev-text-pos1" class="text-[#00FFA3] text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P5</div>
-                                        </div>
-                                        <div class="absolute inset-y-0 right-0 w-[38%] preview-leg-right flex items-end justify-end px-2.5 pb-1.5">
-                                            <div id="prev-text-pos2" class="text-[#00FFA3] text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">Z3</div>
-                                        </div>
+                                    <!-- 하단 위치 프레임 (투명 다리 및 상단 배치된 위치 글씨) -->
+                                    <div id="prev-row-bottom" class="preview-frame-bottom shrink-0 relative flex justify-between items-start px-3 pt-1 overflow-hidden bg-transparent">
+                                        <div id="prev-text-pos1" class="text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black; color: #0C48CC; margin-top: -2px;">P5</div>
+                                        <div id="prev-text-pos2" class="text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black; color: #F40404; margin-top: -2px;">Z3</div>
                                     </div>
                                 </div>
 
