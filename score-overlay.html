@@ -69,7 +69,7 @@
             </div>
         </div>
 
-        <!-- [3] 선수 영역 (폰트 크기 16px 적용) -->
+        <!-- [3] 선수 영역 -->
         <div id="row-player" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
                 <div id="bg-player1" class="col-span-2" style="background-color: #0C48CC;"></div>
@@ -77,19 +77,21 @@
             </div>
             <div class="absolute inset-0 z-20 frame-middle pointer-events-none"></div>
             <div class="absolute inset-0 z-30 grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center h-full">
-                <div id="text-player1" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">실키아</div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player1" style="color:#ffffff;">0</span></div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player2" style="color:#ffffff;">0</span></div>
-                <div id="text-player2" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">곱재</div>
+                <!-- 선수1 텍스트 (콘솔 글씨 색상 연동) -->
+                <div id="text-player1" class="px-2 truncate font-bold text-[16px]">실키아</div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player1">0</span></div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player2">0</span></div>
+                <!-- 선수2 텍스트 (콘솔 글씨 색상 연동) -->
+                <div id="text-player2" class="px-2 truncate font-bold text-[16px]">곱재</div>
             </div>
         </div>
 
-        <!-- [4] 하단 위치 표시 영역 -->
+        <!-- [4] 하단 위치 표시 영역 (위치 글씨를 위쪽으로 바짝 끌어올림: pt-1 또는 top 정렬) -->
         <div id="row-bottom" class="relative w-full h-[42px] shrink-0">
             <div class="absolute inset-0 z-20 frame-bottom pointer-events-none"></div>
-            <div class="absolute inset-0 z-30 flex justify-between items-end px-4 pb-2 h-full">
-                <div id="text-pos1" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]">T1</div>
-                <div id="text-pos2" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]">P5</div>
+            <div class="absolute inset-0 z-30 flex justify-between items-start px-4 pt-1 h-full">
+                <div id="text-pos1" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]">Z1</div>
+                <div id="text-pos2" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]">T11</div>
             </div>
         </div>
 
@@ -159,7 +161,7 @@
                     title: "[1세트]", 
                     t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
                     p1Name: "실키아", p1Score: 0, p2Score: 0, p2Name: "곱재",
-                    pos1: "T1", pos2: "P5"
+                    pos1: "Z1", pos2: "T11"
                 };
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
@@ -183,6 +185,7 @@
                 let bgP1 = document.getElementById('bg-player1'); if(bgP1) bgP1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
                 let bgP2 = document.getElementById('bg-player2'); if(bgP2) bgP2.style.backgroundColor = playerColors.player2Color || "#F40404";
 
+                // [색상 적용 누락 해결] 콘솔에서 설정한 선수 폰트 색상을 정확히 대입
                 let txtP1 = document.getElementById('text-player1');
                 let scP1 = document.getElementById('score-player1');
                 let p1TextCol = playerColors.player1TextColor || "#ffffff";
@@ -201,7 +204,6 @@
                 document.getElementById('score-team2').innerText = manual.t2Score || "0";
                 renderTextFit('text-team2', manual.t2Name || "", 13.5);     
 
-                // 선수 이름 및 점수 자동 폰트 크기 기준을 16으로 설정
                 renderTextFit('text-player1', manual.p1Name || "", 16);     
                 document.getElementById('score-player1').innerText = manual.p1Score || "0";
                 document.getElementById('score-player2').innerText = manual.p2Score || "0";
