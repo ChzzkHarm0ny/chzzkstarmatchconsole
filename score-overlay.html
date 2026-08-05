@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK Minimap Scoreboard Overlay</title>
+    <title>CHZZK Custom Frame Scoreboard Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
@@ -16,6 +16,33 @@
             flex-direction: column;
             position: relative;
             justify-content: flex-end;
+        }
+
+        /* 프레임 배경 공통 스타일 */
+        .frame-row {
+            position: relative;
+            width: 100%;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 3분할 프레임 이미지 매핑 */
+        .frame-top {
+            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_top.png');
+            height: 24px; /* 상단 공지 프레임 높이 */
+        }
+
+        .frame-middle {
+            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_middle.png');
+            height: 28px; /* 팀 및 선수 칸 프레임 높이 (필요시 조절 가능) */
+        }
+
+        .frame-bottom {
+            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_bottom.png');
+            height: 42px; /* 하단 위치 프레임 높이 */
         }
 
         .leg-left {
@@ -36,45 +63,41 @@
 <body class="flex items-end justify-start p-0">
     <div id="scoreboard-wrapper" class="minimap-scoreboard text-white font-sans">
         
-        <!-- [1] 공지 영역 -->
-        <div id="row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0 overflow-hidden">
+        <!-- [1] 상단 공지 영역 (top 프레임) -->
+        <div id="row-title" class="frame-row frame-top justify-center shrink-0">
             <span id="text-title" class="text-[#00FFA3] font-black tracking-wider text-[13px] drop-shadow-md origin-center transition-all">[1세트]</span>
         </div>
         
-        <!-- [2] 팀 로우 영역 -->
-        <div id="row-team" class="grid grid-cols-[1fr_36px_36px_1fr] h-[28px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
-            <div id="bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white" style="background-color: #1d3557;">
-                <span id="text-team1" class="relative z-10 drop-shadow-md origin-center transition-all">1팀</span>
-            </div>
-            <div id="bg-score-t1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
-                <span id="score-team1" class="relative z-10 text-white text-[15px] font-black drop-shadow-md">0</span>
-            </div>
-            <div id="bg-score-t2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
-                <span id="score-team2" class="relative z-10 text-white text-[15px] font-black drop-shadow-md">0</span>
-            </div>
-            <div id="bg-team2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white" style="background-color: #6a1b1b;">
-                <span id="text-team2" class="relative z-10 drop-shadow-md origin-center transition-all">2팀</span>
-            </div>
+        <!-- [2] 팀 영역 (middle 프레임 공통 사용) -->
+        <div id="row-team" class="frame-row frame-middle grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center shrink-0">
+            <!-- 1팀 배경색 레이어 -->
+            <div id="bg-team1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #1d3557;"></div>
+            <div id="text-team1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[13.5px] drop-shadow-md">1팀</div>
+            
+            <div class="relative z-10 flex items-center justify-center text-white text-[15px] font-black drop-shadow-md"><span id="score-team1">0</span></div>
+            <div class="relative z-10 flex items-center justify-center text-white text-[15px] font-black drop-shadow-md"><span id="score-team2">0</span></div>
+            
+            <!-- 2팀 배경색 레이어 -->
+            <div id="bg-team2" class="absolute inset-y-0 right-0 w-[42%] z-0" style="background-color: #6a1b1b;"></div>
+            <div id="text-team2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[13.5px] drop-shadow-md">2팀</div>
         </div>
 
-        <!-- [3] 선수 로우 영역 -->
-        <div id="row-player" class="grid grid-cols-[1fr_36px_36px_1fr] h-[28px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
-            <div id="bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden" style="background-color: #0C48CC;">
-                <span id="text-player1" class="relative z-10 drop-shadow-md font-bold origin-center transition-all" style="color: #ffffff;">선수1</span>
-            </div>
-            <div id="bg-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]" style="background-color: #0C48CC;">
-                <span id="score-player1" class="relative z-10 text-[14px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
-            </div>
-            <div id="bg-score-p2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]" style="background-color: #F40404;">
-                <span id="score-player2" class="relative z-10 text-[14px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
-            </div>
-            <div id="bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden" style="background-color: #F40404;">
-                <span id="text-player2" class="relative z-10 drop-shadow-md font-bold origin-center transition-all" style="color: #ffffff;">선수2</span>
-            </div>
+        <!-- [3] 선수 영역 (middle 프레임 공통 사용) -->
+        <div id="row-player" class="frame-row frame-middle grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center shrink-0">
+            <!-- 1번 선수 배경색 레이어 -->
+            <div id="bg-player1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #0C48CC;"></div>
+            <div id="text-player1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[13px]" style="color: #ffffff;">선수1</div>
+            
+            <div id="score-p1-box" class="relative z-10 flex items-center justify-center font-black drop-shadow-md" style="background-color: #0C48CC; color: #ffffff;"><span id="score-player1">0</span></div>
+            <div id="score-p2-box" class="relative z-10 flex items-center justify-center font-black drop-shadow-md" style="background-color: #F40404; color: #ffffff;"><span id="score-player2">0</span></div>
+            
+            <!-- 2번 선수 배경색 레이어 -->
+            <div id="bg-player2" class="absolute inset-y-0 right-0 w-[42%] z-0" style="background-color: #F40404;"></div>
+            <div id="text-player2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[13px]" style="color: #ffffff;">선수2</div>
         </div>
         
-        <!-- [4] 하단 위치 표시 영역 -->
-        <div id="row-bottom" class="h-[42px] shrink-0 relative flex justify-between items-end px-2.5 pb-1.5 overflow-hidden bg-transparent">
+        <!-- [4] 하단 위치 표시 영역 (bottom 프레임) -->
+        <div id="row-bottom" class="frame-row frame-bottom shrink-0 relative flex justify-between items-end px-2.5 pb-1.5">
             <div class="absolute inset-y-0 left-0 w-[38%] leg-left flex items-end px-2.5 pb-1.5">
                 <div id="text-pos1" class="text-[#00FFA3] text-[16px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P5</div>
             </div>
@@ -155,6 +178,7 @@
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
                 let playerColors = ms.playerColors || { player1Color: "#0C48CC", player2Color: "#F40404", player1TextColor: "#ffffff", player2TextColor: "#ffffff" };
 
+                // 행별 표시 여부 토글 적용
                 let rowTitle = document.getElementById('row-title');
                 if (rowTitle) rowTitle.style.display = manual.showTitle === false ? 'none' : 'flex';
 
@@ -167,15 +191,15 @@
                 let rowBottom = document.getElementById('row-bottom');
                 if (rowBottom) rowBottom.style.display = manual.showBottom === false ? 'none' : 'flex';
 
+                // 팀 배경색 적용
                 let bgT1 = document.getElementById('bg-team1'); if(bgT1) bgT1.style.backgroundColor = teamNames.team1Color || "#1d3557";
                 let bgT2 = document.getElementById('bg-team2'); if(bgT2) bgT2.style.backgroundColor = teamNames.team2Color || "#6a1b1b";
-                let bgSt1 = document.getElementById('bg-score-t1'); if(bgSt1) bgSt1.style.backgroundColor = teamNames.team1Color || "#1d3557";
-                let bgSt2 = document.getElementById('bg-score-t2'); if(bgSt2) bgSt2.style.backgroundColor = teamNames.team2Color || "#6a1b1b";
 
+                // 선수 배경색 및 폰트 컬러 적용
                 let bgP1 = document.getElementById('bg-player1'); if(bgP1) bgP1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
                 let bgP2 = document.getElementById('bg-player2'); if(bgP2) bgP2.style.backgroundColor = playerColors.player2Color || "#F40404";
-                let bgSp1 = document.getElementById('bg-score-p1'); if(bgSp1) bgSp1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
-                let bgSp2 = document.getElementById('bg-score-p2'); if(bgSp2) bgSp2.style.backgroundColor = playerColors.player2Color || "#F40404";
+                let scoreP1Box = document.getElementById('score-p1-box'); if(scoreP1Box) scoreP1Box.style.backgroundColor = playerColors.player1Color || "#0C48CC";
+                let scoreP2Box = document.getElementById('score-p2-box'); if(scoreP2Box) scoreP2Box.style.backgroundColor = playerColors.player2Color || "#F40404";
 
                 let txtP1 = document.getElementById('text-player1');
                 let scP1 = document.getElementById('score-player1');
@@ -187,17 +211,17 @@
                 if(txtP2) txtP2.style.color = playerColors.player2TextColor || "#ffffff";
                 if(scP2) scP2.style.color = playerColors.player2TextColor || "#ffffff";
 
-                // 텍스트 반영 (선수 이름 기본 폰트 크기를 원하시는 15~16px 등으로 조절 가능합니다)
+                // 텍스트 매핑
                 renderTextFit('text-title', manual.title || "", 13);         
                 renderTextFit('text-team1', manual.t1Name || "", 13.5);     
                 document.getElementById('score-team1').innerText = manual.t1Score || "0";
                 document.getElementById('score-team2').innerText = manual.t2Score || "0";
                 renderTextFit('text-team2', manual.t2Name || "", 13.5);     
 
-                renderTextFit('text-player1', manual.p1Name || "", 17);     // 💡 선수1 폰트 기본크기 (여기서 조절하세요)
+                renderTextFit('text-player1', manual.p1Name || "", 13);     
                 document.getElementById('score-player1').innerText = manual.p1Score || "0";
                 document.getElementById('score-player2').innerText = manual.p2Score || "0";
-                renderTextFit('text-player2', manual.p2Name || "", 17);     // 💡 선수2 폰트 기본크기 (여기서 조절하세요)
+                renderTextFit('text-player2', manual.p2Name || "", 13);     
 
                 document.getElementById('text-pos1').innerText = manual.pos1 || "";
                 document.getElementById('text-pos2').innerText = manual.pos2 || "";
