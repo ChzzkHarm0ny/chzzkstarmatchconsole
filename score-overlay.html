@@ -69,7 +69,7 @@
             </div>
         </div>
 
-        <!-- [3] 선수 영역 -->
+        <!-- [3] 선수 영역 (폰트 16px, 콘솔에서 지정한 흰색/검정 폰트 색상 적용) -->
         <div id="row-player" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
                 <div id="bg-player1" class="col-span-2" style="background-color: #0C48CC;"></div>
@@ -77,19 +77,19 @@
             </div>
             <div class="absolute inset-0 z-20 frame-middle pointer-events-none"></div>
             <div class="absolute inset-0 z-30 grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center h-full">
-                <div id="text-player1" class="px-2 truncate font-bold text-[16px]">실키아</div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player1">0</span></div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player2">0</span></div>
-                <div id="text-player2" class="px-2 truncate font-bold text-[16px]">곱재</div>
+                <div id="text-player1" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">실키아</div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player1" style="color: #ffffff;">0</span></div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player2" style="color: #ffffff;">0</span></div>
+                <div id="text-player2" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">곱재</div>
             </div>
         </div>
 
-        <!-- [4] 하단 위치 표시 영역 -->
+        <!-- [4] 하단 위치 표시 영역 (종족/위치 글씨 색상이 선수 배경색과 각각 일치하도록 연동) -->
         <div id="row-bottom" class="relative w-full h-[42px] shrink-0">
             <div class="absolute inset-0 z-20 frame-bottom pointer-events-none"></div>
             <div class="absolute inset-0 z-30 flex justify-between items-start px-4 pt-1 h-full">
-                <div id="text-pos1" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px;">Z1</div>
-                <div id="text-pos2" class="text-[#00FFA3] text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px;">T11</div>
+                <div id="text-pos1" class="text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px; color: #0C48CC;">Z1</div>
+                <div id="text-pos2" class="text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px; color: #F40404;">T11</div>
             </div>
         </div>
 
@@ -183,19 +183,30 @@
                 let bgP1 = document.getElementById('bg-player1'); if(bgP1) bgP1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
                 let bgP2 = document.getElementById('bg-player2'); if(bgP2) bgP2.style.backgroundColor = playerColors.player2Color || "#F40404";
 
-                // [선수 글씨 색상을 선수 칸 배경색과 완전히 일치시킴]
-                let p1Col = playerColors.player1Color || "#0C48CC";
-                let p2Col = playerColors.player2Color || "#F40404";
-
+                // 선수 폰트 색상(흰색/검정) 적용
                 let txtP1 = document.getElementById('text-player1');
                 let scP1 = document.getElementById('score-player1');
-                if(txtP1) txtP1.style.color = p1Col;
-                if(scP1) scP1.style.color = p1Col;
+                let p1TextCol = playerColors.player1TextColor || "#ffffff";
+                if(txtP1) txtP1.style.color = p1TextCol;
+                if(scP1) scP1.style.color = p1TextCol;
 
                 let txtP2 = document.getElementById('text-player2');
                 let scP2 = document.getElementById('score-player2');
-                if(txtP2) txtP2.style.color = p2Col;
-                if(scP2) scP2.style.color = p2Col;
+                let p2TextCol = playerColors.player2TextColor || "#ffffff";
+                if(txtP2) txtP2.style.color = p2TextCol;
+                if(scP2) scP2.style.color = p2TextCol;
+
+                // [하단 종족/위치 글씨 색상] 각 선수의 배경색과 일치하도록 연동
+                let elPos1 = document.getElementById('text-pos1');
+                let elPos2 = document.getElementById('text-pos2');
+                if(elPos1) {
+                    elPos1.innerText = manual.pos1 || "";
+                    elPos1.style.color = playerColors.player1Color || "#0C48CC";
+                }
+                if(elPos2) {
+                    elPos2.innerText = manual.pos2 || "";
+                    elPos2.style.color = playerColors.player2Color || "#F40404";
+                }
 
                 renderTextFit('text-title', manual.title || "", 13);         
                 renderTextFit('text-team1', manual.t1Name || "", 13.5);     
@@ -207,9 +218,6 @@
                 document.getElementById('score-player1').innerText = manual.p1Score || "0";
                 document.getElementById('score-player2').innerText = manual.p2Score || "0";
                 renderTextFit('text-player2', manual.p2Name || "", 16);     
-
-                document.getElementById('text-pos1').innerText = manual.pos1 || "";
-                document.getElementById('text-pos2').innerText = manual.pos2 || "";
             });
         }
     </script>
