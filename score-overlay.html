@@ -53,12 +53,11 @@
             </div>
         </div>
         
-        <!-- [2] 팀 영역 -->
+        <!-- [2] 팀 영역 (중앙 스코어 칸까지 1팀/2팀 색상으로 통일) -->
         <div id="row-team" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
-                <div id="bg-team1" style="background-color: #1d3557;"></div>
-                <div class="bg-[#111111] col-span-2"></div>
-                <div id="bg-team2" style="background-color: #6a1b1b;"></div>
+                <div id="bg-team1" class="col-span-2" style="background-color: #1d3557;"></div>
+                <div id="bg-team2" class="col-span-2" style="background-color: #6a1b1b;"></div>
             </div>
             <div class="absolute inset-0 z-20 frame-middle pointer-events-none"></div>
             <div class="absolute inset-0 z-30 grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center h-full">
@@ -69,7 +68,7 @@
             </div>
         </div>
 
-        <!-- [3] 선수 영역 (폰트 16px, 콘솔에서 지정한 흰색/검정 폰트 색상 적용) -->
+        <!-- [3] 선수 영역 -->
         <div id="row-player" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
                 <div id="bg-player1" class="col-span-2" style="background-color: #0C48CC;"></div>
@@ -84,7 +83,7 @@
             </div>
         </div>
 
-        <!-- [4] 하단 위치 표시 영역 (종족/위치 글씨 색상이 선수 배경색과 각각 일치하도록 연동) -->
+        <!-- [4] 하단 위치 표시 영역 -->
         <div id="row-bottom" class="relative w-full h-[42px] shrink-0">
             <div class="absolute inset-0 z-20 frame-bottom pointer-events-none"></div>
             <div class="absolute inset-0 z-30 flex justify-between items-start px-4 pt-1 h-full">
@@ -183,7 +182,6 @@
                 let bgP1 = document.getElementById('bg-player1'); if(bgP1) bgP1.style.backgroundColor = playerColors.player1Color || "#0C48CC";
                 let bgP2 = document.getElementById('bg-player2'); if(bgP2) bgP2.style.backgroundColor = playerColors.player2Color || "#F40404";
 
-                // 선수 폰트 색상(흰색/검정) 적용
                 let txtP1 = document.getElementById('text-player1');
                 let scP1 = document.getElementById('score-player1');
                 let p1TextCol = playerColors.player1TextColor || "#ffffff";
@@ -196,7 +194,6 @@
                 if(txtP2) txtP2.style.color = p2TextCol;
                 if(scP2) scP2.style.color = p2TextCol;
 
-                // [하단 종족/위치 글씨 색상] 각 선수의 배경색과 일치하도록 연동
                 let elPos1 = document.getElementById('text-pos1');
                 let elPos2 = document.getElementById('text-pos2');
                 if(elPos1) {
