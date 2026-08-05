@@ -44,6 +44,27 @@
             flex-direction: column;
             position: relative;
         }
+
+        /* 콘솔 미리보기용 3분할 프레임 매핑 */
+        .preview-frame-top {
+            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_top.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            height: 24px;
+        }
+        .preview-frame-middle {
+            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_middle.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            height: 28px;
+        }
+        .preview-frame-bottom {
+            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_bottom.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            height: 42px;
+        }
+
         .preview-leg-left {
             background-color: #0b0c0e;
             clip-path: polygon(0% 0%, 100% 0%, 72% 100%, 0% 100%);
@@ -60,10 +81,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // [보안 수정] 마스터키를 브라우저 코드에 그대로 두면 개발자도구로 누구나 확인할 수 있어서 제거했습니다.
-        // 실제 키 값은 Apps Script 프로젝트의 스크립트 속성(Script Properties)에만 저장하고,
-        // 아래 URL은 그 검증 결과("맞다/틀리다")만 돌려주는 웹앱 주소입니다.
-        // ⚠️ 배포 후 아래 URL을 본인의 Apps Script 웹앱 URL로 반드시 교체하세요.
         const ROOM_AUTH_URL = "https://script.google.com/macros/s/AKfycbwFSMBiDHsY0Ap_wWtUFuRhA12Os8N_JBMebIbv9cHpzHND0tJHbIxXQlc1re7_MXWT/exec";
 
         const firebaseConfig = {
@@ -104,8 +121,6 @@
         let leagueTitleText = "스타크래프트 프로리그";
         let playerRaceMap = {};
 
-        // [보안 수정] 마스터키가 맞는지는 더 이상 브라우저가 스스로 판단하지 않고,
-        // 키 값을 알고 있는 Apps Script 서버에 물어보고 그 결과(true/false)만 받습니다.
         async function verifyMasterKeyOnServer(inputKey) {
             if (!inputKey) return false;
             try {
@@ -186,8 +201,6 @@
                 if (btn) btn.innerText = "☀️ 라이트모드";
             }
 
-            // [보안 수정] 예전엔 실제 키 값을 localStorage에 그대로 저장해 비교했는데,
-            // 이제는 "서버 검증을 통과했음"을 뜻하는 고정 플래그 문자열만 저장/비교합니다.
             const isAuth = localStorage.getItem('starcraft_master_auth') === "verified";
             const authInputGroup = document.getElementById('auth-input-group');
             if (isAuth) {
@@ -263,8 +276,6 @@
                 renderMatchSetTabs();
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
-                // [구조 통일] 전체를 덮어쓰는 matchSetsConfig 대신, 이 세트 하나만 개별 경로에 씁니다.
-                // 다른 스태프가 동시에 다른 세트를 편집 중이어도 서로 덮어쓸 일이 없습니다.
                 if (currentRoomId) {
                     set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + newId), newSet);
                 }
@@ -415,8 +426,6 @@
             const roomData = snapshot.val();
 
             if (roomData && roomData.password) {
-                // [보안 수정] 기존에는 pin이 빈 값이면 이 검사 자체를 건너뛰어 누구나 그냥
-                // 입장할 수 있었습니다. 이제 비밀번호가 걸린 방이면 PIN이 정확히 일치해야만 통과합니다.
                 if (roomData.password !== pin) {
                     alert("방 비밀번호(PIN)가 일치하지 않습니다!");
                     if (isAutoLogin) {
@@ -427,8 +436,6 @@
                     return;
                 }
             } else {
-                // [보안 수정] 새 방을 만들 때 PIN을 비워두면 "0000"으로 자동 설정되던 것을 제거하고,
-                // 반드시 직접 PIN을 입력하도록 강제합니다.
                 if (!pin) {
                     alert("새로운 방입니다. 이 방에서 사용할 비밀번호(PIN)를 입력해주세요!");
                     return;
@@ -575,9 +582,6 @@
                     if(ms.selectedMapPool) selectedMapPool = ms.selectedMapPool;
                     if(ms.matchSetsObj) matchSetsObj = ms.matchSetsObj;
 
-                    // [1회성 마이그레이션] 이전 버전에서 matchSetsConfig 경로에만 저장돼있던 방을 위한 호환 처리.
-                    // matchSetsObj가 비어있는데 matchSetsConfig에 데이터가 남아있으면 그때만 옮겨옵니다.
-                    // 정상적으로 matchSetsObj가 있는 방이라면 이 블록은 실행되지 않습니다.
                     if ((!ms.matchSetsObj || Object.keys(ms.matchSetsObj).length === 0) && ms.matchSetsConfig) {
                         matchSetsObj = ms.matchSetsConfig;
                         Object.keys(matchSetsObj).forEach(setId => {
@@ -721,9 +725,6 @@
             renderMapGrid();
         }
 
-        // [사이드이펙트 분리] 참가자로 선택됐지만 아직 어느 팀에도 없는 선수를 1팀으로 기본 배정합니다.
-        // 예전엔 renderPlayerSelectionGrid()가 화면을 그리는 도중에 이 작업을 같이 했는데,
-        // 렌더 함수는 상태를 읽기만 해야 하므로 별도 함수로 분리해 렌더 진입 전에 한 번만 실행합니다.
         function reconcileTeamRosters() {
             selectedRoster.forEach(name => {
                 if (!team1Roster.includes(name) && !team2Roster.includes(name)) {
@@ -1740,46 +1741,39 @@
                             </button>
                         </div>
 
+                        <!-- 💡 3분할 프레임 디자인이 적용된 콘솔 내부 실시간 미리보기 영역 -->
                         <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33] flex flex-col items-center justify-center">
                             <span class="text-xs font-bold text-[#00FFA3] mb-3 self-start">🔍 스코어보드 실시간 미리보기</span>
                             <div class="p-6 rounded-xl border border-[#2c2d33] flex items-center justify-center w-full overflow-hidden" style="background-image: linear-gradient(45deg, #121316 25%, transparent 25%), linear-gradient(-45deg, #121316 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #121316 75%), linear-gradient(-45deg, transparent 75%, #121316 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;">
                                 
                                 <div class="preview-scoreboard text-white font-sans scale-100">
-                                    <div id="prev-row-title" class="bg-[#141518] border-b border-[#2c2d33] h-[22px] flex items-center justify-center shrink-0 overflow-hidden">
+                                    <!-- 상단 공지 프레임 -->
+                                    <div id="prev-row-title" class="preview-frame-top flex items-center justify-center shrink-0 overflow-hidden">
                                         <span id="prev-text-title" class="text-[#00FFA3] font-black tracking-wider text-[11px] drop-shadow-md">[1세트]</span>
                                     </div>
                                     
-                                    <div id="prev-row-team" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
-                                        <div id="prev-bg-team1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white text-[12px]" style="background-color: #1d3557;">
-                                            <span id="prev-text-team1" class="relative z-10 drop-shadow-md">1팀</span>
-                                        </div>
-                                        <div class="relative h-full flex items-center justify-center border-r border-[#1b1c20]">
-                                            <span id="prev-score-team1" class="relative z-10 text-white text-[13px] font-black drop-shadow-md">0</span>
-                                        </div>
-                                        <div class="relative h-full flex items-center justify-center border-l border-[#1b1c20]">
-                                            <span id="prev-score-team2" class="relative z-10 text-white text-[13px] font-black drop-shadow-md">0</span>
-                                        </div>
-                                        <div id="prev-bg-team2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-white text-[12px]" style="background-color: #6a1b1b;">
-                                            <span id="prev-text-team2" class="relative z-10 drop-shadow-md">2팀</span>
-                                        </div>
+                                    <!-- 팀 로우 프레임 -->
+                                    <div id="prev-row-team" class="preview-frame-middle grid grid-cols-[1fr_32px_32px_1fr] font-black text-center items-center shrink-0 overflow-hidden relative">
+                                        <div id="prev-bg-team1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #1d3557;"></div>
+                                        <div id="prev-text-team1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md">1팀</div>
+                                        <div class="relative z-10 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team1">0</span></div>
+                                        <div class="relative z-10 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team2">0</span></div>
+                                        <div id="prev-bg-team2" class="absolute inset-y-0 right-0 w-[42%] z-0" style="background-color: #6a1b1b;"></div>
+                                        <div id="prev-text-team2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md">2팀</div>
                                     </div>
 
-                                    <div id="prev-row-player" class="grid grid-cols-[1fr_32px_32px_1fr] h-[26px] font-black text-center items-center shrink-0 border-b border-[#2c2d33] overflow-hidden bg-[#1b1c20]">
-                                        <div id="prev-bg-player1" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-[11.5px]" style="background-color: #0C48CC;">
-                                            <span id="prev-text-player1" class="relative z-10 drop-shadow-md font-bold" style="color: #ffffff;">선수1</span>
-                                        </div>
-                                        <div id="prev-score-p1" class="relative h-full flex items-center justify-center border-r border-[#1b1c20]" style="background-color: #0C48CC;">
-                                            <span id="prev-score-player1" class="relative z-10 text-[12px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
-                                        </div>
-                                        <div id="prev-score-p2" class="relative h-full flex items-center justify-center border-l border-[#1b1c20]" style="background-color: #F40404;">
-                                            <span id="prev-score-player2" class="relative z-10 text-[12px] font-black drop-shadow-md" style="color: #ffffff;">0</span>
-                                        </div>
-                                        <div id="prev-bg-player2" class="relative h-full flex items-center justify-center px-1 overflow-hidden text-[11.5px]" style="background-color: #F40404;">
-                                            <span id="prev-text-player2" class="relative z-10 drop-shadow-md font-bold" style="color: #ffffff;">선수2</span>
-                                        </div>
+                                    <!-- 선수 로우 프레임 -->
+                                    <div id="prev-row-player" class="preview-frame-middle grid grid-cols-[1fr_32px_32px_1fr] font-black text-center items-center shrink-0 overflow-hidden relative">
+                                        <div id="prev-bg-player1" class="absolute inset-y-0 left-0 w-[42%] z-0" style="background-color: #0C48CC;"></div>
+                                        <div id="prev-text-player1" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[11.5px]" style="color: #ffffff;">선수1</div>
+                                        <div id="prev-score-p1" class="relative z-10 flex items-center justify-center font-black drop-shadow-md" style="background-color: #0C48CC; color: #ffffff;"><span id="prev-score-player1">0</span></div>
+                                        <div id="prev-score-p2" class="relative z-10 flex items-center justify-center font-black drop-shadow-md" style="background-color: #F40404; color: #ffffff;"><span id="prev-score-player2">0</span></div>
+                                        <div id="prev-bg-player2" class="absolute inset-y-0 right-0 w-[42%] z-0" style="background-color: #F40404;"></div>
+                                        <div id="prev-text-player2" class="relative z-10 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[11.5px]" style="color: #ffffff;">선수2</div>
                                     </div>
                                     
-                                    <div id="prev-row-bottom" class="h-[42px] shrink-0 relative flex justify-between items-end px-2.5 pb-1.5 overflow-hidden bg-transparent">
+                                    <!-- 하단 위치 프레임 -->
+                                    <div id="prev-row-bottom" class="preview-frame-bottom shrink-0 relative flex justify-between items-end px-2.5 pb-1.5 overflow-hidden bg-transparent">
                                         <div class="absolute inset-y-0 left-0 w-[38%] preview-leg-left flex items-end px-2.5 pb-1.5">
                                             <div id="prev-text-pos1" class="text-[#00FFA3] text-[14px] font-black tracking-wider z-10" style="text-shadow: 1px 1px 2px black;">P5</div>
                                         </div>
@@ -1790,7 +1784,7 @@
                                 </div>
 
                             </div>
-                            <span class="text-[10px] text-gray-400 mt-2">※ 체커보드 배경(격자)은 투명 영역을 의미합니다.</span>
+                            <span class="text-[10px] text-gray-400 mt-2">※ 3분할 프레임 기반 실시간 미리보기입니다.</span>
                         </div>
                     </div>
 
