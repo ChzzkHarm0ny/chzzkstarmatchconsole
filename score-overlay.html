@@ -30,6 +30,13 @@
             background-repeat: no-repeat;
         }
 
+        /* 하단 프레임 (직사각형 공간을 채우거나 새로 만드신 이미지) */
+        .frame-bottom {
+            background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_bottom.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+        }
+
         .row-hidden {
             display: none !important;
         }
@@ -63,7 +70,7 @@
             </div>
         </div>
 
-        <!-- [3] 선수 영역 (마지막 칸) -->
+        <!-- [3] 선수 영역 -->
         <div id="row-player" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
                 <div id="bg-player1" class="col-span-2" style="background-color: #0C48CC;"></div>
@@ -76,6 +83,12 @@
                 <div class="flex items-center justify-center font-black drop-shadow-md"><span id="score-player2" style="color:#ffffff;">0</span></div>
                 <div id="text-player2" class="px-2 truncate font-bold text-[13px]" style="color: #ffffff;">선수2</div>
             </div>
+        </div>
+
+        <!-- [4] 하단 프레임 영역 (bottom 프레임이 정상 출력됨) -->
+        <div id="row-bottom" class="relative w-full h-[42px] shrink-0">
+            <div class="absolute inset-0 z-10 bg-[#111111]"></div>
+            <div class="absolute inset-0 z-20 frame-bottom pointer-events-none"></div>
         </div>
 
     </div>
@@ -140,7 +153,7 @@
                 }
 
                 let manual = data.manualScore || {
-                    showTitle: true, showTeam: true, showPlayer: true,
+                    showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
                     title: "[1세트]", 
                     t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
                     p1Name: "선수1", p1Score: 0, p2Score: 0, p2Name: "선수2"
@@ -157,6 +170,9 @@
 
                 let rowPlayer = document.getElementById('row-player');
                 if (rowPlayer) rowPlayer.style.display = manual.showPlayer === false ? 'none' : 'block';
+
+                let rowBottom = document.getElementById('row-bottom');
+                if (rowBottom) rowBottom.style.display = manual.showBottom === false ? 'none' : 'block';
 
                 let bgT1 = document.getElementById('bg-team1'); if(bgT1) bgT1.style.backgroundColor = teamNames.team1Color || "#1d3557";
                 let bgT2 = document.getElementById('bg-team2'); if(bgT2) bgT2.style.backgroundColor = teamNames.team2Color || "#6a1b1b";
