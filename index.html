@@ -74,7 +74,7 @@
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const ROOM_AUTH_URL = "https://script.google.com/macros/s/AKfycbwFSMBiDHsY0Ap_wWtUFuRhA12Os8N_JBMebIbv9cHpzHND0tJHbIxXQlc1re7_MXWT/exec";
 
@@ -101,7 +101,7 @@
         let team2Roster = [];
         let selectedMapPool = [];
         let matchSetsObj = {
-            1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {} }
+            1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {}, nameCustom: false }
         };
         let activeSetId = 1;
         let currentMatchMode = "team";
@@ -266,7 +266,7 @@
                     return;
                 }
                 let newId = Math.max(...keys.map(Number)) + 1;
-                let newSet = { id: newId, name: newId + "세트 (매치)", matchesCount: 7, matches: {} };
+                let newSet = { id: newId, name: newId + "세트 (" + leagueTitleText + ")", matchesCount: 7, matches: {}, nameCustom: false };
                 matchSetsObj[newId] = newSet;
                 renderMatchSetTabs();
                 renderMatchSetPanels();
@@ -785,11 +785,12 @@
                     let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
                     let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
 
+                    let nameTooLong = p.name.length > 4;
                     card.innerHTML = `
                         <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-[#00FFA3] pointer-events-none">
                         <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
                         <div class="truncate">
-                            <div class="text-xs font-bold text-white truncate">${p.name}</div>
+                            <div class="text-xs font-bold text-white truncate">${p.name}${nameTooLong ? ' <span class="text-yellow-400" title="오버레이에 4글자까지 최적으로 표시됩니다. 시트에서 4글자 이내로 줄여주세요.">⚠️</span>' : ''}</div>
                             <span class="text-[9px] ${raceBadgeClass} px-1 rounded">${p.race}</span>
                         </div>
                     `;
@@ -836,11 +837,12 @@
                     let imgSrc = p.img || "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(p.name) + ".png";
                     let raceBadgeClass = p.race === '프로토스' ? 'race-badge-P' : (p.race === '테란' ? 'race-badge-T' : 'race-badge-Z');
 
+                    let nameTooLong = p.name.length > 4;
                     card.innerHTML = `
                         <div class="flex items-center gap-2.5">
                             <img src="${imgSrc}" class="w-7 h-7 object-cover rounded border border-[#2c2d33]" onerror="this.src='https://placehold.co/40x40/1b1c20/FFF?text=User'">
                             <div>
-                                <div class="text-xs font-bold text-white">${p.name}</div>
+                                <div class="text-xs font-bold text-white">${p.name}${nameTooLong ? ' <span class="text-yellow-400" title="오버레이에 4글자까지 최적으로 표시됩니다. 시트에서 4글자 이내로 줄여주세요.">⚠️</span>' : ''}</div>
                                 <span class="text-[9px] ${raceBadgeClass} px-1 rounded">${p.race}</span>
                             </div>
                         </div>
@@ -988,6 +990,13 @@
                 btn.onclick = () => switchMatchSetTab(setObj.id);
                 wrap.appendChild(btn);
 
+                let renameBtn = document.createElement('button');
+                renameBtn.className = "px-2 py-2 text-xs text-gray-400 hover:text-[#00FFA3] hover:bg-[#2c2d33] cursor-pointer";
+                renameBtn.innerText = "✏️";
+                renameBtn.title = "세트 이름 수정";
+                renameBtn.onclick = (e) => { e.stopPropagation(); renameMatchSet(setObj.id); };
+                wrap.appendChild(renameBtn);
+
                 if (setObj.id !== 1) {
                     let delBtn = document.createElement('button');
                     delBtn.className = "px-2 py-2 text-xs font-bold text-red-400 hover:bg-red-500/20 cursor-pointer";
@@ -1015,6 +1024,39 @@
                 renderMatchSetPanels();
                 updateVsMatchDropdownOptions();
             }
+        }
+
+        function renameMatchSet(setId) {
+            let s = matchSetsObj[setId];
+            if (!s) return;
+            let newName = prompt("세트 이름을 입력하세요 (예: 1세트 (씨나인 대학리그))", s.name);
+            if (newName === null) return;
+            newName = newName.trim();
+            if (!newName) return;
+            s.name = newName;
+            s.nameCustom = true;
+            if (currentRoomId) {
+                update(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), { name: s.name, nameCustom: true });
+            }
+            renderMatchSetTabs();
+            renderMatchSetPanels();
+            updateVsMatchDropdownOptions();
+        }
+
+        function applyLeagueTitleToSetNames() {
+            let updates = {};
+            Object.values(matchSetsObj).forEach(setObj => {
+                if (!setObj.nameCustom) {
+                    setObj.name = setObj.id + "세트 (" + leagueTitleText + ")";
+                    updates[setObj.id + "/name"] = setObj.name;
+                }
+            });
+            if (currentRoomId && Object.keys(updates).length > 0) {
+                update(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj"), updates);
+            }
+            renderMatchSetTabs();
+            renderMatchSetPanels();
+            updateVsMatchDropdownOptions();
         }
 
         function switchMatchSetTab(setId) {
@@ -1366,7 +1408,8 @@
             if (!currentRoomId) return;
             leagueTitleText = document.getElementById('input-league-title').value.trim() || "스타크래프트 프로리그";
             set(ref(db, "rooms/" + currentRoomId + "/matchState/leagueTitle"), leagueTitleText).then(() => {
-                alert("대회 이름이 적용되었습니다!");
+                applyLeagueTitleToSetNames();
+                alert("대회 이름이 적용되었습니다! (직접 이름을 수정(✏️)하지 않은 세트에는 새 대회명이 자동 반영됩니다)");
             });
         }
 
@@ -1562,6 +1605,7 @@
                             <input type="text" id="input-league-title" value="스타크래프트 프로리그" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white" placeholder="예: 씨나인 대학리그">
                             <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">기본 대회명 저장</button>
                         </div>
+                        <p class="text-[10px] text-gray-400">저장하면 [⚔️ 2. 중계 대시보드]의 각 세트 이름(예: "1세트 (씨나인 대학리그)")에 자동 반영됩니다. 특정 세트만 다른 이름으로 쓰고 싶다면 해당 세트 탭의 ✏️ 버튼으로 직접 수정할 수 있습니다.</p>
                     </div>
 
                     <div id="team-setting-wrapper" class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
@@ -1895,7 +1939,7 @@
                             <div class="bg-[#0b0c0e] p-3 rounded-lg border border-[#2c2d33]">
                                 <h4 class="font-bold text-white mb-1">2단계: 시트 내용 채우기 (선수 및 맵 데이터)</h4>
                                 <ul class="list-disc list-inside text-gray-400 space-y-1">
-                                    <li><b>Players 시트</b>: `선수명`, `종족(프로토스/테란/저그)`, `이미지 URL` 항목을 입력합니다.</li>
+                                    <li><b>Players 시트</b>: `선수명`, `종족(프로토스/테란/저그)`, `이미지 URL` 항목을 입력합니다. <b class="text-yellow-400">선수명은 오버레이에 4글자까지 최적으로 표시되니 가급적 4글자 이내로 등록해 주세요.</b> (콘솔의 선수 카드에서 4글자를 초과하면 ⚠️ 표시가 뜹니다)</li>
                                     <li><b>Maps 시트</b>: `맵 이름`, `맵 이미지 URL` 항목을 입력합니다.</li>
                                     <li><b class="text-yellow-400">🖼️ 이미지 URL 입력 방법</b>: 이미지 파일을 웹에 업로드하여 생성된 공개 이미지 URL(GitHub Raw, Discord 이미지 링크, Imgur 등)을 시트에 입력합니다.</li>
                                 </ul>
