@@ -1123,7 +1123,6 @@
             }
         };
 
-        // 💡 5/7/9경기 템플릿 적용 함수 추가
         window.setMatchesTemplate = function(setId, count) {
             if(window.backupMatches) window.backupMatches(setId);
             let s = matchSetsObj[setId];
@@ -1154,7 +1153,6 @@
                                 <button onclick="resetMatchSetData(${setObj.id})" class="bg-[#2c2d33] hover:bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">🔄 세트 대진 초기화</button>
                             </div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <!-- 💡 템플릿 선택 버튼 그룹 -->
                                 <span class="text-xs text-gray-400">템플릿:</span>
                                 <button onclick="window.setMatchesTemplate(${setObj.id}, 5)" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-yellow-400 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">5경기</button>
                                 <button onclick="window.setMatchesTemplate(${setObj.id}, 7)" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-yellow-400 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">7경기</button>
@@ -1390,7 +1388,6 @@
             s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
 
-            // 스코어 연동 업데이트
             document.getElementById('man-t1-score').value = t1WinsCount;
             document.getElementById('man-t2-score').value = t2WinsCount;
             updateScoreboardPreviewFromConsole();
@@ -1401,16 +1398,13 @@
                 t2Score: t2WinsCount
             });
 
-Promise.all([p1, p2]).then(() => {
+            Promise.all([p1, p2]).then(() => {
                 updateVsMatchDropdownOptions();
 
-                // 대진 반영 시 드롭다운 선택란에만 현재 경기가 지정되도록 설정 (자동 송출은 안 함)
                 let vsSelect = document.getElementById('vs-match-select');
                 let targetMatchKey = setId + "-" + activeMatchIdx;
                 if (vsSelect) {
                     vsSelect.value = targetMatchKey;
-                    
-                    // 미리보기 화면만 조용히 갱신
                     let m = s.matches[activeMatchIdx];
                     if (m) {
                         let t1Players = m.t1Players || [m.t1Player || "미정"];
@@ -1423,9 +1417,62 @@ Promise.all([p1, p2]).then(() => {
                     }
                 }
 
-                alert(s.name + " 대진 반영 및 자동 스코어 계산이 완료되었습니다!");
-                // ❌ saveVsMatchState(true); 코드는 완전히 제거함
+                alert(s.name + " 대진 반영 및 자동 스코어 계산이 완료되었습니다! (VS 화면은 '송출하기' 버튼을 누를 때만 나옵니다)");
             });
+        };
+
+        window.saveVsMatchState = function(isAutoSend = false) {
+            if (!currentRoomId) return;
+            let val = document.getElementById('vs-match-select').value;
+            if(!val) { 
+                if(!isAutoSend) alert("목록에서 경기를 먼저 선택해주세요!"); 
+                return; 
+            }
+            let parts = val.split('-');
+            let setId = parts[0];
+            let matchIdx = parts[1];
+            let m = matchSetsObj[setId]?.matches[matchIdx];
+            if(!m) return;
+
+            let t1Players = m.t1Players || [m.t1Player || "미정"];
+            let t2Players = m.t2Players || [m.t2Player || "미정"];
+
+            let githubBase = "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
+            
+            let t1DataArr = t1Players.map(name => {
+                if(name === "-") return { name: "-", race: "-", img: "" };
+                let obj = allPlayers.find(p => p.name === name) || { name: name, race: "미정", img: githubBase + encodeURIComponent(name) + ".png" };
+                return { name: obj.name, race: obj.race, img: obj.img };
+            });
+            let t2DataArr = t2Players.map(name => {
+                if(name === "-") return { name: "-", race: "-", img: "" };
+                let obj = allPlayers.find(p => p.name === name) || { name: name, race: "미정", img: githubBase + encodeURIComponent(name) + ".png" };
+                return { name: obj.name, race: obj.race, img: obj.img };
+            });
+            let mapObj = allMaps.find(map => map.name === m.mapName) || { name: m.mapName, url: "" };
+
+            let vsData = {
+                t1: t1DataArr,
+                t2: t2DataArr,
+                map: { name: mapObj.name, url: mapObj.url || "" },
+                timestamp: Date.now()
+            };
+
+            set(ref(db, "rooms/" + currentRoomId + "/matchState/vsMatch"), vsData);
+            
+            let p1Text = t1Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
+            let p2Text = t2Players.filter(x => x !== "-" && x !== "미정").join(', ') || "미정";
+            let t1ImgName = t1Players.find(x => x !== "-" && x !== "미정") || "선수1";
+            let t2ImgName = t2Players.find(x => x !== "-" && x !== "미정") || "선수2";
+
+            updateVsPreview(t1ImgName, t2ImgName, m.mapName, p1Text, p2Text);
+            
+            if (isAutoSend) {
+                alert(matchSetsObj[setId].name + " 대진이 저장되었으며, 현재 진행 경기가 VS 매치업 화면에 즉시 송출되었습니다!");
+            } else {
+                alert("선택한 경기 정보가 VS 매치업 화면에 송출되었습니다!");
+            }
+        }
 
         window.saveManualScoreboard = function() {
             if (!currentRoomId) return;
