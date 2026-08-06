@@ -1123,6 +1123,16 @@
             }
         };
 
+        // 💡 5/7/9경기 템플릿 적용 함수 추가
+        window.setMatchesTemplate = function(setId, count) {
+            if(window.backupMatches) window.backupMatches(setId);
+            let s = matchSetsObj[setId];
+            if(s) {
+                s.matchesCount = count;
+                renderMatchSetPanels();
+            }
+        };
+
         function renderMatchSetPanels() {
             const wrapper = document.getElementById('match-sets-wrapper');
             if(!wrapper) return;
@@ -1138,13 +1148,19 @@
                 
                 panel.innerHTML = `
                     <div>
-                        <div class="flex justify-between items-center mb-3">
+                        <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
                             <div class="flex items-center gap-3">
                                 <h3 class="text-sm font-bold text-[#00FFA3]">${setObj.name} 상세 대진 설정</h3>
                                 <button onclick="resetMatchSetData(${setObj.id})" class="bg-[#2c2d33] hover:bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">🔄 세트 대진 초기화</button>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs text-gray-400">경기 수 조절:</span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- 💡 템플릿 선택 버튼 그룹 -->
+                                <span class="text-xs text-gray-400">템플릿:</span>
+                                <button onclick="window.setMatchesTemplate(${setObj.id}, 5)" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-yellow-400 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">5경기</button>
+                                <button onclick="window.setMatchesTemplate(${setObj.id}, 7)" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-yellow-400 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">7경기</button>
+                                <button onclick="window.setMatchesTemplate(${setObj.id}, 9)" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-yellow-400 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer">9경기</button>
+                                <span class="text-gray-600">|</span>
+                                <span class="text-xs text-gray-400">경기 수:</span>
                                 <button onclick="window.adjustSetMatchesCount(${setObj.id}, -1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">-</button>
                                 <span class="text-xs font-black text-[#00FFA3]">${setObj.matchesCount}경기</span>
                                 <button onclick="window.adjustSetMatchesCount(${setObj.id}, 1)" class="bg-[#2c2d33] px-2 py-0.5 rounded text-xs font-bold cursor-pointer">+</button>
@@ -1165,7 +1181,7 @@
                             </table>
                         </div>
                         <button onclick="applyMatchSet(${setObj.id})" class="w-full bg-[#2c2d33] hover:bg-[#3c3d44] text-white font-extrabold py-2.5 rounded-lg text-sm cursor-pointer shadow-lg transition-all">
-                            📥 ${setObj.name} 대진 반영 (매치리스트용 현재 경기 지정)
+                            📥 ${setObj.name} 대진 반영 (매치리스트용 현재 경기 지정 및 스코어 연동)
                         </button>
                     </div>
                 `;
@@ -1336,6 +1352,9 @@
                 if(ar.checked) activeMatchIdx = parseInt(ar.value);
             }
 
+            let t1WinsCount = 0;
+            let t2WinsCount = 0;
+
             for (let i = 1; i <= s.matchesCount; i++) {
                 let formatEl = document.getElementById('s' + setId + '-format-' + i);
                 if (!formatEl) continue;
@@ -1355,6 +1374,9 @@
                 let radios = document.getElementsByName('winner_s' + setId + '_m' + i);
                 for(let r of radios) { if(r.checked) winner = r.value; }
 
+                if (winner === 't1') t1WinsCount++;
+                else if (winner === 't2') t2WinsCount++;
+
                 matches[i] = {
                     matchFormat: format,
                     t1Players: t1Players,
@@ -1368,10 +1390,21 @@
             s.activeMatchIdx = activeMatchIdx;
             matchSetsObj[setId] = s;
 
-            set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s).then(() => {
+            // 💡 대진 반영 시 현재 세트의 승리 횟수를 수동 스코어보드(t1Score, t2Score)에 자동 연동
+            document.getElementById('man-t1-score').value = t1WinsCount;
+            document.getElementById('man-t2-score').value = t2WinsCount;
+            updateScoreboardPreviewFromConsole();
+
+            // 파이어베이스에 대진 데이터 및 수동 스코어 동시 저장
+            let p1 = set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s);
+            let p2 = update(ref(db, "rooms/" + currentRoomId + "/manualScore"), {
+                t1Score: t1WinsCount,
+                t2Score: t2WinsCount
+            });
+
+            Promise.all([p1, p2]).then(() => {
                 updateVsMatchDropdownOptions();
 
-                // 💡 대진 반영 시 현재 진행 중인 경기를 드롭다운에 자동 선택하고 즉시 송출 트리거 실행
                 let vsSelect = document.getElementById('vs-match-select');
                 let targetMatchKey = setId + "-" + activeMatchIdx;
                 if (vsSelect) {
@@ -1429,7 +1462,7 @@
             updateVsPreview(t1ImgName, t2ImgName, m.mapName, p1Text, p2Text);
             
             if (isAutoSend) {
-                alert(matchSetsObj[setId].name + " 대진이 저장되었으며, 현재 진행 경기가 VS 매치업 화면에 즉시 송출되었습니다!");
+                alert(matchSetsObj[setId].name + " 대진 반영 및 자동 스코어 계산, 현재 경기 VS 송출이 완료되었습니다!");
             } else {
                 alert("선택한 경기 정보가 VS 매치업 화면에 송출되었습니다!");
             }
