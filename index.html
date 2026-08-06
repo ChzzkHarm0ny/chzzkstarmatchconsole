@@ -1401,15 +1401,16 @@
                 t2Score: t2WinsCount
             });
 
-            Promise.all([p1, p2]).then(() => {
+Promise.all([p1, p2]).then(() => {
                 updateVsMatchDropdownOptions();
 
-                // 💡 대진 반영 시 오버레이 송출은 하지 않고, 드롭다운 선택란에만 현재 경기가 지정되도록 설정
+                // 대진 반영 시 드롭다운 선택란에만 현재 경기가 지정되도록 설정 (자동 송출은 안 함)
                 let vsSelect = document.getElementById('vs-match-select');
                 let targetMatchKey = setId + "-" + activeMatchIdx;
                 if (vsSelect) {
                     vsSelect.value = targetMatchKey;
-                    // 미리보기 이미지/이름도 드롭다운 선택에 맞춰 갱신만 해둠
+                    
+                    // 미리보기 화면만 조용히 갱신
                     let m = s.matches[activeMatchIdx];
                     if (m) {
                         let t1Players = m.t1Players || [m.t1Player || "미정"];
@@ -1422,9 +1423,9 @@
                     }
                 }
 
-                alert(s.name + " 대진 반영 및 자동 스코어 계산이 완료되었습니다! (VS 화면은 '송출하기' 버튼을 누를 때만 나옵니다)");
+                alert(s.name + " 대진 반영 및 자동 스코어 계산이 완료되었습니다!");
+                // ❌ saveVsMatchState(true); 코드는 완전히 제거함
             });
-        };
 
         window.saveManualScoreboard = function() {
             if (!currentRoomId) return;
