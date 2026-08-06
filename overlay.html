@@ -82,7 +82,7 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[300px] shrink-0 overflow-hidden";
+                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-hidden";
 
                             // 세트 내 매치들의 승패를 세어 팀 스코어 계산
                             let t1Wins = 0, t2Wins = 0;
@@ -116,24 +116,27 @@
                                 let winner = match.winner || "";
 
                                 // [핵심 수정] "-" 일 경우 자리만 차지하고 투명하게 보이도록 처리
+                                // 선수명은 오버레이 디자인상 4글자까지만 표시(등록은 4글자 이내 권장)
                                 let t1Html = t1Players.map(p => {
                                     if(p === "-") return `<div class="truncate text-transparent select-none">-</div>`;
-                                    return `<div class="truncate ${getRaceClass(p)} ${winner === 't2' ? 'player-loser' : ''}">${p}</div>`;
+                                    let dispName = p.length > 4 ? p.slice(0, 4) : p;
+                                    return `<div class="truncate text-base font-black ${getRaceClass(p)} ${winner === 't2' ? 'player-loser' : ''}">${dispName}</div>`;
                                 }).join('');
 
                                 let t2Html = t2Players.map(p => {
                                     if(p === "-") return `<div class="truncate text-transparent select-none">-</div>`;
-                                    return `<div class="truncate ${getRaceClass(p)} ${winner === 't1' ? 'player-loser' : ''}">${p}</div>`;
+                                    let dispName = p.length > 4 ? p.slice(0, 4) : p;
+                                    return `<div class="truncate text-base font-black ${getRaceClass(p)} ${winner === 't1' ? 'player-loser' : ''}">${dispName}</div>`;
                                 }).join('');
 
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
 
                                 bodyHtml += `
-                                    <div class="set-row flex items-center justify-between px-2 py-1.5 border-b border-[#232428] text-sm font-bold ${rowHighlightClass}">
-                                        <div class="w-5 text-center text-gray-500 font-black text-xs">${i}</div>
+                                    <div class="set-row flex items-center justify-between px-1.5 py-1.5 border-b border-[#232428] text-sm font-bold ${rowHighlightClass}">
+                                        <div class="w-4 text-center text-gray-500 font-black text-xs">${i}</div>
                                         <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
-                                        <div class="w-16 text-center text-gray-400 font-medium truncate text-xs px-1" title="${mapNameFull}">${mapName}</div>
+                                        <div class="w-11 text-center text-gray-400 font-medium truncate text-[10px] px-0.5" title="${mapNameFull}">${mapName}</div>
                                         <div class="flex-1 text-center flex flex-col leading-tight">${t2Html}</div>
                                     </div>
                                 `;
