@@ -73,14 +73,6 @@
                     let isSoloMode = (ms.matchMode === 'solo');
                     let team1Name = isSoloMode ? "P1" : (ms.teamNames ? ms.teamNames.team1 : "1팀");
                     let team2Name = isSoloMode ? "P2" : (ms.teamNames ? ms.teamNames.team2 : "2팀");
-                    // 개인전(solo)일 때는 콘솔의 "개인별 색상 설정"(player1Color/player2Color, VS·스코어보드와 동일한 색)을 쓰고,
-                    // 팀전일 때는 팀 색상(teamNames.team1Color/team2Color)을 씁니다.
-                    let team1Color = isSoloMode
-                        ? ((ms.playerColors && ms.playerColors.player1Color) || "#0C48CC")
-                        : ((ms.teamNames && ms.teamNames.team1Color) ? ms.teamNames.team1Color : "#1d3557");
-                    let team2Color = isSoloMode
-                        ? ((ms.playerColors && ms.playerColors.player2Color) || "#F40404")
-                        : ((ms.teamNames && ms.teamNames.team2Color) ? ms.teamNames.team2Color : "#6a1b1b");
 
                     if (ms.matchSetsObj) {
                         let wrapper = document.getElementById('sets-wrapper');
@@ -104,9 +96,9 @@
                                     <div class="text-xs tracking-widest text-gray-300 font-bold">${setObj.name}</div>
                                 </div>
                                 <div class="border-b border-[#2c2d33] py-2 flex items-center justify-center gap-2">
-                                    <span class="text-2xl font-black" style="color:${team1Color};">${t1Wins}</span>
+                                    <span class="text-2xl font-black text-white">${t1Wins}</span>
                                     <span class="text-lg font-black text-gray-500">:</span>
-                                    <span class="text-2xl font-black" style="color:${team2Color};">${t2Wins}</span>
+                                    <span class="text-2xl font-black text-white">${t2Wins}</span>
                                 </div>
                             `;
 
