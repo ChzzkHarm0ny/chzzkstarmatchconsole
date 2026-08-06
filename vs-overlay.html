@@ -31,7 +31,7 @@
         const db = getDatabase(app);
         
         let fadeTimer = null;
-        let lastProcessedTimestamp = 0; // 💡 타임스탬프 필터링 변수
+        let lastProcessedTimestamp = 0;
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -54,15 +54,14 @@
                 let vs = ms.vsMatch;
                 let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
 
-                // 💡 명시적인 송출 이벤트(타임스탬프 변경)가 발생했을 때만 반응하도록 수정
                 if (vs && vs.timestamp && vs.timestamp !== lastProcessedTimestamp) {
                     lastProcessedTimestamp = vs.timestamp;
 
                     let t1Arr = Array.isArray(vs.t1) ? vs.t1 : [vs.t1];
                     let t2Arr = Array.isArray(vs.t2) ? vs.t2 : [vs.t2];
                     
-                    document.getElementById('t1-container').innerHTML = renderTeamPlayers(t1Arr, teamNames.team1, teamNames.team1Color, false);
-                    document.getElementById('t2-container').innerHTML = renderTeamPlayers(t2Arr, teamNames.team2, teamNames.team2Color, true);
+                    document.getElementById('t1-container').innerHTML = renderTeamLayout(t1Arr, teamNames.team1, teamNames.team1Color, false);
+                    document.getElementById('t2-container').innerHTML = renderTeamLayout(t2Arr, teamNames.team2, teamNames.team2Color, true);
 
                     if(vs.map) {
                         document.getElementById('map-name').innerText = vs.map.name || "맵 이름";
@@ -74,37 +73,71 @@
             });
         };
 
-        function renderTeamPlayers(playersArr, teamName, teamColor, isRightSide) {
-            let html = `<div class="flex flex-col w-[360px] gap-2 items-center bg-[#0b0c0e] border border-[#2c2d33] rounded-xl p-4">`;
-            html += `<span class="px-3 py-1 rounded text-xs font-black text-white shadow w-full text-center" style="background-color:${teamColor}">${teamName}</span>`;
-            
-            html += `<div class="flex flex-col gap-2 w-full mt-1">`;
-            playersArr.forEach(p => {
+        function renderTeamLayout(playersArr, teamName, teamColor, isRightSide) {
+            let html = `
+            <div class="flex flex-col w-[385px] gap-3 items-center bg-[#0b0c0e] border border-[#2c2d33] rounded-2xl p-4 shadow-xl">
+                <span class="px-3 py-1 rounded-lg text-xs font-black text-white shadow w-full text-center" style="background-color:${teamColor}">${teamName}</span>`;
+
+            // 💡 [조건 분기] 선수가 딱 2명일 경우 (2v2 팀플) -> 상단 대형 카드 크기를 절반씩 나누어 나란히 배치
+            if (playersArr.length === 2) {
+                html += `<div class="flex gap-2 w-full h-[180px]">`;
+                playersArr.forEach(p => {
+                    let raceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
+                    html += `
+                    <div class="flex-1 bg-[#141518] border border-[#2c2d33] rounded-xl overflow-hidden flex flex-col items-center justify-between p-2.5">
+                        <img src="${p.img}" class="w-full h-[105px] object-cover rounded-lg border border-[#2c2d33] bg-black/40" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                        <div class="flex flex-col items-center text-center w-full truncate mt-1">
+                            <span class="text-sm font-black text-white truncate w-full">${p.name}</span>
+                            <span class="px-2 py-0.5 mt-0.5 rounded text-[10px] font-black text-black ${raceClass}">${p.race}</span>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } 
+            // 💡 [조건 분기] 선수가 3명 이상일 경우 -> 1번은 대형 카드, 나머지는 하단 썸네일
+            else if (playersArr.length > 2) {
+                let leadPlayer = playersArr[0] || { name: "미정", race: "미정", img: "" };
+                let subPlayers = playersArr.slice(1);
+                let leadRaceClass = leadPlayer.race === '프로토스' ? 'race-P' : (leadPlayer.race === '테란' ? 'race-T' : 'race-Z');
+
+                html += `
+                <div class="relative w-full h-[140px] bg-[#141518] border border-[#2c2d33] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4">
+                    <img src="${leadPlayer.img}" class="w-24 h-full object-cover rounded-lg border border-[#2c2d33] shrink-0 bg-black/40" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                    <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
+                        <span class="text-lg font-black text-white truncate w-full" style="text-shadow: 1px 1px 3px black;">${leadPlayer.name}</span>
+                        <span class="px-2 py-0.5 mt-1 rounded text-xs font-black text-black ${leadRaceClass}">${leadPlayer.race}</span>
+                    </div>
+                </div>`;
+
+                html += `<div class="flex gap-2 w-full justify-start mt-0.5">`;
+                subPlayers.forEach(p => {
+                    let subRaceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
+                    html += `
+                    <div class="flex-1 flex items-center gap-2 bg-[#141518] border border-[#2c2d33] rounded-lg p-1.5 overflow-hidden">
+                        <img src="${p.img}" class="w-8 h-8 object-cover rounded border border-[#2c2d33] shrink-0 bg-black/40" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=User'">
+                        <div class="flex flex-col truncate">
+                            <span class="text-xs font-bold text-white truncate">${p.name}</span>
+                            <span class="px-1 rounded text-[8px] font-black text-black ${subRaceClass} w-max mt-0.5">${p.race}</span>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } 
+            // 💡 [기본] 1명일 경우 (1v1 개인전) -> 꽉 찬 대형 카드 1개 출력
+            else {
+                let p = playersArr[0] || { name: "미정", race: "미정", img: "" };
                 let raceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
-                let imgSize = playersArr.length > 2 ? "w-12 h-12" : "w-16 h-16";
-                let textSize = playersArr.length > 2 ? "text-base" : "text-lg";
-                
-                if(isRightSide) {
-                    html += `
-                    <div class="flex items-center justify-end gap-4 w-full">
-                        <div class="flex flex-col items-end">
-                            <span class="${textSize} font-black text-white truncate max-w-[180px]">${p.name}</span>
-                            <span class="px-2 py-0.5 mt-0.5 rounded text-[10px] font-black text-black ${raceClass}">${p.race}</span>
-                        </div>
-                        <img src="${p.img}" class="${imgSize} object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
-                    </div>`;
-                } else {
-                    html += `
-                    <div class="flex items-center justify-start gap-4 w-full">
-                        <img src="${p.img}" class="${imgSize} object-cover rounded-xl border border-[#2c2d33] shrink-0" onerror="this.src='https://placehold.co/120x120/1b1c20/FFF?text=User'">
-                        <div class="flex flex-col items-start">
-                            <span class="${textSize} font-black text-white truncate max-w-[180px]">${p.name}</span>
-                            <span class="px-2 py-0.5 mt-0.5 rounded text-[10px] font-black text-black ${raceClass}">${p.race}</span>
-                        </div>
-                    </div>`;
-                }
-            });
-            html += `</div></div>`;
+                html += `
+                <div class="relative w-full h-[180px] bg-[#141518] border border-[#2c2d33] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4">
+                    <img src="${p.img}" class="w-28 h-full object-cover rounded-lg border border-[#2c2d33] shrink-0 bg-black/40" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                    <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
+                        <span class="text-xl font-black text-white truncate w-full" style="text-shadow: 1px 1px 3px black;">${p.name}</span>
+                        <span class="px-2.5 py-0.5 mt-1 rounded text-xs font-black text-black ${raceClass}">${p.race}</span>
+                    </div>
+                </div>`;
+            }
+
+            html += `</div>`;
             return html;
         }
 
@@ -127,13 +160,13 @@
 </head>
 <body class="flex items-center justify-center h-screen p-6">
     <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease;">
-        <div id="vs-wrapper" class="flex items-center justify-center gap-4 bg-[#141518]/95 border border-[#2c2d33] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[900px]">
+        <div id="vs-wrapper" class="flex items-center justify-center gap-4 bg-[#141518]/95 border border-[#2c2d33] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[960px]">
             <div id="t1-container"></div>
-            <div class="flex flex-col items-center justify-center px-4 shrink-0">
+            <div class="flex flex-col items-center justify-center px-2 shrink-0">
                 <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</span>
                 <div class="flex flex-col items-center bg-[#0b0c0e] border border-[#2c2d33] p-2 rounded-xl">
                     <img id="map-img" src="https://placehold.co/60x60/1b1c20/FFF?text=Map" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33] mb-1">
-                    <span id="map-name" class="text-xs font-bold text-gray-300 truncate max-w-[120px]">맵 이름</span>
+                    <span id="map-name" class="text-xs font-bold text-gray-300 truncate max-w-[100px]">맵 이름</span>
                 </div>
             </div>
             <div id="t2-container"></div>
