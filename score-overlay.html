@@ -118,7 +118,7 @@
             el.innerText = text;
             el.style.whiteSpace = "nowrap";
             
-            // scaleX 압축을 제거하고 글자 크기(fontSize)만 조절하여 왜곡 방지
+            // scaleX 압축을 완전히 제거하고 글자 크기(fontSize)만 조정하여 왜곡 방지
             let len = (text || "").length;
             if (len >= 18) {
                 el.style.fontSize = (defaultSize - 4) + "px";
@@ -129,8 +129,7 @@
             } else {
                 el.style.fontSize = defaultSize + "px";
             }
-            el.style.transform = "none"; // 가로 압축 강제 해제
-        }
+            el.style.transform = "none";
         }
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -152,7 +151,6 @@
                     }
                 }
 
-                // 잔상이 남지 않도록 기본값들을 모두 빈 칸("")으로 설정
                 let manual = data.manualScore || {
                     showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
                     title: "", 
