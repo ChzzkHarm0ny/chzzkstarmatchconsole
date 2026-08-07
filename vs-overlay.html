@@ -2,28 +2,74 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK VS Matchup Overlay</title>
+    <title>CHZZK VS Matchup Overlay — Console HUD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
+        :root{
+            --panel-bg:#101115;
+            --panel-bg-alt:#16171c;
+            --border-steel:#2c2f38;
+            --accent:#F0A93F;
+            --accent-ink:#2b1d04;
+            --text-dim:#8b8f9b;
+        }
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
-        .race-P { background-color: #FFE000; color: #000; }
-        .race-T { background-color: #00AFFF; color: #000; }
-        .race-Z { background-color: #FF4545; color: #fff; }
-        
+        .font-display{ font-family:'Black Han Sans', sans-serif; letter-spacing:0.02em; }
+        .font-tech{ font-family:'Rajdhani', sans-serif; letter-spacing:0.08em; }
+
+        .race-P { background-color:#F0A93F; color:#2b1d04; }
+        .race-T { background-color:#3EA8FF; color:#03203a; }
+        .race-Z { background-color:#E5484D; color:#3a0505; }
+
         #vs-wrapper { opacity: 0; transition: opacity 0.8s ease-in-out; }
         #vs-wrapper.active { opacity: 1; }
-        
-        /* 맵 이미지 고정 높이, 유동 가로 비율 */
+
         .map-img-fixed {
-            height: 70px !important;
+            height: 88px !important;
             width: auto !important;
             max-width: 100% !important;
             object-fit: contain;
             display: block;
             margin: 0 auto;
         }
-        
+
         .text-shadow-custom { text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
+
+        /* 모서리를 깎은(chamfer) 패널: 바깥쪽은 테두리색, 안쪽은 패널색을 1px 패딩으로 겹쳐 얇은 각진 테두리를 만듦 */
+        .chz-frame{ padding:1px; background:var(--border-steel); box-shadow:0 18px 34px rgba(0,0,0,0.45); }
+        .chz-frame-inner{ background:var(--panel-bg); height:100%; width:100%; }
+
+        .chz-cut-l, .chz-cut-l .chz-frame-inner{
+            clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+        }
+        .chz-cut-r, .chz-cut-r .chz-frame-inner{
+            clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+        }
+        .chz-cut-all, .chz-cut-all .chz-frame-inner{
+            clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+        }
+        .chz-cut-sm, .chz-cut-sm .chz-frame-inner{
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+
+        .team-edge{ height:3px; width:100%; }
+
+        .race-chip{ clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+
+        .vs-slash{ width:26px; height:3px; transform:skewX(-24deg); }
+
+        .bracket-label::before{ content:"\2039\2039 "; }
+        .bracket-label::after{ content:" \203A\203A"; }
+
+        .reticle{ position:relative; }
+        .reticle span{ position:absolute; width:10px; height:10px; border-color:var(--accent); opacity:0.85; }
+        .reticle .tl{ top:0; left:0; border-top:2px solid; border-left:2px solid; }
+        .reticle .tr{ top:0; right:0; border-top:2px solid; border-right:2px solid; }
+        .reticle .bl{ bottom:0; left:0; border-bottom:2px solid; border-left:2px solid; }
+        .reticle .br{ bottom:0; right:0; border-bottom:2px solid; border-right:2px solid; }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -42,7 +88,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
+
         let fadeTimer = null;
         let lastProcessedTimestamp = 0;
 
@@ -67,7 +113,7 @@
                 }
 
                 let vs = ms.vsMatch;
-                let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
+                let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#F0A93F", team2Color: "#3EA8FF" };
                 let isSoloMode = ms.matchMode === "solo";
 
                 if (vs && vs.timestamp && vs.timestamp !== lastProcessedTimestamp) {
@@ -75,9 +121,12 @@
 
                     let t1Arr = Array.isArray(vs.t1) ? vs.t1 : [vs.t1];
                     let t2Arr = Array.isArray(vs.t2) ? vs.t2 : [vs.t2];
-                    
+
                     document.getElementById('t1-container').innerHTML = renderTeamLayout(t1Arr, teamNames.team1, teamNames.team1Color, false, isSoloMode);
                     document.getElementById('t2-container').innerHTML = renderTeamLayout(t2Arr, teamNames.team2, teamNames.team2Color, true, isSoloMode);
+
+                    document.getElementById('vs-slash-l').style.backgroundColor = teamNames.team1Color;
+                    document.getElementById('vs-slash-r').style.backgroundColor = teamNames.team2Color;
 
                     if(vs.map) {
                         document.getElementById('map-name').innerText = vs.map.name || "맵 이름";
@@ -100,73 +149,89 @@
             });
         };
 
+        function raceClassOf(race){
+            return race === '프로토스' ? 'race-P' : (race === '테란' ? 'race-T' : 'race-Z');
+        }
+
         function renderTeamLayout(playersArr, teamName, teamColor, isRightSide, isSoloMode) {
             let hasTeamName = teamName && teamName.trim() !== "";
-            let teamLabelHtml = (isSoloMode || !hasTeamName)
+            let cutClass = isRightSide ? 'chz-cut-r' : 'chz-cut-l';
+
+            let teamEdgeHtml = (isSoloMode || !hasTeamName)
                 ? ""
-                : `<span class="px-3 py-1.5 rounded-lg text-xs font-black text-white shadow-md w-full text-center border border-white/10 tracking-wide" style="background-color:${teamColor}">${teamName}</span>`;
+                : `<div class="team-edge" style="background-color:${teamColor}"></div>
+                   <span class="font-display px-3 pt-2 pb-1.5 text-sm text-white w-full text-center tracking-wide">${teamName}</span>`;
 
             let html = `
-            <div class="flex flex-col w-[355px] gap-3 items-center bg-[#0e0f13]/95 border border-[#32343d] rounded-2xl p-4 shadow-2xl backdrop-blur-md">
-                ${teamLabelHtml}`;
+            <div class="chz-frame ${cutClass} w-[355px] shadow-2xl">
+              <div class="chz-frame-inner flex flex-col items-center gap-2.5 p-3.5">
+                ${teamEdgeHtml}`;
 
             if (playersArr.length === 2) {
-                html += `<div class="flex gap-2.5 w-full h-[180px]">`;
+                html += `<div class="flex gap-2.5 w-full h-[176px] mt-1">`;
                 playersArr.forEach(p => {
-                    let raceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
+                    let raceClass = raceClassOf(p.race);
                     html += `
-                    <div class="flex-1 bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex flex-col items-center justify-between p-2.5 shadow-inner">
-                        <img src="${p.img}" class="w-full h-[105px] object-cover rounded-lg border border-[#2c2d36] bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
-                        <div class="flex flex-col items-center text-center w-full truncate mt-1">
-                            <span class="text-sm font-black text-white truncate w-full tracking-tight">${p.name}</span>
-                            <span class="px-2.5 py-0.5 mt-0.5 rounded text-[10px] font-black text-black shadow-sm ${raceClass}">${p.race}</span>
+                    <div class="flex-1 chz-frame chz-cut-sm shadow-inner">
+                      <div class="chz-frame-inner flex flex-col items-center justify-between p-2.5">
+                        <img src="${p.img}" class="w-full h-[100px] object-cover border border-[#2c2d36] bg-black/50" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                        <div class="flex flex-col items-center text-center w-full truncate mt-1.5">
+                            <span class="font-tech text-sm font-bold text-white truncate w-full">${p.name}</span>
+                            <span class="race-chip px-2.5 py-0.5 mt-1 text-[10px] font-bold ${raceClass}">${p.race}</span>
                         </div>
+                      </div>
                     </div>`;
                 });
                 html += `</div>`;
-            } 
+            }
             else if (playersArr.length > 2) {
                 let leadPlayer = playersArr[0] || { name: "미정", race: "미정", img: "" };
                 let subPlayers = playersArr.slice(1);
-                let leadRaceClass = leadPlayer.race === '프로토스' ? 'race-P' : (leadPlayer.race === '테란' ? 'race-T' : 'race-Z');
+                let leadRaceClass = raceClassOf(leadPlayer.race);
 
                 html += `
-                <div class="relative w-full h-[140px] bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4 shadow-inner">
-                    <img src="${leadPlayer.img}" class="w-24 h-full object-cover rounded-lg border border-[#2c2d36] shrink-0 bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                <div class="relative w-full h-[136px] mt-1 chz-frame chz-cut-sm shadow-inner">
+                  <div class="chz-frame-inner flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4">
+                    <img src="${leadPlayer.img}" class="w-24 h-full object-cover border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="text-lg font-black text-white truncate w-full tracking-tight text-shadow-custom">${leadPlayer.name}</span>
-                        <span class="px-2.5 py-0.5 mt-1 rounded text-xs font-black text-black shadow-sm ${leadRaceClass}">${leadPlayer.race}</span>
+                        <span class="font-display text-lg text-white truncate w-full text-shadow-custom">${leadPlayer.name}</span>
+                        <span class="race-chip px-2.5 py-0.5 mt-1.5 text-xs font-bold ${leadRaceClass}">${leadPlayer.race}</span>
                     </div>
+                  </div>
                 </div>`;
 
                 html += `<div class="flex gap-2 w-full justify-start mt-0.5">`;
                 subPlayers.forEach(p => {
-                    let subRaceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
+                    let subRaceClass = raceClassOf(p.race);
                     html += `
-                    <div class="flex-1 flex items-center gap-2 bg-[#17181c] border border-[#2c2d36] rounded-lg p-1.5 overflow-hidden shadow-inner">
-                        <img src="${p.img}" class="w-8 h-8 object-cover rounded border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=User'">
+                    <div class="flex-1 flex items-center gap-2 chz-frame chz-cut-sm shadow-inner">
+                      <div class="chz-frame-inner flex items-center gap-2 p-1.5">
+                        <img src="${p.img}" class="w-8 h-8 object-cover border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=User'">
                         <div class="flex flex-col truncate">
-                            <span class="text-xs font-bold text-white truncate">${p.name}</span>
-                            <span class="px-1.5 rounded text-[8px] font-black text-black ${subRaceClass} w-max mt-0.5">${p.race}</span>
+                            <span class="font-tech text-xs font-bold text-white truncate">${p.name}</span>
+                            <span class="race-chip px-1.5 text-[8px] font-bold ${subRaceClass} w-max mt-0.5">${p.race}</span>
                         </div>
+                      </div>
                     </div>`;
                 });
                 html += `</div>`;
-            } 
+            }
             else {
                 let p = playersArr[0] || { name: "미정", race: "미정", img: "" };
-                let raceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
+                let raceClass = raceClassOf(p.race);
                 html += `
-                <div class="relative w-full h-[180px] bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3.5 gap-4 shadow-inner">
-                    <img src="${p.img}" class="w-28 h-full object-cover rounded-lg border border-[#2c2d36] shrink-0 bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                <div class="relative w-full h-[176px] mt-1 chz-frame chz-cut-sm shadow-inner">
+                  <div class="chz-frame-inner flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3.5 gap-4">
+                    <img src="${p.img}" class="w-28 h-full object-cover border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="text-xl font-black text-white truncate w-full tracking-tight text-shadow-custom">${p.name}</span>
-                        <span class="px-3 py-0.5 mt-1.5 rounded text-xs font-black text-black shadow-sm ${raceClass}">${p.race}</span>
+                        <span class="font-display text-2xl text-white truncate w-full text-shadow-custom">${p.name}</span>
+                        <span class="race-chip px-3 py-0.5 mt-2 text-xs font-bold ${raceClass}">${p.race}</span>
                     </div>
+                  </div>
                 </div>`;
             }
 
-            html += `</div>`;
+            html += `</div></div>`;
             return html;
         }
 
@@ -177,7 +242,7 @@
             if (fadeTimer) clearTimeout(fadeTimer);
 
             container.classList.remove('active');
-            void container.offsetWidth; 
+            void container.offsetWidth;
 
             container.classList.add('active');
 
@@ -189,27 +254,34 @@
 </head>
 <body class="flex items-center justify-center h-screen p-6">
     <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease; opacity: 0;">
-        <!-- 전체 오버레이 박스 폭을 980px에서 1040px로 넓혀 중앙 여유 공간 확보 -->
-        <div id="vs-wrapper" class="flex items-center justify-center gap-5 bg-[#121317]/95 border-2 border-[#32343d] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[1040px]">
-            
+        <div id="vs-wrapper" class="chz-frame chz-cut-all w-[1040px]">
+          <div class="chz-frame-inner flex items-center justify-center gap-5 p-6">
+
             <div id="t1-container"></div>
-            
-            <!-- 중앙 영역: 너비를 250px로 대폭 확장하여 긴 세트 이름도 줄바꿈 없이 한 줄로 깔끔하게 수용 -->
+
             <div class="flex flex-col items-center justify-center gap-3 shrink-0 w-[250px]">
-                <!-- 경기 정보 뱃지: 줄바꿈 없이(whitespace-nowrap) 한 줄로 길게 표출 -->
-                <span id="match-label" class="w-full px-3 py-1.5 bg-[#17181c] border border-[#32343d] rounded-lg text-xs font-black text-gray-200 text-center tracking-tight whitespace-nowrap overflow-hidden text-ellipsis shadow-inner" style="display: none;"></span>
-                
-                <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest drop-shadow-[0_0_12px_rgba(0,255,163,0.6)] my-0.5">VS</span>
-                
-                <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-3 rounded-xl shadow-lg w-full">
-                    <div class="flex items-center justify-center h-[70px] mb-2 overflow-hidden w-full">
-                        <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed rounded-lg border border-[#2c2d36] shadow bg-black/50">
+                <span id="match-label" class="bracket-label w-full font-tech px-3 py-1.5 text-xs font-bold text-[var(--text-dim)] text-center whitespace-nowrap overflow-hidden text-ellipsis" style="display: none;"></span>
+
+                <div class="flex items-center gap-2 my-0.5">
+                    <span id="vs-slash-l" class="vs-slash" style="background-color:#F0A93F"></span>
+                    <span class="font-display text-4xl italic text-[var(--accent)] tracking-wider" style="text-shadow:0 0 18px rgba(240,169,63,0.55)">VS</span>
+                    <span id="vs-slash-r" class="vs-slash" style="background-color:#3EA8FF"></span>
+                </div>
+
+                <div class="reticle flex flex-col items-center chz-frame chz-cut-sm w-full">
+                  <span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span>
+                  <div class="chz-frame-inner flex flex-col items-center p-3">
+                    <div class="flex items-center justify-center h-[88px] mb-2 overflow-hidden w-full">
+                        <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed border border-[#2c2d36] bg-black/50">
                     </div>
-                    <span id="map-name" class="text-xs font-black text-gray-200 truncate w-full text-center tracking-tight">맵 이름</span>
+                    <span id="map-name" class="font-tech text-xs font-bold text-gray-200 truncate w-full text-center">맵 이름</span>
+                  </div>
                 </div>
             </div>
 
             <div id="t2-container"></div>
+
+          </div>
         </div>
     </div>
 </body>
