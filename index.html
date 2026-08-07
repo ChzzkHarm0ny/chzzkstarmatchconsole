@@ -1029,7 +1029,7 @@
         function renameMatchSet(setId) {
             let s = matchSetsObj[setId];
             if (!s) return;
-            let newName = prompt("세트 이름을 입력하세요 (예: 1세트 (씨나인 대학리그))", s.name);
+            let newName = prompt("세트 이름을 입력하세요 (예: 1세트 (프로리그))", s.name);
             if (newName === null) return;
             newName = newName.trim();
             if (!newName) return;
@@ -1657,10 +1657,10 @@
                     <div class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
                         <h4 class="text-xs font-bold text-[#00FFA3] mb-2">대회/매치 이름 기본 설정</h4>
                         <div class="flex gap-2 mb-2">
-                            <input type="text" id="input-league-title" value="스타크래프트 프로리그" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white" placeholder="예: 씨나인 대학리그">
+                            <input type="text" id="input-league-title" value="스타크래프트 프로리그" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white" placeholder="예: 프로리그">
                             <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">기본 대회명 저장</button>
                         </div>
-                        <p class="text-[10px] text-gray-400">저장하면 [⚔️ 2. 중계 대시보드]의 각 세트 이름(예: "1세트 (씨나인 대학리그)")에 자동 반영됩니다. 특정 세트만 다른 이름으로 쓰고 싶다면 해당 세트 탭의 ✏️ 버튼으로 직접 수정할 수 있습니다.</p>
+                        <p class="text-[10px] text-gray-400">저장하면 [⚔️ 2. 중계 대시보드]의 각 세트 이름(예: "1세트 (프로리그)")에 자동 반영됩니다. 특정 세트만 다른 이름으로 쓰고 싶다면 해당 세트 탭의 ✏️ 버튼으로 직접 수정할 수 있습니다.</p>
                     </div>
 
                     <div id="team-setting-wrapper" class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
