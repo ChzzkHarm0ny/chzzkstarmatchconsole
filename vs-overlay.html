@@ -6,6 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         :root{
@@ -19,7 +20,7 @@
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
         .font-display{ font-family:'Black Han Sans', sans-serif; letter-spacing:0.02em; }
         .font-tech{ font-family:'Rajdhani', sans-serif; letter-spacing:0.08em; }
-        .font-label{ font-family:'Black Han Sans', sans-serif; letter-spacing:0; }
+        .font-label{ font-family:'Pretendard', sans-serif; font-weight:600; letter-spacing:0; }
 
         .race-P { background-color:#F0A93F; color:#2b1d04; }
         .race-T { background-color:#3EA8FF; color:#03203a; }
@@ -63,7 +64,7 @@
         .vs-slash{ width:26px; height:3px; transform:skewX(-24deg); }
 
         .reticle{ position:relative; }
-        .reticle span{ position:absolute; width:10px; height:10px; border-color:var(--accent); opacity:0.85; }
+        .reticle .tl, .reticle .tr, .reticle .bl, .reticle .br{ position:absolute; width:10px; height:10px; border-color:var(--accent); opacity:0.85; }
         .reticle .tl{ top:0; left:0; border-top:2px solid; border-left:2px solid; }
         .reticle .tr{ top:0; right:0; border-top:2px solid; border-right:2px solid; }
         .reticle .bl{ bottom:0; left:0; border-bottom:2px solid; border-left:2px solid; }
@@ -284,10 +285,12 @@
                 <div class="reticle flex flex-col items-center chz-frame chz-cut-sm w-full">
                   <span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span>
                   <div class="chz-frame-inner flex flex-col items-center p-3">
-                    <div class="flex items-center justify-center h-[88px] mb-2 overflow-hidden w-full">
+                    <div class="flex items-center justify-center h-[88px] mb-3 overflow-hidden w-full">
                         <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed border border-[#2c2d36] bg-black/50">
                     </div>
-                    <span id="map-name" class="font-label text-sm text-gray-200 truncate w-full text-center px-1">맵 이름</span>
+                    <div class="w-full border-t border-[#2c2f38] pt-2">
+                        <span id="map-name" class="font-label text-sm text-gray-100 block w-full text-center px-1 leading-snug">맵 이름</span>
+                    </div>
                   </div>
                 </div>
             </div>
