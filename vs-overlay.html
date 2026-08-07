@@ -173,7 +173,7 @@
             let teamEdgeHtml = (isSoloMode || !hasTeamName)
                 ? ""
                 : `<div class="chz-cut-sm w-full" style="background-color:${teamColor}">
-                     <span class="font-display block px-3 py-2.5 text-base w-full text-center" style="color:${getContrastText(teamColor)}">${teamName}</span>
+                     <span class="font-label block px-3 py-2.5 text-base w-full text-center" style="color:${getContrastText(teamColor)}">${teamName}</span>
                    </div>`;
 
             let html = `
@@ -190,7 +190,7 @@
                       <div class="chz-frame-inner flex flex-col items-center justify-between p-2.5">
                         <img src="${p.img}" class="w-full h-[100px] object-cover border border-[#2c2d36] bg-black/50" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                         <div class="flex flex-col items-center text-center w-full truncate mt-1.5">
-                            <span class="font-tech text-sm font-bold text-white truncate w-full">${p.name}</span>
+                            <span class="font-label text-sm text-white truncate w-full">${p.name}</span>
                             <span class="race-chip px-2.5 py-0.5 mt-1 text-[10px] font-bold ${raceClass}">${p.race}</span>
                         </div>
                       </div>
@@ -208,7 +208,7 @@
                   <div class="chz-frame-inner flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4">
                     <img src="${leadPlayer.img}" class="w-24 h-full object-cover border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="font-display text-lg text-white truncate w-full text-shadow-custom">${leadPlayer.name}</span>
+                        <span class="font-label text-lg text-white truncate w-full text-shadow-custom">${leadPlayer.name}</span>
                         <span class="race-chip px-2.5 py-0.5 mt-1.5 text-xs font-bold ${leadRaceClass}">${leadPlayer.race}</span>
                     </div>
                   </div>
@@ -222,7 +222,7 @@
                       <div class="chz-frame-inner flex items-center gap-2 p-1.5">
                         <img src="${p.img}" class="w-8 h-8 object-cover border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=User'">
                         <div class="flex flex-col truncate">
-                            <span class="font-tech text-xs font-bold text-white truncate">${p.name}</span>
+                            <span class="font-label text-xs text-white truncate">${p.name}</span>
                             <span class="race-chip px-1.5 text-[8px] font-bold ${subRaceClass} w-max mt-0.5">${p.race}</span>
                         </div>
                       </div>
@@ -238,7 +238,7 @@
                   <div class="chz-frame-inner flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3.5 gap-4">
                     <img src="${p.img}" class="w-28 h-full object-cover border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="font-display text-2xl text-white truncate w-full text-shadow-custom">${p.name}</span>
+                        <span class="font-label text-2xl text-white truncate w-full text-shadow-custom">${p.name}</span>
                         <span class="race-chip px-3 py-0.5 mt-2 text-xs font-bold ${raceClass}">${p.race}</span>
                     </div>
                   </div>
