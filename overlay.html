@@ -77,7 +77,6 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            // 외곽 테두리를 밝은 회색(border-[#525252])으로 적용
                             card.className = "set-card flex flex-col bg-[#141518] text-white border-2 border-[#525252] w-[280px] shrink-0";
 
                             let t1Wins = 0, t2Wins = 0;
@@ -88,15 +87,15 @@
                                 });
                             }
 
-                            // 헤더 및 구분선을 회색으로 명확히 적용
+                            // 스코어 영역 배경을 흰색(bg-white), 글씨를 검은색(text-black)으로 반전 적용
                             let headerHtml = `
                                 <div class="bg-[#1b1c20] border-b-2 border-[#525252] py-1.5 text-center">
                                     <div class="text-xs tracking-widest text-gray-200 font-bold">${setObj.name}</div>
                                 </div>
-                                <div class="border-b-2 border-[#525252] py-2 flex items-center justify-center gap-2">
-                                    <span class="text-2xl font-black text-white">${t1Wins}</span>
-                                    <span class="text-lg font-black text-gray-500">:</span>
-                                    <span class="text-2xl font-black text-white">${t2Wins}</span>
+                                <div class="bg-white border-b-2 border-[#525252] py-2 flex items-center justify-center gap-2">
+                                    <span class="text-2xl font-black text-black">${t1Wins}</span>
+                                    <span class="text-lg font-black text-gray-400">:</span>
+                                    <span class="text-2xl font-black text-black">${t2Wins}</span>
                                 </div>
                             `;
 
@@ -125,7 +124,6 @@
 
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
-                                // 내부 구분선도 회색으로 적용
                                 let borderClass = (i < setObj.matchesCount) ? "border-b border-[#525252]" : "";
 
                                 bodyHtml += `
