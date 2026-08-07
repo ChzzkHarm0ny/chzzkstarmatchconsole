@@ -12,11 +12,13 @@
         .player-loser { color: #4b5563 !important; opacity: 0.5; }
         #list-wrapper { transition: opacity 0.3s ease; }
         .overlay-active-match {
-            border: 1px solid #00FFA3 !important;
             background-color: rgba(0, 255, 163, 0.12) !important;
-            box-shadow: 0 0 12px rgba(0, 255, 163, 0.45);
+            border-left: 3px solid #00FFA3 !important;
+            border-right: 3px solid #00FFA3 !important;
         }
         .set-card { font-variant-numeric: tabular-nums; }
+        .match-row:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
+        .match-row:nth-child(odd) { background-color: transparent; }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -74,7 +76,7 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-hidden p-2";
+                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-hidden";
 
                             let t1Wins = 0, t2Wins = 0;
                             if (setObj.matches) {
@@ -86,17 +88,17 @@
 
                             // 상단 세트명 및 스코어 헤더
                             let headerHtml = `
-                                <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-1.5 text-center rounded-t-lg mb-2">
+                                <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-1.5 text-center">
                                     <div class="text-xs tracking-widest text-gray-300 font-bold">${setObj.name}</div>
                                 </div>
-                                <div class="border-b border-[#2c2d33] pb-2 mb-2 flex items-center justify-center gap-2">
+                                <div class="border-b border-[#2c2d33] py-2 flex items-center justify-center gap-2">
                                     <span class="text-2xl font-black text-white">${t1Wins}</span>
                                     <span class="text-lg font-black text-gray-500">:</span>
                                     <span class="text-2xl font-black text-white">${t2Wins}</span>
                                 </div>
                             `;
 
-                            let bodyHtml = `<div class="flex flex-col gap-2 px-1">`;
+                            let bodyHtml = `<div class="flex flex-col">`;
                             let activeMatchIdx = setObj.activeMatchIdx || 1;
 
                             for (let i = 1; i <= setObj.matchesCount; i++) {
@@ -121,10 +123,11 @@
 
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
+                                let borderClass = (i < setObj.matchesCount) ? "border-b border-[#2c2d33]" : "";
 
-                                // 번호가 카드 안쪽 왼쪽에 깔끔하게 배치되는 기본 구조
+                                // 전체 큰 박스 안에서 줄 단위로 구분되는 일체형 행 구조
                                 bodyHtml += `
-                                    <div class="flex items-center gap-3 py-2 px-3 rounded-lg border border-[#2c2d33] bg-[#141518] ${rowHighlightClass}">
+                                    <div class="match-row flex items-center py-2.5 px-3 ${borderClass} ${rowHighlightClass}">
                                         <div class="text-gray-400 font-bold text-sm w-4 text-center shrink-0">${i}</div>
                                         <div class="flex items-center justify-center flex-1">
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
