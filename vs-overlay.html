@@ -84,7 +84,6 @@
             <div class="flex flex-col w-[385px] gap-3 items-center bg-[#0b0c0e] border border-[#2c2d33] rounded-2xl p-4 shadow-xl">
                 ${teamLabelHtml}`;
 
-            // 💡 [조건 분기] 선수가 딱 2명일 경우 (2v2 팀플) -> 상단 대형 카드 크기를 절반씩 나누어 나란히 배치
             if (playersArr.length === 2) {
                 html += `<div class="flex gap-2 w-full h-[180px]">`;
                 playersArr.forEach(p => {
@@ -100,7 +99,6 @@
                 });
                 html += `</div>`;
             } 
-            // 💡 [조건 분기] 선수가 3명 이상일 경우 -> 1번은 대형 카드, 나머지는 하단 썸네일
             else if (playersArr.length > 2) {
                 let leadPlayer = playersArr[0] || { name: "미정", race: "미정", img: "" };
                 let subPlayers = playersArr.slice(1);
@@ -129,7 +127,6 @@
                 });
                 html += `</div>`;
             } 
-            // 💡 [기본] 1명일 경우 (1v1 개인전) -> 꽉 찬 대형 카드 1개 출력
             else {
                 let p = playersArr[0] || { name: "미정", race: "미정", img: "" };
                 let raceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
@@ -168,13 +165,16 @@
     <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease;">
         <div id="vs-wrapper" class="flex items-center justify-center gap-4 bg-[#141518]/95 border border-[#2c2d33] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[960px]">
             <div id="t1-container"></div>
+            
+            <!-- 맵 영역 개선: 맵 이미지를 직사각형(가로형 비율)으로 키우고 이름 칸 확장 -->
             <div class="flex flex-col items-center justify-center px-2 shrink-0">
                 <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</span>
-                <div class="flex flex-col items-center bg-[#0b0c0e] border border-[#2c2d33] p-2 rounded-xl">
-                    <img id="map-img" src="https://placehold.co/60x60/1b1c20/FFF?text=Map" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33] mb-1">
-                    <span id="map-name" class="text-xs font-bold text-gray-300 truncate max-w-[100px]">맵 이름</span>
+                <div class="flex flex-col items-center bg-[#0b0c0e] border border-[#2c2d33] p-2.5 rounded-xl w-[120px]">
+                    <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="w-[100px] h-[70px] object-cover rounded-lg border border-[#2c2d33] mb-1.5 bg-black/40">
+                    <span id="map-name" class="text-xs font-bold text-gray-200 truncate w-full text-center">맵 이름</span>
                 </div>
             </div>
+
             <div id="t2-container"></div>
         </div>
     </div>
