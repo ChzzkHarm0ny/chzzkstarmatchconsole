@@ -75,7 +75,8 @@
         };
 
         function renderTeamLayout(playersArr, teamName, teamColor, isRightSide, isSoloMode) {
-            let teamLabelHtml = isSoloMode
+            let hasTeamName = teamName && teamName.trim() !== "";
+            let teamLabelHtml = (isSoloMode || !hasTeamName)
                 ? ""
                 : `<span class="px-3 py-1 rounded-lg text-xs font-black text-white shadow w-full text-center" style="background-color:${teamColor}">${teamName}</span>`;
 
