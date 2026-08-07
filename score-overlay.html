@@ -118,20 +118,19 @@
             el.innerText = text;
             el.style.whiteSpace = "nowrap";
             
+            // scaleX 압축을 제거하고 글자 크기(fontSize)만 조절하여 왜곡 방지
             let len = (text || "").length;
             if (len >= 18) {
                 el.style.fontSize = (defaultSize - 4) + "px";
-                el.style.transform = "scaleX(0.7)";
             } else if (len >= 12) {
                 el.style.fontSize = (defaultSize - 3) + "px";
-                el.style.transform = "scaleX(0.8)";
             } else if (len >= 8) {
                 el.style.fontSize = (defaultSize - 2) + "px";
-                el.style.transform = "scaleX(0.9)";
             } else {
                 el.style.fontSize = defaultSize + "px";
-                el.style.transform = "scaleX(1)";
             }
+            el.style.transform = "none"; // 가로 압축 강제 해제
+        }
         }
 
         const urlParams = new URLSearchParams(window.location.search);
