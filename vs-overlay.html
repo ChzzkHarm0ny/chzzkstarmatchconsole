@@ -53,6 +53,7 @@
 
                 let vs = ms.vsMatch;
                 let teamNames = ms.teamNames || { team1: "1팀", team2: "2팀", team1Color: "#1d3557", team2Color: "#6a1b1b" };
+                let isSoloMode = ms.matchMode === "solo";
 
                 if (vs && vs.timestamp && vs.timestamp !== lastProcessedTimestamp) {
                     lastProcessedTimestamp = vs.timestamp;
@@ -60,8 +61,8 @@
                     let t1Arr = Array.isArray(vs.t1) ? vs.t1 : [vs.t1];
                     let t2Arr = Array.isArray(vs.t2) ? vs.t2 : [vs.t2];
                     
-                    document.getElementById('t1-container').innerHTML = renderTeamLayout(t1Arr, teamNames.team1, teamNames.team1Color, false);
-                    document.getElementById('t2-container').innerHTML = renderTeamLayout(t2Arr, teamNames.team2, teamNames.team2Color, true);
+                    document.getElementById('t1-container').innerHTML = renderTeamLayout(t1Arr, teamNames.team1, teamNames.team1Color, false, isSoloMode);
+                    document.getElementById('t2-container').innerHTML = renderTeamLayout(t2Arr, teamNames.team2, teamNames.team2Color, true, isSoloMode);
 
                     if(vs.map) {
                         document.getElementById('map-name').innerText = vs.map.name || "맵 이름";
@@ -73,10 +74,14 @@
             });
         };
 
-        function renderTeamLayout(playersArr, teamName, teamColor, isRightSide) {
+        function renderTeamLayout(playersArr, teamName, teamColor, isRightSide, isSoloMode) {
+            let teamLabelHtml = isSoloMode
+                ? ""
+                : `<span class="px-3 py-1 rounded-lg text-xs font-black text-white shadow w-full text-center" style="background-color:${teamColor}">${teamName}</span>`;
+
             let html = `
             <div class="flex flex-col w-[385px] gap-3 items-center bg-[#0b0c0e] border border-[#2c2d33] rounded-2xl p-4 shadow-xl">
-                <span class="px-3 py-1 rounded-lg text-xs font-black text-white shadow w-full text-center" style="background-color:${teamColor}">${teamName}</span>`;
+                ${teamLabelHtml}`;
 
             // 💡 [조건 분기] 선수가 딱 2명일 경우 (2v2 팀플) -> 상단 대형 카드 크기를 절반씩 나누어 나란히 배치
             if (playersArr.length === 2) {
