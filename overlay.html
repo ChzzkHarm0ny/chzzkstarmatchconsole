@@ -11,14 +11,15 @@
         .race-Z { color: #FF4545; }
         .player-loser { color: #4b5563 !important; opacity: 0.5; }
         #list-wrapper { transition: opacity 0.3s ease; }
+        
+        /* 활성 경기 녹색 하이라이트 */
         .overlay-active-match {
             background-color: rgba(0, 255, 163, 0.12) !important;
-            border-left: 3px solid #00FFA3 !important;
-            border-right: 3px solid #00FFA3 !important;
+            border-left: 4px solid #00FFA3 !important;
+            border-right: 4px solid #00FFA3 !important;
         }
         .set-card { font-variant-numeric: tabular-nums; }
-        .match-row:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
-        .match-row:nth-child(odd) { background-color: transparent; }
+        .match-row:nth-child(even) { background-color: rgba(255, 255, 255, 0.03); }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -76,8 +77,8 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            // 둥근 모서리(rounded-xl) 제거
-                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-hidden";
+                            // 외곽 테두리를 밝은 회색(border-[#525252])으로 적용
+                            card.className = "set-card flex flex-col bg-[#141518] text-white border-2 border-[#525252] w-[280px] shrink-0";
 
                             let t1Wins = 0, t2Wins = 0;
                             if (setObj.matches) {
@@ -87,12 +88,12 @@
                                 });
                             }
 
-                            // 상단 세트명 및 스코어 헤더
+                            // 헤더 및 구분선을 회색으로 명확히 적용
                             let headerHtml = `
-                                <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-1.5 text-center">
-                                    <div class="text-xs tracking-widest text-gray-300 font-bold">${setObj.name}</div>
+                                <div class="bg-[#1b1c20] border-b-2 border-[#525252] py-1.5 text-center">
+                                    <div class="text-xs tracking-widest text-gray-200 font-bold">${setObj.name}</div>
                                 </div>
-                                <div class="border-b border-[#2c2d33] py-2 flex items-center justify-center gap-2">
+                                <div class="border-b-2 border-[#525252] py-2 flex items-center justify-center gap-2">
                                     <span class="text-2xl font-black text-white">${t1Wins}</span>
                                     <span class="text-lg font-black text-gray-500">:</span>
                                     <span class="text-2xl font-black text-white">${t2Wins}</span>
@@ -124,11 +125,12 @@
 
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
-                                let borderClass = (i < setObj.matchesCount) ? "border-b border-[#2c2d33]" : "";
+                                // 내부 구분선도 회색으로 적용
+                                let borderClass = (i < setObj.matchesCount) ? "border-b border-[#525252]" : "";
 
                                 bodyHtml += `
                                     <div class="match-row flex items-center py-2.5 px-3 ${borderClass} ${rowHighlightClass}">
-                                        <div class="text-gray-400 font-bold text-sm w-4 text-center shrink-0">${i}</div>
+                                        <div class="text-gray-300 font-bold text-sm w-4 text-center shrink-0">${i}</div>
                                         <div class="flex items-center justify-center flex-1">
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
                                             <div class="w-14 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
