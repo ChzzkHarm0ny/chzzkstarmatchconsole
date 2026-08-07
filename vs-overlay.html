@@ -11,6 +11,14 @@
         .race-Z { background-color: #FF4545; color: #fff; }
         #vs-wrapper { opacity: 0; transition: opacity 0.8s ease-in-out; }
         #vs-wrapper.active { opacity: 1; }
+        
+        /* 맵 이미지 비율 유지 및 높이 고정을 위한 클래스 */
+        .map-img-fluid {
+            height: 72px;
+            width: auto;
+            max-width: 170px;
+            object-fit: contain;
+        }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -78,22 +86,22 @@
             let hasTeamName = teamName && teamName.trim() !== "";
             let teamLabelHtml = (isSoloMode || !hasTeamName)
                 ? ""
-                : `<span class="px-3 py-1 rounded-lg text-xs font-black text-white shadow w-full text-center" style="background-color:${teamColor}">${teamName}</span>`;
+                : `<span class="px-3 py-1 rounded-lg text-xs font-black text-white shadow-md w-full text-center border border-white/10 tracking-wide" style="background-color:${teamColor}">${teamName}</span>`;
 
             let html = `
-            <div class="flex flex-col w-[385px] gap-3 items-center bg-[#0b0c0e] border border-[#2c2d33] rounded-2xl p-4 shadow-xl">
+            <div class="flex flex-col w-[385px] gap-3 items-center bg-[#0e0f13]/95 border border-[#32343d] rounded-2xl p-4 shadow-2xl backdrop-blur-md">
                 ${teamLabelHtml}`;
 
             if (playersArr.length === 2) {
-                html += `<div class="flex gap-2 w-full h-[180px]">`;
+                html += `<div class="flex gap-2.5 w-full h-[180px]">`;
                 playersArr.forEach(p => {
                     let raceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
                     html += `
-                    <div class="flex-1 bg-[#141518] border border-[#2c2d33] rounded-xl overflow-hidden flex flex-col items-center justify-between p-2.5">
-                        <img src="${p.img}" class="w-full h-[105px] object-cover rounded-lg border border-[#2c2d33] bg-black/40" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                    <div class="flex-1 bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex flex-col items-center justify-between p-2.5 shadow-inner">
+                        <img src="${p.img}" class="w-full h-[105px] object-cover rounded-lg border border-[#2c2d36] bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                         <div class="flex flex-col items-center text-center w-full truncate mt-1">
-                            <span class="text-sm font-black text-white truncate w-full">${p.name}</span>
-                            <span class="px-2 py-0.5 mt-0.5 rounded text-[10px] font-black text-black ${raceClass}">${p.race}</span>
+                            <span class="text-sm font-black text-white truncate w-full tracking-tight">${p.name}</span>
+                            <span class="px-2.5 py-0.5 mt-0.5 rounded text-[10px] font-black text-black shadow-sm ${raceClass}">${p.race}</span>
                         </div>
                     </div>`;
                 });
@@ -105,11 +113,11 @@
                 let leadRaceClass = leadPlayer.race === '프로토스' ? 'race-P' : (leadPlayer.race === '테란' ? 'race-T' : 'race-Z');
 
                 html += `
-                <div class="relative w-full h-[140px] bg-[#141518] border border-[#2c2d33] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4">
-                    <img src="${leadPlayer.img}" class="w-24 h-full object-cover rounded-lg border border-[#2c2d33] shrink-0 bg-black/40" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                <div class="relative w-full h-[140px] bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4 shadow-inner">
+                    <img src="${leadPlayer.img}" class="w-24 h-full object-cover rounded-lg border border-[#2c2d36] shrink-0 bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="text-lg font-black text-white truncate w-full" style="text-shadow: 1px 1px 3px black;">${leadPlayer.name}</span>
-                        <span class="px-2 py-0.5 mt-1 rounded text-xs font-black text-black ${leadRaceClass}">${leadPlayer.race}</span>
+                        <span class="text-lg font-black text-white truncate w-full tracking-tight" style="text-shadow: 1px 1px 3px black;">${leadPlayer.name}</span>
+                        <span class="px-2.5 py-0.5 mt-1 rounded text-xs font-black text-black shadow-sm ${leadRaceClass}">${leadPlayer.race}</span>
                     </div>
                 </div>`;
 
@@ -117,11 +125,11 @@
                 subPlayers.forEach(p => {
                     let subRaceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
                     html += `
-                    <div class="flex-1 flex items-center gap-2 bg-[#141518] border border-[#2c2d33] rounded-lg p-1.5 overflow-hidden">
-                        <img src="${p.img}" class="w-8 h-8 object-cover rounded border border-[#2c2d33] shrink-0 bg-black/40" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=User'">
+                    <div class="flex-1 flex items-center gap-2 bg-[#17181c] border border-[#2c2d36] rounded-lg p-1.5 overflow-hidden shadow-inner">
+                        <img src="${p.img}" class="w-8 h-8 object-cover rounded border border-[#2c2d36] shrink-0 bg-black/50" onerror="this.src='https://placehold.co/60x60/1b1c20/FFF?text=User'">
                         <div class="flex flex-col truncate">
                             <span class="text-xs font-bold text-white truncate">${p.name}</span>
-                            <span class="px-1 rounded text-[8px] font-black text-black ${subRaceClass} w-max mt-0.5">${p.race}</span>
+                            <span class="px-1.5 rounded text-[8px] font-black text-black ${subRaceClass} w-max mt-0.5">${p.race}</span>
                         </div>
                     </div>`;
                 });
@@ -131,11 +139,11 @@
                 let p = playersArr[0] || { name: "미정", race: "미정", img: "" };
                 let raceClass = p.race === '프로토스' ? 'race-P' : (p.race === '테란' ? 'race-T' : 'race-Z');
                 html += `
-                <div class="relative w-full h-[180px] bg-[#141518] border border-[#2c2d33] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4">
-                    <img src="${p.img}" class="w-28 h-full object-cover rounded-lg border border-[#2c2d33] shrink-0 bg-black/40" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
+                <div class="relative w-full h-[180px] bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3.5 gap-4 shadow-inner">
+                    <img src="${p.img}" class="w-28 h-full object-cover rounded-lg border border-[#2c2d36] shrink-0 bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="text-xl font-black text-white truncate w-full" style="text-shadow: 1px 1px 3px black;">${p.name}</span>
-                        <span class="px-2.5 py-0.5 mt-1 rounded text-xs font-black text-black ${raceClass}">${p.race}</span>
+                        <span class="text-xl font-black text-white truncate w-full tracking-tight" style="text-shadow: 1px 1px 3px black;">${p.name}</span>
+                        <span class="px-3 py-0.5 mt-1.5 rounded text-xs font-black text-black shadow-sm ${raceClass}">${p.race}</span>
                     </div>
                 </div>`;
             }
@@ -163,15 +171,17 @@
 </head>
 <body class="flex items-center justify-center h-screen p-6">
     <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease;">
-        <div id="vs-wrapper" class="flex items-center justify-center gap-4 bg-[#141518]/95 border border-[#2c2d33] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[960px]">
+        <div id="vs-wrapper" class="flex items-center justify-center gap-5 bg-[#121317]/95 border-2 border-[#32343d] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[980px]">
             <div id="t1-container"></div>
             
-            <!-- 맵 영역 개선: 맵 이미지를 직사각형(가로형 비율)으로 키우고 이름 칸 확장 -->
+            <!-- 중앙 VS 및 맵 영역 (해상도 유동적 비율 맵 이미지 적용) -->
             <div class="flex flex-col items-center justify-center px-2 shrink-0">
-                <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_10px_rgba(0,255,163,0.5)]">VS</span>
-                <div class="flex flex-col items-center bg-[#0b0c0e] border border-[#2c2d33] p-2.5 rounded-xl w-[120px]">
-                    <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="w-[100px] h-[70px] object-cover rounded-lg border border-[#2c2d33] mb-1.5 bg-black/40">
-                    <span id="map-name" class="text-xs font-bold text-gray-200 truncate w-full text-center">맵 이름</span>
+                <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_12px_rgba(0,255,163,0.6)]">VS</span>
+                <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-3 rounded-xl shadow-lg min-w-[130px]">
+                    <div class="flex items-center justify-center h-[76px] mb-1.5 overflow-hidden">
+                        <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fluid rounded-lg border border-[#2c2d36] shadow bg-black/50">
+                    </div>
+                    <span id="map-name" class="text-xs font-black text-gray-200 truncate w-full text-center tracking-tight">맵 이름</span>
                 </div>
             </div>
 
