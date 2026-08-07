@@ -1513,10 +1513,10 @@
             });
         }
 
-        function saveTeamNames() {
-            if (!currentRoomId) return;
-            team1Name = document.getElementById('input-team1-name').value || "1팀";
-            team2Name = document.getElementById('input-team2-name').value || "2팀";
+function saveTeamNames() {
+    if (!currentRoomId) return;
+    team1Name = document.getElementById('input-team1-name').value.trim();
+    team2Name = document.getElementById('input-team2-name').value.trim();
             team1Color = document.getElementById('input-team1-color').value || "#1d3557";
             team2Color = document.getElementById('input-team2-color').value || "#6a1b1b";
 
