@@ -76,10 +76,10 @@
             </div>
             <div class="absolute inset-0 z-20 frame-middle pointer-events-none"></div>
             <div class="absolute inset-0 z-30 grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center h-full">
-                <div id="text-player1" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;"></div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player1" style="color: #ffffff;"></span></div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player2" style="color: #ffffff;"></span></div>
-                <div id="text-player2" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;"></div>
+                <div id="text-player1" class="px-2 truncate font-bold text-[17px]" style="color: #ffffff;"></div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[17px]"><span id="score-player1" style="color: #ffffff;"></span></div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[17px]"><span id="score-player2" style="color: #ffffff;"></span></div>
+                <div id="text-player2" class="px-2 truncate font-bold text-[17px]" style="color: #ffffff;"></div>
             </div>
         </div>
 
@@ -118,7 +118,6 @@
             el.innerText = text;
             el.style.whiteSpace = "nowrap";
             
-            // scaleX 압축을 완전히 제거하고 글자 크기(fontSize)만 조정하여 왜곡 방지
             let len = (text || "").length;
             if (len >= 18) {
                 el.style.fontSize = (defaultSize - 4) + "px";
@@ -209,10 +208,11 @@
                 document.getElementById('score-team2').innerText = manual.t2Score !== undefined ? manual.t2Score : "";
                 renderTextFit('text-team2', manual.t2Name || "", 13.5);     
 
-                renderTextFit('text-player1', manual.p1Name || "", 16);     
+                // 선수 이름 크기를 17로 적용
+                renderTextFit('text-player1', manual.p1Name || "", 17);     
                 document.getElementById('score-player1').innerText = manual.p1Score !== undefined ? manual.p1Score : "";
                 document.getElementById('score-player2').innerText = manual.p2Score !== undefined ? manual.p2Score : "";
-                renderTextFit('text-player2', manual.p2Name || "", 16);     
+                renderTextFit('text-player2', manual.p2Name || "", 17);     
             });
         }
     </script>
