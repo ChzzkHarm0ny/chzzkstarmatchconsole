@@ -49,11 +49,11 @@
             <div class="absolute inset-0 z-10 bg-[#111111]"></div>
             <div class="absolute inset-0 z-20 frame-top pointer-events-none"></div>
             <div class="absolute inset-0 z-30 flex items-center justify-center h-full">
-                <span id="text-title" class="text-[#00FFA3] font-black tracking-wider text-[13px] drop-shadow-md">[1세트]</span>
+                <span id="text-title" class="text-[#00FFA3] font-black tracking-wider text-[13px] drop-shadow-md"></span>
             </div>
         </div>
         
-        <!-- [2] 팀 영역 (중앙 스코어 칸까지 1팀/2팀 색상으로 통일) -->
+        <!-- [2] 팀 영역 -->
         <div id="row-team" class="relative w-full h-[28px] shrink-0">
             <div class="absolute inset-0 z-10 grid grid-cols-[1fr_36px_36px_1fr]">
                 <div id="bg-team1" class="col-span-2" style="background-color: #1d3557;"></div>
@@ -61,10 +61,10 @@
             </div>
             <div class="absolute inset-0 z-20 frame-middle pointer-events-none"></div>
             <div class="absolute inset-0 z-30 grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center h-full">
-                <div id="text-team1" class="px-2 truncate text-white text-[13.5px] drop-shadow-md">1팀</div>
-                <div class="flex items-center justify-center text-white text-[15px] drop-shadow-md"><span id="score-team1">0</span></div>
-                <div class="flex items-center justify-center text-white text-[15px] drop-shadow-md"><span id="score-team2">0</span></div>
-                <div id="text-team2" class="px-2 truncate text-white text-[13.5px] drop-shadow-md">2팀</div>
+                <div id="text-team1" class="px-2 truncate text-white text-[13.5px] drop-shadow-md"></div>
+                <div class="flex items-center justify-center text-white text-[15px] drop-shadow-md"><span id="score-team1"></span></div>
+                <div class="flex items-center justify-center text-white text-[15px] drop-shadow-md"><span id="score-team2"></span></div>
+                <div id="text-team2" class="px-2 truncate text-white text-[13.5px] drop-shadow-md"></div>
             </div>
         </div>
 
@@ -76,10 +76,10 @@
             </div>
             <div class="absolute inset-0 z-20 frame-middle pointer-events-none"></div>
             <div class="absolute inset-0 z-30 grid grid-cols-[1fr_36px_36px_1fr] font-black text-center items-center h-full">
-                <div id="text-player1" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">실키아</div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player1" style="color: #ffffff;">0</span></div>
-                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player2" style="color: #ffffff;">0</span></div>
-                <div id="text-player2" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;">곱재</div>
+                <div id="text-player1" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;"></div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player1" style="color: #ffffff;"></span></div>
+                <div class="flex items-center justify-center font-black drop-shadow-md text-[16px]"><span id="score-player2" style="color: #ffffff;"></span></div>
+                <div id="text-player2" class="px-2 truncate font-bold text-[16px]" style="color: #ffffff;"></div>
             </div>
         </div>
 
@@ -87,8 +87,8 @@
         <div id="row-bottom" class="relative w-full h-[42px] shrink-0">
             <div class="absolute inset-0 z-20 frame-bottom pointer-events-none"></div>
             <div class="absolute inset-0 z-30 flex justify-between items-start px-4 pt-1 h-full">
-                <div id="text-pos1" class="text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px; color: #0C48CC;">Z1</div>
-                <div id="text-pos2" class="text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px; color: #F40404;">T11</div>
+                <div id="text-pos1" class="text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px; color: #0C48CC;"></div>
+                <div id="text-pos2" class="text-[16px] font-black tracking-wider drop-shadow-[1px_1px_2px_black]" style="margin-top: -2px; color: #F40404;"></div>
             </div>
         </div>
 
@@ -153,12 +153,13 @@
                     }
                 }
 
+                // 잔상이 남지 않도록 기본값들을 모두 빈 칸("")으로 설정
                 let manual = data.manualScore || {
                     showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
-                    title: "[1세트]", 
-                    t1Name: "1팀", t1Score: 0, t2Score: 0, t2Name: "2팀",
-                    p1Name: "실키아", p1Score: 0, p2Score: 0, p2Name: "곱재",
-                    pos1: "Z1", pos2: "T11"
+                    title: "", 
+                    t1Name: "", t1Score: "", t2Score: "", t2Name: "",
+                    p1Name: "", p1Score: "", p2Score: "", p2Name: "",
+                    pos1: "", pos2: ""
                 };
 
                 let teamNames = ms.teamNames || { team1Color: "#1d3557", team2Color: "#6a1b1b" };
@@ -207,13 +208,13 @@
 
                 renderTextFit('text-title', manual.title || "", 13);         
                 renderTextFit('text-team1', manual.t1Name || "", 13.5);     
-                document.getElementById('score-team1').innerText = manual.t1Score || "0";
-                document.getElementById('score-team2').innerText = manual.t2Score || "0";
+                document.getElementById('score-team1').innerText = manual.t1Score !== undefined ? manual.t1Score : "";
+                document.getElementById('score-team2').innerText = manual.t2Score !== undefined ? manual.t2Score : "";
                 renderTextFit('text-team2', manual.t2Name || "", 13.5);     
 
                 renderTextFit('text-player1', manual.p1Name || "", 16);     
-                document.getElementById('score-player1').innerText = manual.p1Score || "0";
-                document.getElementById('score-player2').innerText = manual.p2Score || "0";
+                document.getElementById('score-player1').innerText = manual.p1Score !== undefined ? manual.p1Score : "";
+                document.getElementById('score-player2').innerText = manual.p2Score !== undefined ? manual.p2Score : "";
                 renderTextFit('text-player2', manual.p2Name || "", 16);     
             });
         }
