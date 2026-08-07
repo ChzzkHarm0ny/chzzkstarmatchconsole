@@ -12,7 +12,6 @@
         #vs-wrapper { opacity: 0; transition: opacity 0.8s ease-in-out; }
         #vs-wrapper.active { opacity: 1; }
         
-        /* 맵 이미지 비율 유지 및 높이 고정을 위한 클래스 */
         .map-img-fluid {
             height: 72px;
             width: auto;
@@ -75,6 +74,18 @@
                     if(vs.map) {
                         document.getElementById('map-name').innerText = vs.map.name || "맵 이름";
                         if(vs.map.url) document.getElementById('map-img').src = vs.map.url;
+                    }
+
+                    // 몇 경기인지 표시 업데이트 (상단 배치)
+                    let matchLabel = vs.matchTitle || (vs.matchIndex ? `${vs.matchIndex}경기` : "");
+                    let matchLabelEl = document.getElementById('match-label');
+                    if (matchLabelEl) {
+                        if (matchLabel) {
+                            matchLabelEl.innerText = matchLabel;
+                            matchLabelEl.style.display = 'block';
+                        } else {
+                            matchLabelEl.style.display = 'none';
+                        }
                     }
 
                     triggerFadeAnimation();
@@ -174,11 +185,13 @@
         <div id="vs-wrapper" class="flex items-center justify-center gap-5 bg-[#121317]/95 border-2 border-[#32343d] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[980px]">
             <div id="t1-container"></div>
             
-            <!-- 중앙 VS 및 맵 영역 (해상도 유동적 비율 맵 이미지 적용) -->
+            <!-- 중앙 VS 및 경기 정보 / 맵 영역 (경기 정보가 상단에 배치됨) -->
             <div class="flex flex-col items-center justify-center px-2 shrink-0">
+                <!-- 몇 경기인지 표시하는 라벨을 VS 로고 위 상단으로 이동 -->
+                <span id="match-label" class="text-[11px] font-black text-[#00FFA3] mb-1.5 tracking-wider uppercase" style="display: none;"></span>
                 <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_12px_rgba(0,255,163,0.6)]">VS</span>
                 <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-3 rounded-xl shadow-lg min-w-[130px]">
-                    <div class="flex items-center justify-center h-[76px] mb-1.5 overflow-hidden">
+                    <div class="flex items-center justify-center h-[72px] mb-1.5 overflow-hidden">
                         <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fluid rounded-lg border border-[#2c2d36] shadow bg-black/50">
                     </div>
                     <span id="map-name" class="text-xs font-black text-gray-200 truncate w-full text-center tracking-tight">맵 이름</span>
