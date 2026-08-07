@@ -121,10 +121,10 @@
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
 
-                                // 번호 탭 텍스트 색상을 흰색(text-white)으로 변경
+                                // 숫자 박스에 h-full을 주어 안쪽 매치 칸과 세로 높이가 1:1로 똑같이 꽉 차게 맞춤
                                 bodyHtml += `
                                     <div class="flex items-center relative ${rowHighlightClass} rounded-lg border border-[#2c2d33] bg-[#141518]">
-                                        <div class="absolute -left-10 bg-[#1b1c20] border border-[#2c2d33] text-white font-black text-base w-7 h-7 rounded-md flex items-center justify-center shadow-lg z-20">${i}</div>
+                                        <div class="absolute -left-9 inset-y-0 bg-[#1b1c20] border border-[#2c2d33] text-white font-black text-base w-7 h-full rounded-md flex items-center justify-center shadow-lg z-20">${i}</div>
                                         <div class="flex items-center justify-center w-full py-2 px-3">
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
                                             <div class="w-16 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
