@@ -76,7 +76,8 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-hidden";
+                            // 둥근 모서리(rounded-xl) 제거
+                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-hidden";
 
                             let t1Wins = 0, t2Wins = 0;
                             if (setObj.matches) {
@@ -125,7 +126,6 @@
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
                                 let borderClass = (i < setObj.matchesCount) ? "border-b border-[#2c2d33]" : "";
 
-                                // 전체 큰 박스 안에서 줄 단위로 구분되는 일체형 행 구조
                                 bodyHtml += `
                                     <div class="match-row flex items-center py-2.5 px-3 ${borderClass} ${rowHighlightClass}">
                                         <div class="text-gray-400 font-bold text-sm w-4 text-center shrink-0">${i}</div>
