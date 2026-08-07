@@ -101,7 +101,7 @@
         let team2Roster = [];
         let selectedMapPool = [];
         let matchSetsObj = {
-            1: { id: 1, name: "1세트 (매치)", matchesCount: 7, matches: {}, nameCustom: false }
+            1: { id: 1, name: "1세트 (프로리그)", matchesCount: 7, matches: {}, nameCustom: false }
         };
         let activeSetId = 1;
         let currentMatchMode = "team";
@@ -304,6 +304,14 @@
                     el.addEventListener('change', updateScoreboardPreviewFromConsole);
                 }
             });
+
+            // 출전 경기 선택 드롭다운 변경 시 수동 스코어보드 입력창에 자동 동기화
+            let vsMatchSelectEl = document.getElementById('vs-match-select');
+            if (vsMatchSelectEl) {
+                vsMatchSelectEl.addEventListener('change', function() {
+                    autoSyncSelectedMatchToManualScore(this.value);
+                });
+            }
 
             document.getElementById('btn-save-vs').addEventListener('click', () => saveVsMatchState(false));
             document.getElementById('btn-save-league-title').addEventListener('click', saveLeagueTitle);
@@ -620,8 +628,8 @@
 
                     let manual = data.manualScore || {
                         showTitle: true, showTeam: true, showPlayer: true, showBottom: true,
-                        title: "[1세트]", t1Name: "1팀", t1Score: "", t2Score: "", t2Name: "2팀",
-                        p1Name: "선수1", p1Score: "", p2Score: "", p2Name: "선수2", pos1: "", pos2: ""
+                        title: "", t1Name: "", t1Score: "", t2Score: "", t2Name: "",
+                        p1Name: "", p1Score: "", p2Score: "", p2Name: "", pos1: "", pos2: ""
                     };
                     document.getElementById('cb-show-title').checked = manual.showTitle;
                     document.getElementById('cb-show-team').checked = manual.showTeam;
@@ -1315,6 +1323,33 @@
             }
         }
 
+        // 💡 핵심 추가: 선택한 경기의 정보를 수동 스코어보드 입력창에 자동으로 채워주는 함수
+        function autoSyncSelectedMatchToManualScore(val) {
+            if (!val) return;
+            let parts = val.split('-');
+            let setId = parts[0];
+            let matchIdx = parts[1];
+            let setObj = matchSetsObj[setId];
+            let m = setObj?.matches[matchIdx];
+            if (!m) return;
+
+            let t1Players = (m.t1Players || []).filter(x => x !== "-" && x !== "미정");
+            let t2Players = (m.t2Players || []).filter(x => x !== "-" && x !== "미정");
+            let p1Text = t1Players.join(', ') || "";
+            let p2Text = t2Players.join(', ') || "";
+
+            // 수동 스코어보드 입력 폼에 자동 입력
+            document.getElementById('man-title').value = "[" + setObj.name + " " + matchIdx + "경기]";
+            document.getElementById('man-t1-name').value = team1Name;
+            document.getElementById('man-t2-name').value = team2Name;
+            document.getElementById('man-p1-name').value = p1Text;
+            document.getElementById('man-p2-name').value = p2Text;
+
+            // 콘솔 미리보기 반영 및 자동 저장 실행
+            updateScoreboardPreviewFromConsole();
+            saveManualScoreboard();
+        }
+
         function updateVsPreview(t1Name, t2Name, mapName, p1FullText, p2FullText) {
             let p1Obj = allPlayers.find(p => p.name === t1Name) || { name: t1Name || "선수1", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P1" };
             let p2Obj = allPlayers.find(p => p.name === t2Name) || { name: t2Name || "선수2", race: "미정", img: "https://placehold.co/100x100/1b1c20/FFF?text=P2" };
@@ -1414,10 +1449,16 @@
                         let t1ImgName = t1Players.find(x => x !== "-" && x !== "미정") || "선수1";
                         let t2ImgName = t2Players.find(x => x !== "-" && x !== "미정") || "선수2";
                         updateVsPreview(t1ImgName, t2ImgName, m.mapName, p1Text, p2Text);
+
+                        // 💡 [대진 반영] 시 현재 지정된 경기의 선수 이름과 공지도 수동 스코어보드에 자동 동기화
+                        document.getElementById('man-title').value = "[" + s.name + " " + activeMatchIdx + "경기]";
+                        document.getElementById('man-p1-name').value = p1Text;
+                        document.getElementById('man-p2-name').value = p2Text;
+                        saveManualScoreboard();
                     }
                 }
 
-                alert(s.name + " 대진 반영 및 자동 스코어 계산이 완료되었습니다! (VS 화면은 '송출하기' 버튼을 누를 때만 나옵니다)");
+                alert(s.name + " 대진 반영 및 스코어/선수 자동 동기화가 완료되었습니다!");
             });
         };
 
@@ -1500,8 +1541,13 @@
             };
 
             set(ref(db, "rooms/" + currentRoomId + "/manualScore"), manualData).then(() => {
-                alert("스코어보드 오버레이가 수동 입력값으로 즉시 업데이트 되었습니다!");
+                // 수동 반영 버튼을 직접 눌렀을 때만 알림 표시 (자동 동기화 시에는 알림 생략)
             });
+        };
+
+        window.triggerManualScoreSaveButton = function() {
+            saveManualScoreboard();
+            alert("스코어보드 오버레이가 수동 입력값으로 즉시 업데이트 되었습니다!");
         };
 
         function saveLeagueTitle() {
@@ -1509,14 +1555,14 @@
             leagueTitleText = document.getElementById('input-league-title').value.trim() || "스타크래프트 프로리그";
             set(ref(db, "rooms/" + currentRoomId + "/matchState/leagueTitle"), leagueTitleText).then(() => {
                 applyLeagueTitleToSetNames();
-                alert("대회 이름이 적용되었습니다! (직접 이름을 수정(✏️)하지 않은 세트에는 새 대회명이 자동 반영됩니다)");
+                alert("대회 이름이 적용되었습니다!");
             });
         }
 
-function saveTeamNames() {
-    if (!currentRoomId) return;
-    team1Name = document.getElementById('input-team1-name').value.trim();
-    team2Name = document.getElementById('input-team2-name').value.trim();
+        function saveTeamNames() {
+            if (!currentRoomId) return;
+            team1Name = document.getElementById('input-team1-name').value.trim();
+            team2Name = document.getElementById('input-team2-name').value.trim();
             team1Color = document.getElementById('input-team1-color').value || "#1d3557";
             team2Color = document.getElementById('input-team2-color').value || "#6a1b1b";
 
@@ -1660,7 +1706,7 @@ function saveTeamNames() {
                             <input type="text" id="input-league-title" value="스타크래프트 프로리그" class="w-full bg-[#141518] border border-[#2c2d33] rounded p-2 text-xs text-white" placeholder="예: 프로리그">
                             <button id="btn-save-league-title" class="bg-[#00FFA3] text-black font-bold px-4 py-2 rounded text-xs whitespace-nowrap cursor-pointer">기본 대회명 저장</button>
                         </div>
-                        <p class="text-[10px] text-gray-400">저장하면 [⚔️ 2. 중계 대시보드]의 각 세트 이름(예: "1세트 (프로리그)")에 자동 반영됩니다. 특정 세트만 다른 이름으로 쓰고 싶다면 해당 세트 탭의 ✏️ 버튼으로 직접 수정할 수 있습니다.</p>
+                        <p class="text-[10px] text-gray-400">저장하면 [⚔️ 2. 중계 대시보드]의 각 세트 이름(예: "1세트 (프로리그)")에 자동 반영됩니다.</p>
                     </div>
 
                     <div id="team-setting-wrapper" class="mb-6 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33]">
@@ -1833,7 +1879,7 @@ function saveTeamNames() {
                                 </div>
                             </div>
 
-                            <button id="btn-save-manual-score" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-3 mt-1 rounded-lg text-xs cursor-pointer shadow-lg transition-all border border-[#00e692]">
+                            <button onclick="triggerManualScoreSaveButton()" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-3 mt-1 rounded-lg text-xs cursor-pointer shadow-lg transition-all border border-[#00e692]">
                                 🎯 스코어보드 오버레이 실시간 수동 반영
                             </button>
                         </div>
@@ -1847,36 +1893,36 @@ function saveTeamNames() {
                                     <!-- 상단 공지 프레임 -->
                                     <div id="prev-row-title" class="preview-frame-top relative flex items-center justify-center shrink-0 overflow-hidden">
                                         <div class="absolute inset-0 z-20 preview-frame-top pointer-events-none"></div>
-                                        <span id="prev-text-title" class="text-[#00FFA3] font-black tracking-wider text-[11px] drop-shadow-md z-30">[1세트]</span>
+                                        <span id="prev-text-title" class="text-[#00FFA3] font-black tracking-wider text-[11px] drop-shadow-md z-30"></span>
                                     </div>
                                     
                                     <!-- 팀 로우 프레임 -->
                                     <div id="prev-row-team" class="preview-frame-middle grid grid-cols-[1fr_32px_32px_1fr] font-black text-center items-center shrink-0 overflow-hidden relative">
                                         <div id="prev-bg-team1" class="absolute inset-y-0 left-0 w-[50%] z-0" style="background-color: #1d3557;"></div>
                                         <div class="absolute inset-0 z-20 preview-frame-middle pointer-events-none"></div>
-                                        <div id="prev-text-team1" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md">1팀</div>
-                                        <div class="relative z-30 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team1">0</span></div>
-                                        <div class="relative z-30 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team2">0</span></div>
+                                        <div id="prev-text-team1" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md"></div>
+                                        <div class="relative z-30 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team1"></span></div>
+                                        <div class="relative z-30 flex items-center justify-center text-white text-[13px] font-black drop-shadow-md"><span id="prev-score-team2"></span></div>
                                         <div id="prev-bg-team2" class="absolute inset-y-0 right-0 w-[50%] z-0" style="background-color: #6a1b1b;"></div>
-                                        <div id="prev-text-team2" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md">2팀</div>
+                                        <div id="prev-text-team2" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate text-white text-[12px] drop-shadow-md"></div>
                                     </div>
 
                                     <!-- 선수 로우 프레임 -->
                                     <div id="prev-row-player" class="preview-frame-middle grid grid-cols-[1fr_32px_32px_1fr] font-black text-center items-center shrink-0 overflow-hidden relative">
                                         <div id="prev-bg-player1" class="absolute inset-y-0 left-0 w-[50%] z-0" style="background-color: #0C48CC;"></div>
                                         <div class="absolute inset-0 z-20 preview-frame-middle pointer-events-none"></div>
-                                        <div id="prev-text-player1" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[14px]" style="color: #ffffff;">선수1</div>
-                                        <div id="prev-score-p1" class="relative z-30 flex items-center justify-center font-black drop-shadow-md text-[14px]" style="background-color: #0C48CC; color: #ffffff;"><span id="prev-score-player1">0</span></div>
-                                        <div id="prev-score-p2" class="relative z-30 flex items-center justify-center font-black drop-shadow-md text-[14px]" style="background-color: #F40404; color: #ffffff;"><span id="prev-score-player2">0</span></div>
+                                        <div id="prev-text-player1" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[14px]" style="color: #ffffff;"></div>
+                                        <div id="prev-score-p1" class="relative z-30 flex items-center justify-center font-black drop-shadow-md text-[14px]" style="background-color: #0C48CC; color: #ffffff;"><span id="prev-score-player1"></span></div>
+                                        <div id="prev-score-p2" class="relative z-30 flex items-center justify-center font-black drop-shadow-md text-[14px]" style="background-color: #F40404; color: #ffffff;"><span id="prev-score-player2"></span></div>
                                         <div id="prev-bg-player2" class="absolute inset-y-0 right-0 w-[50%] z-0" style="background-color: #F40404;"></div>
-                                        <div id="prev-text-player2" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[14px]" style="color: #ffffff;">선수2</div>
+                                        <div id="prev-text-player2" class="relative z-30 col-span-1 flex items-center justify-center px-2 truncate font-bold text-[14px]" style="color: #ffffff;"></div>
                                     </div>
                                     
                                     <!-- 하단 위치 프레임 -->
                                     <div id="prev-row-bottom" class="preview-frame-bottom shrink-0 relative flex justify-between items-start px-3 pt-1 overflow-hidden bg-transparent">
                                         <div class="absolute inset-0 z-20 preview-frame-bottom pointer-events-none"></div>
-                                        <div id="prev-text-pos1" class="text-[14px] font-black tracking-wider z-30" style="text-shadow: 1px 1px 2px black; color: #0C48CC; margin-top: -2px;">P5</div>
-                                        <div id="prev-text-pos2" class="text-[14px] font-black tracking-wider z-30" style="text-shadow: 1px 1px 2px black; color: #F40404; margin-top: -2px;">Z3</div>
+                                        <div id="prev-text-pos1" class="text-[14px] font-black tracking-wider z-30" style="text-shadow: 1px 1px 2px black; color: #0C48CC; margin-top: -2px;"></div>
+                                        <div id="prev-text-pos2" class="text-[14px] font-black tracking-wider z-30" style="text-shadow: 1px 1px 2px black; color: #F40404; margin-top: -2px;"></div>
                                     </div>
                                 </div>
 
@@ -1898,26 +1944,26 @@ function saveTeamNames() {
                         <div class="mb-4 bg-[#0b0c0e] p-4 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-4">
                             <div class="flex items-center gap-3 flex-1 justify-end">
                                 <div class="text-right">
-                                    <div id="prev-p1-name" class="text-sm font-black text-white">선수1</div>
-                                    <div id="prev-p1-race" class="text-xs font-bold text-gray-400">종족</div>
+                                    <div id="prev-p1-name" class="text-sm font-black text-white"></div>
+                                    <div id="prev-p1-race" class="text-xs font-bold text-gray-400"></div>
                                 </div>
                                 <img id="prev-p1-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P1" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33]">
                             </div>
                             <div class="flex flex-col items-center px-2">
                                 <img id="prev-map-img" src="https://placehold.co/100x100/1b1c20/FFF?text=Map" class="w-10 h-10 object-cover rounded border border-[#2c2d33] mb-1">
-                                <span id="prev-map-name" class="text-[10px] text-gray-300 font-bold">맵 이름</span>
+                                <span id="prev-map-name" class="text-[10px] text-gray-300 font-bold"></span>
                             </div>
                             <div class="flex items-center gap-3 flex-1 justify-start">
                                 <img id="prev-p2-img" src="https://placehold.co/100x100/1b1c20/FFF?text=P2" class="w-12 h-12 object-cover rounded-lg border border-[#2c2d33]">
                                 <div class="text-left">
-                                    <div id="prev-p2-name" class="text-sm font-black text-white">선수2</div>
-                                    <div id="prev-p2-race" class="text-xs font-bold text-gray-400">종족</div>
+                                    <div id="prev-p2-name" class="text-sm font-black text-white"></div>
+                                    <div id="prev-p2-race" class="text-xs font-bold text-gray-400"></div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="block text-[10px] text-gray-400 mb-1">출전 경기 선택 (목록에서 고르면 위 미리보기에 즉시 반영됩니다)</label>
+                            <label class="block text-[10px] text-gray-400 mb-1">출전 경기 선택 (목록에서 고르면 위 미리보기에 즉시 반영되며 스코어보드 입력창에도 자동 연동됩니다)</label>
                             <select id="vs-match-select" class="w-full bg-[#0b0c0e] border border-[#2c2d33] rounded p-2 text-xs text-[#00FFA3] font-bold"></select>
                         </div>
                         <button id="btn-save-vs" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black py-2.5 rounded text-xs font-extrabold cursor-pointer">선택한 경기 VS 매치업 화면 송출하기</button>
@@ -1994,9 +2040,8 @@ function saveTeamNames() {
                             <div class="bg-[#0b0c0e] p-3 rounded-lg border border-[#2c2d33]">
                                 <h4 class="font-bold text-white mb-1">2단계: 시트 내용 채우기 (선수 및 맵 데이터)</h4>
                                 <ul class="list-disc list-inside text-gray-400 space-y-1">
-                                    <li><b>Players 시트</b>: `선수명`, `종족(프로토스/테란/저그)`, `이미지 URL` 항목을 입력합니다. <b class="text-yellow-400">선수명은 오버레이에 4글자까지 최적으로 표시되니 가급적 4글자 이내로 등록해 주세요.</b> (콘솔의 선수 카드에서 4글자를 초과하면 ⚠️ 표시가 뜹니다)</li>
+                                    <li><b>Players 시트</b>: `선수명`, `종족(프로토스/테란/저그)`, `이미지 URL` 항목을 입력합니다. <b class="text-yellow-400">선수명은 오버레이에 4글자까지 최적으로 표시되니 가급적 4글자 이내로 등록해 주세요.</b></li>
                                     <li><b>Maps 시트</b>: `맵 이름`, `맵 이미지 URL` 항목을 입력합니다.</li>
-                                    <li><b class="text-yellow-400">🖼️ 이미지 URL 입력 방법</b>: 이미지 파일을 웹에 업로드하여 생성된 공개 이미지 URL(GitHub Raw, Discord 이미지 링크, Imgur 등)을 시트에 입력합니다.</li>
                                 </ul>
                             </div>
 
@@ -2031,7 +2076,7 @@ function saveTeamNames() {
                             <h3 class="text-sm font-bold text-white">⚔️ 2. 중계 대시보드 탭</h3>
                             <ul class="list-disc list-inside text-gray-400 space-y-1 pl-1">
                                 <li><b>세트 대진 작성</b>: 세트별 매치(1v1, 2v2 등) 형태, 선수, 맵을 매칭하고 [대진 반영]을 누릅니다.</li>
-                                <li><b>수동 스코어 제어</b>: 세트명, 점수, 선수 이름, 미니맵 위치(P12, P5 등)를 조절하고 우측 실시간 미리보기로 확인합니다.</li>
+                                <li><b>자동 스코어 & 선수 연동</b>: [대진 반영]을 하거나 VS 매치업에서 경기를 고르면 스코어보드 입력창에 선수와 공지가 자동으로 채워집니다.</li>
                                 <li><b>VS 매치업 송출</b>: 선수 소개 화면에 표시할 경기를 고르고 송출합니다.</li>
                             </ul>
                         </div>
