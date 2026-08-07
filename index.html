@@ -1,6 +1,4 @@
-# Define the corrected index.html content based on the user's provided source code and the applied fix.
-
-index_html_content = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -1487,7 +1485,6 @@ index_html_content = r'''<!DOCTYPE html>
             });
             let mapObj = allMaps.find(map => map.name === m.mapName) || { name: m.mapName, url: "" };
 
-            // [수정된 부분]
             let setNameStr = setObj ? setObj.name : "";
             let matchIndexStr = matchIdx; 
 
@@ -2093,8 +2090,3 @@ index_html_content = r'''<!DOCTYPE html>
     </div>
 </body>
 </html>
-'''
-
-# Write to file
-with open('index.html', 'w', encoding='utf-8') as f:
-    f.write(index_html_content)
