@@ -131,13 +131,18 @@
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
 
                                 bodyHtml += `
-                                    <div class="set-row flex items-center justify-between px-1.5 py-1.5 border-b border-[#232428] text-sm font-bold ${rowHighlightClass}">
-                                        <div class="w-4 text-center text-gray-500 font-black text-xs">${i}</div>
-                                        <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
-                                        <div class="w-16 text-center text-white font-black truncate text-base px-0.5" title="${mapNameFull}">${mapName}</div>
-                                        <div class="flex-1 text-center flex flex-col leading-tight">${t2Html}</div>
-                                    </div>
-                                `;
+                                    <div class="set-row flex items-center justify-center px-1.5 py-1.5 border-b border-[#232428] text-sm font-bold relative ${rowHighlightClass}">
+        <!-- 숫자를 왼쪽 여백으로 독립 (절대 위치 활용) -->
+        <div class="absolute left-1 text-gray-600 font-black text-[10px]">${i}</div>
+        
+        <!-- 중앙 정렬을 위한 컨테이너 -->
+        <div class="flex items-center justify-center w-full max-w-[260px]">
+            <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
+            <div class="w-16 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
+            <div class="flex-1 text-center flex flex-col leading-tight">${t2Html}</div>
+        </div>
+    </div>
+`;
                             }
                             bodyHtml += `</div>`;
 
