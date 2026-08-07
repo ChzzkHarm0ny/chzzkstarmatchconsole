@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>CHZZK Multi-Set ProLeague Overlay</title>
+    <title>CHZZK ProLeague Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow-y: auto; }
@@ -11,10 +11,12 @@
         .race-Z { color: #FF4545; }
         .player-loser { color: #4b5563 !important; opacity: 0.5; }
         #list-wrapper { transition: opacity 0.3s ease; }
+        
+        /* 활성 경기 스타일: 검은 배경 유지 + 선명한 네온 테두리 */
         .overlay-active-match {
-            border: 1px solid #00FFA3 !important;
-            background-color: rgba(0, 255, 163, 0.12) !important;
-            box-shadow: 0 0 12px rgba(0, 255, 163, 0.45);
+            border: 2px solid #00FFA3 !important;
+            background-color: #141518 !important; 
+            box-shadow: 0 0 15px rgba(0, 255, 163, 0.3);
         }
         .set-card { font-variant-numeric: tabular-nums; }
     </style>
@@ -40,7 +42,6 @@
         window.onload = async function() {
             const urlParams = new URLSearchParams(window.location.search);
             const roomId = urlParams.get('room');
-
             if (!roomId) return;
 
             const roomRef = ref(db, "rooms/" + roomId);
@@ -49,20 +50,15 @@
                 let listEl = document.getElementById('list-wrapper');
                 if (data.matchState && data.matchState.listVisible === false) {
                     listEl.style.opacity = '0';
-                    listEl.style.pointerEvents = 'none';
                     return;
-                } else {
-                    listEl.style.opacity = '1';
-                    listEl.style.pointerEvents = 'auto';
                 }
+                listEl.style.opacity = '1';
 
-                if (data.settings && data.settings.gasUrl) {
+                if (data.settings?.gasUrl) {
                     try {
                         let res = await fetch(data.settings.gasUrl + "?action=getData");
                         let sheetData = await res.json();
-                        if (sheetData.players) {
-                            sheetData.players.forEach(p => { playerRaceMap[p.name] = p.race; });
-                        }
+                        if (sheetData.players) sheetData.players.forEach(p => playerRaceMap[p.name] = p.race);
                     } catch (e) {}
                 }
 
@@ -74,8 +70,7 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            // 큰 배경 박스를 제거하고, 내부 요소들이 세로로 나열되도록 변경 (좌측 여백 ml-8은 번호 탭 공간 확보용)
-                            card.className = "set-card flex flex-col w-[280px] shrink-0 overflow-visible ml-8 gap-2";
+                            card.className = "set-card flex flex-col w-[280px] shrink-0 ml-8 gap-2";
 
                             let t1Wins = 0, t2Wins = 0;
                             if (setObj.matches) {
@@ -85,19 +80,15 @@
                                 });
                             }
 
-                            // 상단 세트명과 스코어를 각각 독립된 테두리 박스 형태로 분리
+                            // 1. 상단 박스 결합 (헤더 + 스코어 통합)
                             let headerHtml = `
-                                <div class="bg-[#141518]/95 border border-[#2c2d33] rounded-lg py-1.5 text-center shadow-lg backdrop-blur-md">
-                                    <div class="text-xs tracking-widest text-gray-300 font-bold">${setObj.name}</div>
-                                </div>
-                                <div class="bg-[#141518]/95 border border-[#2c2d33] rounded-lg py-1 flex items-center justify-center gap-2 shadow-lg backdrop-blur-md">
-                                    <span class="text-xl font-black text-white">${t1Wins}</span>
-                                    <span class="text-base font-black text-gray-500">:</span>
-                                    <span class="text-xl font-black text-white">${t2Wins}</span>
+                                <div class="bg-[#141518] border-2 border-[#2c2d33] rounded-xl p-2 shadow-lg">
+                                    <div class="text-xs text-center text-gray-300 font-bold mb-1">${setObj.name}</div>
+                                    <div class="text-center font-black text-2xl text-white tracking-widest">${t1Wins} : ${t2Wins}</div>
                                 </div>
                             `;
 
-                            let bodyHtml = `<div class="flex flex-col gap-2.5">`;
+                            let bodyHtml = `<div class="flex flex-col gap-2">`;
                             let activeMatchIdx = setObj.activeMatchIdx || 1;
 
                             for (let i = 1; i <= setObj.matchesCount; i++) {
@@ -108,34 +99,24 @@
                                 let mapName = mapNameFull.slice(0, 2);
                                 let winner = match.winner || "";
 
-                                let t1Html = t1Players.map(p => {
-                                    if(p === "-") return `<div class="truncate text-transparent select-none">-</div>`;
-                                    let dispName = p.length > 4 ? p.slice(0, 4) : p;
-                                    return `<div class="truncate text-base font-black ${getRaceClass(p)} ${winner === 't2' ? 'player-loser' : ''}">${dispName}</div>`;
-                                }).join('');
-
-                                let t2Html = t2Players.map(p => {
-                                    if(p === "-") return `<div class="truncate text-transparent select-none">-</div>`;
-                                    let dispName = p.length > 4 ? p.slice(0, 4) : p;
-                                    return `<div class="truncate text-base font-black ${getRaceClass(p)} ${winner === 't1' ? 'player-loser' : ''}">${dispName}</div>`;
-                                }).join('');
+                                let t1Html = t1Players.map(p => p === "-" ? "" : `<div class="truncate text-base font-black ${getRaceClass(p)} ${winner === 't2' ? 'player-loser' : ''}">${p.length > 4 ? p.slice(0,4) : p}</div>`).join('');
+                                let t2Html = t2Players.map(p => p === "-" ? "" : `<div class="truncate text-base font-black ${getRaceClass(p)} ${winner === 't1' ? 'player-loser' : ''}">${p.length > 4 ? p.slice(0,4) : p}</div>`).join('');
 
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
-                                let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
+                                let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "border-2 border-[#2c2d33]";
 
                                 bodyHtml += `
-                                    <div class="flex items-center relative ${rowHighlightClass} rounded-lg border border-[#2c2d33] bg-[#141518]/95 shadow-lg backdrop-blur-md">
-                                        <div class="absolute -left-9 inset-y-0 bg-[#1b1c20] border-2 border-[#3c3d44] text-white font-black text-base w-7 h-full rounded-md flex items-center justify-center shadow-lg z-20">${i}</div>
+                                    <div class="flex items-center relative rounded-lg bg-[#141518] ${rowHighlightClass}">
+                                        <div class="absolute -left-9 inset-y-0 bg-[#1b1c20] border-2 border-[#3c3d44] text-white font-black text-base w-7 h-full rounded-md flex items-center justify-center z-20">${i}</div>
                                         <div class="flex items-center justify-center w-full py-2 px-3">
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
-                                            <div class="w-16 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
+                                            <div class="w-16 text-center text-white font-black truncate text-base px-1">${mapName}</div>
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t2Html}</div>
                                         </div>
                                     </div>
                                 `;
                             }
                             bodyHtml += `</div>`;
-
                             card.innerHTML = headerHtml + bodyHtml;
                             wrapper.appendChild(card);
                         });
