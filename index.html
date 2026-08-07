@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+# Define the corrected index.html content based on the user's provided source code and the applied fix.
+
+index_html_content = r'''<!DOCTYPE html>
 <html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -1485,13 +1487,16 @@
             });
             let mapObj = allMaps.find(map => map.name === m.mapName) || { name: m.mapName, url: "" };
 
-            let matchTitleStr = (setObj ? setObj.name : "") + " " + matchIdx + "경기";
+            // [수정된 부분]
+            let setNameStr = setObj ? setObj.name : "";
+            let matchIndexStr = matchIdx; 
 
             let vsData = {
                 t1: t1DataArr,
                 t2: t2DataArr,
                 map: { name: mapObj.name, url: mapObj.url || "" },
-                matchTitle: matchTitleStr,
+                matchTitle: setNameStr,    
+                matchIndex: matchIndexStr, 
                 timestamp: Date.now()
             };
 
@@ -1504,7 +1509,7 @@
 
             updateVsPreview(t1ImgName, t2ImgName, m.mapName, p1Text, p2Text);
             
-            document.getElementById('man-title').value = "[" + matchTitleStr + "]";
+            document.getElementById('man-title').value = "[" + setNameStr + " " + matchIdx + "경기]";
             document.getElementById('man-p1-name').value = p1Text;
             document.getElementById('man-p2-name').value = p2Text;
             saveManualScoreboard();
@@ -2088,3 +2093,8 @@
     </div>
 </body>
 </html>
+'''
+
+# Write to file
+with open('index.html', 'w', encoding='utf-8') as f:
+    f.write(index_html_content)
