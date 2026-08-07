@@ -17,8 +17,6 @@
             box-shadow: 0 0 12px rgba(0, 255, 163, 0.45);
         }
         .set-card { font-variant-numeric: tabular-nums; }
-        .set-row:nth-child(even) { background-color: rgba(255,255,255,0.03); }
-        .set-row:nth-child(odd) { background-color: transparent; }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -75,9 +73,8 @@
                         wrapper.innerHTML = '';
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
-                            // 세트 카드는 상단에 배치 (기본 세로 플렉스)
                             let card = document.createElement('div');
-                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-hidden";
+                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-visible p-2";
 
                             let t1Wins = 0, t2Wins = 0;
                             if (setObj.matches) {
@@ -89,17 +86,17 @@
 
                             // 상단 세트명 및 스코어 헤더
                             let headerHtml = `
-                                <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-1.5 text-center">
+                                <div class="bg-[#1b1c20] border-b border-[#2c2d33] py-1.5 text-center rounded-t-lg mb-2">
                                     <div class="text-xs tracking-widest text-gray-300 font-bold">${setObj.name}</div>
                                 </div>
-                                <div class="border-b border-[#2c2d33] py-2 flex items-center justify-center gap-2">
+                                <div class="border-b border-[#2c2d33] pb-2 mb-2 flex items-center justify-center gap-2">
                                     <span class="text-2xl font-black text-white">${t1Wins}</span>
                                     <span class="text-lg font-black text-gray-500">:</span>
                                     <span class="text-2xl font-black text-white">${t2Wins}</span>
                                 </div>
                             `;
 
-                            let bodyHtml = `<div class="flex flex-col gap-1.5 p-2">`;
+                            let bodyHtml = `<div class="flex flex-col gap-2.5 pl-4 pr-1">`;
                             let activeMatchIdx = setObj.activeMatchIdx || 1;
 
                             for (let i = 1; i <= setObj.matchesCount; i++) {
@@ -125,13 +122,13 @@
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
 
-                                // 각 경기(Row)마다 왼쪽에 작은 번호 탭이 살짝 튀어나오고 내용물은 중앙 정렬되는 디자인
+                                // 경기 번호 탭 크기를 선수 이름과 동일하게(text-base, font-black, w-7 h-7) 키움
                                 bodyHtml += `
-                                    <div class="set-row flex items-center justify-center py-2 px-1 border border-[#2c2d33] rounded-lg text-sm font-bold relative ${rowHighlightClass}">
-                                        <div class="absolute -left-2 bg-[#1b1c20] border border-[#2c2d33] text-gray-300 font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow">${i}</div>
-                                        <div class="flex items-center justify-center w-full max-w-[230px]">
+                                    <div class="flex items-center relative ${rowHighlightClass} rounded-lg border border-[#2c2d33] bg-[#141518]">
+                                        <div class="absolute -left-4 bg-[#1b1c20] border border-[#2c2d33] text-[#00FFA3] font-black text-base w-7 h-7 rounded-md flex items-center justify-center shadow-lg z-20">${i}</div>
+                                        <div class="flex items-center justify-center w-full py-2 px-3">
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
-                                            <div class="w-14 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
+                                            <div class="w-16 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t2Html}</div>
                                         </div>
                                     </div>
@@ -158,7 +155,7 @@
 </head>
 <body class="flex items-start justify-start p-4 font-sans">
     <div id="list-wrapper">
-        <div id="sets-wrapper" class="flex items-start gap-4 overflow-x-auto"></div>
+        <div id="sets-wrapper" class="flex items-start gap-6 overflow-x-auto"></div>
     </div>
 </body>
 </html>
