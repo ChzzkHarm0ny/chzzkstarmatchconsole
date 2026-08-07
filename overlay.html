@@ -20,6 +20,11 @@
         }
         .set-card { font-variant-numeric: tabular-nums; }
         .match-row:nth-child(even) { background-color: rgba(255, 255, 255, 0.03); }
+        
+        /* 스코어 영역 회색 그라디에이션 스타일 */
+        .score-gradient-bg {
+            background: linear-gradient(to bottom, #4a4b52, #26272b);
+        }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -87,15 +92,15 @@
                                 });
                             }
 
-                            // 스코어 영역 배경을 흰색(bg-white), 글씨를 검은색(text-black)으로 반전 적용
+                            // 스코어 영역에 회색 그라디에이션 적용
                             let headerHtml = `
                                 <div class="bg-[#1b1c20] border-b-2 border-[#525252] py-1.5 text-center">
                                     <div class="text-xs tracking-widest text-gray-200 font-bold">${setObj.name}</div>
                                 </div>
-                                <div class="bg-white border-b-2 border-[#525252] py-2 flex items-center justify-center gap-2">
-                                    <span class="text-2xl font-black text-black">${t1Wins}</span>
-                                    <span class="text-lg font-black text-gray-400">:</span>
-                                    <span class="text-2xl font-black text-black">${t2Wins}</span>
+                                <div class="score-gradient-bg border-b-2 border-[#525252] py-2 flex items-center justify-center gap-2">
+                                    <span class="text-2xl font-black text-white">${t1Wins}</span>
+                                    <span class="text-lg font-black text-gray-300">:</span>
+                                    <span class="text-2xl font-black text-white">${t2Wins}</span>
                                 </div>
                             `;
 
