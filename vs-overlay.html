@@ -13,7 +13,7 @@
         #vs-wrapper { opacity: 0; transition: opacity 0.8s ease-in-out; }
         #vs-wrapper.active { opacity: 1; }
         
-        /* 맵 이미지 핵심: 높이 고정, 가로 비율 유동 */
+        /* 맵 이미지 고정 높이, 유동 가로 비율 */
         .map-img-fixed {
             height: 70px !important;
             width: auto !important;
@@ -107,7 +107,7 @@
                 : `<span class="px-3 py-1.5 rounded-lg text-xs font-black text-white shadow-md w-full text-center border border-white/10 tracking-wide" style="background-color:${teamColor}">${teamName}</span>`;
 
             let html = `
-            <div class="flex flex-col w-[385px] gap-3 items-center bg-[#0e0f13]/95 border border-[#32343d] rounded-2xl p-4 shadow-2xl backdrop-blur-md">
+            <div class="flex flex-col w-[355px] gap-3 items-center bg-[#0e0f13]/95 border border-[#32343d] rounded-2xl p-4 shadow-2xl backdrop-blur-md">
                 ${teamLabelHtml}`;
 
             if (playersArr.length === 2) {
@@ -189,18 +189,19 @@
 </head>
 <body class="flex items-center justify-center h-screen p-6">
     <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease; opacity: 0;">
-        <div id="vs-wrapper" class="flex items-center justify-center gap-6 bg-[#121317]/95 border-2 border-[#32343d] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[980px]">
+        <!-- 전체 오버레이 박스 폭을 980px에서 1040px로 넓혀 중앙 여유 공간 확보 -->
+        <div id="vs-wrapper" class="flex items-center justify-center gap-5 bg-[#121317]/95 border-2 border-[#32343d] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[1040px]">
             
             <div id="t1-container"></div>
             
-            <!-- 중앙 영역 -->
-            <div class="flex flex-col items-center justify-center gap-3 shrink-0 w-[180px]">
-                <!-- 경기 정보 뱃지 (텍스트 잘림 방지 및 자동 줄바꿈 적용) -->
-                <span id="match-label" class="w-full px-2 py-1.5 bg-[#17181c] border border-[#32343d] rounded-lg text-[10px] font-black text-gray-200 text-center tracking-tight leading-tight break-keep" style="display: none;"></span>
+            <!-- 중앙 영역: 너비를 250px로 대폭 확장하여 긴 세트 이름도 줄바꿈 없이 한 줄로 깔끔하게 수용 -->
+            <div class="flex flex-col items-center justify-center gap-3 shrink-0 w-[250px]">
+                <!-- 경기 정보 뱃지: 줄바꿈 없이(whitespace-nowrap) 한 줄로 길게 표출 -->
+                <span id="match-label" class="w-full px-3 py-1.5 bg-[#17181c] border border-[#32343d] rounded-lg text-xs font-black text-gray-200 text-center tracking-tight whitespace-nowrap overflow-hidden text-ellipsis shadow-inner" style="display: none;"></span>
                 
                 <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest drop-shadow-[0_0_12px_rgba(0,255,163,0.6)] my-0.5">VS</span>
                 
-                <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-2.5 rounded-xl shadow-lg w-full">
+                <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-3 rounded-xl shadow-lg w-full">
                     <div class="flex items-center justify-center h-[70px] mb-2 overflow-hidden w-full">
                         <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed rounded-lg border border-[#2c2d36] shadow bg-black/50">
                     </div>
