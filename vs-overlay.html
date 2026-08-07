@@ -9,16 +9,21 @@
         .race-P { background-color: #FFE000; color: #000; }
         .race-T { background-color: #00AFFF; color: #000; }
         .race-Z { background-color: #FF4545; color: #fff; }
+        
         #vs-wrapper { opacity: 0; transition: opacity 0.8s ease-in-out; }
         #vs-wrapper.active { opacity: 1; }
         
-        /* 맵 이미지가 찌그러지지 않고 원본 비율과 깔끔함을 유지하도록 설정 */
+        /* 맵 이미지 핵심: 높이 고정, 가로 비율 유동 */
         .map-img-fixed {
-            width: 100%;
-            height: 85px;
-            object-fit: cover;
+            height: 70px !important;
+            width: auto !important;
+            max-width: 100% !important;
+            object-fit: contain;
             display: block;
+            margin: 0 auto;
         }
+        
+        .text-shadow-custom { text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -54,9 +59,11 @@
                 let wrapperEl = document.getElementById('vs-wrapper-outer');
                 if (ms.vsVisible === false) {
                     wrapperEl.style.opacity = '0';
+                    wrapperEl.style.pointerEvents = 'none';
                     return;
                 } else {
                     wrapperEl.style.opacity = '1';
+                    wrapperEl.style.pointerEvents = 'auto';
                 }
 
                 let vs = ms.vsMatch;
@@ -127,7 +134,7 @@
                 <div class="relative w-full h-[140px] bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3 gap-4 shadow-inner">
                     <img src="${leadPlayer.img}" class="w-24 h-full object-cover rounded-lg border border-[#2c2d36] shrink-0 bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="text-lg font-black text-white truncate w-full tracking-tight" style="text-shadow: 1px 1px 3px black;">${leadPlayer.name}</span>
+                        <span class="text-lg font-black text-white truncate w-full tracking-tight text-shadow-custom">${leadPlayer.name}</span>
                         <span class="px-2.5 py-0.5 mt-1 rounded text-xs font-black text-black shadow-sm ${leadRaceClass}">${leadPlayer.race}</span>
                     </div>
                 </div>`;
@@ -153,7 +160,7 @@
                 <div class="relative w-full h-[180px] bg-[#17181c] border border-[#2c2d36] rounded-xl overflow-hidden flex ${isRightSide ? 'flex-row-reverse' : 'flex-row'} items-center p-3.5 gap-4 shadow-inner">
                     <img src="${p.img}" class="w-28 h-full object-cover rounded-lg border border-[#2c2d36] shrink-0 bg-black/50 shadow" onerror="this.src='https://placehold.co/120x160/1b1c20/FFF?text=User'">
                     <div class="flex flex-col justify-center ${isRightSide ? 'items-end text-right' : 'items-start text-left'} flex-1 truncate">
-                        <span class="text-xl font-black text-white truncate w-full tracking-tight" style="text-shadow: 1px 1px 3px black;">${p.name}</span>
+                        <span class="text-xl font-black text-white truncate w-full tracking-tight text-shadow-custom">${p.name}</span>
                         <span class="px-3 py-0.5 mt-1.5 rounded text-xs font-black text-black shadow-sm ${raceClass}">${p.race}</span>
                     </div>
                 </div>`;
@@ -181,22 +188,21 @@
     </script>
 </head>
 <body class="flex items-center justify-center h-screen p-6">
-    <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease;">
+    <div id="vs-wrapper-outer" style="transition: opacity 0.3s ease; opacity: 0;">
         <div id="vs-wrapper" class="flex items-center justify-center gap-6 bg-[#121317]/95 border-2 border-[#32343d] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[980px]">
+            
             <div id="t1-container"></div>
             
-            <!-- 중앙 영역: 세로 중앙 정렬을 맞추고 균형감 있게 리폼된 센터 패널 -->
-            <div class="flex flex-col items-center justify-center gap-3 shrink-0 w-[150px]">
-                <!-- 세트/경기 정보 배지: 좌우 카드 헤더와 높낮이 라인을 맞추어 안정감 부여 -->
-                <span id="match-label" class="w-full px-3 py-1.5 bg-[#17181c] border border-[#32343d] rounded-lg text-xs font-black text-gray-200 text-center tracking-tight truncate shadow-inner" style="display: none;"></span>
+            <!-- 중앙 영역 -->
+            <div class="flex flex-col items-center justify-center gap-3 shrink-0 w-[180px]">
+                <!-- 경기 정보 뱃지 (텍스트 잘림 방지 및 자동 줄바꿈 적용) -->
+                <span id="match-label" class="w-full px-2 py-1.5 bg-[#17181c] border border-[#32343d] rounded-lg text-[10px] font-black text-gray-200 text-center tracking-tight leading-tight break-keep" style="display: none;"></span>
                 
-                <!-- VS 로고 -->
-                <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest drop-shadow-[0_0_12px_rgba(0,255,163,0.6)] my-1">VS</span>
+                <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest drop-shadow-[0_0_12px_rgba(0,255,163,0.6)] my-0.5">VS</span>
                 
-                <!-- 맵 카드 박스: 맵 이미지가 찌그러지지 않고 고유 비율로 깔끔하게 노출되도록 개선 -->
                 <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-2.5 rounded-xl shadow-lg w-full">
-                    <div class="w-full rounded-lg overflow-hidden border border-[#2c2d36] shadow bg-black/50 mb-2">
-                        <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed">
+                    <div class="flex items-center justify-center h-[70px] mb-2 overflow-hidden w-full">
+                        <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed rounded-lg border border-[#2c2d36] shadow bg-black/50">
                     </div>
                     <span id="map-name" class="text-xs font-black text-gray-200 truncate w-full text-center tracking-tight">맵 이름</span>
                 </div>
