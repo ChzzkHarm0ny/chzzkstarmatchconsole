@@ -12,11 +12,13 @@
         #vs-wrapper { opacity: 0; transition: opacity 0.8s ease-in-out; }
         #vs-wrapper.active { opacity: 1; }
         
-        .map-img-fluid {
-            height: 72px;
-            width: auto;
-            max-width: 170px;
+        .map-img-fixed {
+            height: 72px !important;
+            width: auto !important;
+            max-width: 180px !important;
             object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
     </style>
     <script type="module">
@@ -76,13 +78,12 @@
                         if(vs.map.url) document.getElementById('map-img').src = vs.map.url;
                     }
 
-                    // 몇 경기인지 표시 업데이트 (상단 배치)
-                    let matchLabel = vs.matchTitle || (vs.matchIndex ? `${vs.matchIndex}경기` : "");
+                    let matchLabel = vs.matchTitle || vs.roundTitle || (vs.matchIndex ? `${vs.matchIndex}경기` : "");
                     let matchLabelEl = document.getElementById('match-label');
                     if (matchLabelEl) {
                         if (matchLabel) {
                             matchLabelEl.innerText = matchLabel;
-                            matchLabelEl.style.display = 'block';
+                            matchLabelEl.style.display = 'inline-block';
                         } else {
                             matchLabelEl.style.display = 'none';
                         }
@@ -185,14 +186,15 @@
         <div id="vs-wrapper" class="flex items-center justify-center gap-5 bg-[#121317]/95 border-2 border-[#32343d] rounded-2xl p-6 shadow-2xl backdrop-blur-md w-[980px]">
             <div id="t1-container"></div>
             
-            <!-- 중앙 VS 및 경기 정보 / 맵 영역 (경기 정보가 상단에 배치됨) -->
+            <!-- 중앙 영역: 세련된 박스 형태로 변경된 경기 정보 뱃지 + VS + 맵 영역 -->
             <div class="flex flex-col items-center justify-center px-2 shrink-0">
-                <!-- 몇 경기인지 표시하는 라벨을 VS 로고 위 상단으로 이동 -->
-                <span id="match-label" class="text-[11px] font-black text-[#00FFA3] mb-1.5 tracking-wider uppercase" style="display: none;"></span>
+                <!-- 💡 텍스트가 달랑 나오지 않도록 배경색, 테두리, 둥근 모서리, 흰색/회색 톤을 적용한 뱃지 박스 -->
+                <span id="match-label" class="px-3 py-1 mb-2 bg-[#17181c] border border-[#32343d] rounded-lg text-[11px] font-black text-gray-200 tracking-wider uppercase shadow-inner" style="display: none;"></span>
+                
                 <span class="text-3xl font-black italic text-[#00FFA3] tracking-widest mb-3 drop-shadow-[0_0_12px_rgba(0,255,163,0.6)]">VS</span>
-                <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-3 rounded-xl shadow-lg min-w-[130px]">
-                    <div class="flex items-center justify-center h-[72px] mb-1.5 overflow-hidden">
-                        <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fluid rounded-lg border border-[#2c2d36] shadow bg-black/50">
+                <div class="flex flex-col items-center bg-[#17181c] border border-[#32343d] p-3 rounded-xl shadow-lg min-w-[140px]">
+                    <div class="flex items-center justify-center h-[76px] mb-1.5 overflow-hidden w-full">
+                        <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed rounded-lg border border-[#2c2d36] shadow bg-black/50">
                     </div>
                     <span id="map-name" class="text-xs font-black text-gray-200 truncate w-full text-center tracking-tight">맵 이름</span>
                 </div>
