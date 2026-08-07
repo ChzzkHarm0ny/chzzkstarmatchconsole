@@ -19,6 +19,7 @@
         body { background-color: rgba(0, 0, 0, 0); margin: 0; overflow: hidden; }
         .font-display{ font-family:'Black Han Sans', sans-serif; letter-spacing:0.02em; }
         .font-tech{ font-family:'Rajdhani', sans-serif; letter-spacing:0.08em; }
+        .font-label{ font-family:'Black Han Sans', sans-serif; letter-spacing:0; }
 
         .race-P { background-color:#F0A93F; color:#2b1d04; }
         .race-T { background-color:#3EA8FF; color:#03203a; }
@@ -60,9 +61,6 @@
         .race-chip{ clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
 
         .vs-slash{ width:26px; height:3px; transform:skewX(-24deg); }
-
-        .bracket-label::before{ content:"\2039\2039 "; }
-        .bracket-label::after{ content:" \203A\203A"; }
 
         .reticle{ position:relative; }
         .reticle span{ position:absolute; width:10px; height:10px; border-color:var(--accent); opacity:0.85; }
@@ -133,11 +131,15 @@
                         if(vs.map.url) document.getElementById('map-img').src = vs.map.url;
                     }
 
-                    let matchLabel = vs.matchTitle || vs.roundTitle || (vs.matchIndex ? `${vs.matchIndex}경기` : "");
+                    let mainLabel = vs.matchTitle || vs.roundTitle || "";
+                    let subLabel = vs.matchIndex ? `${vs.matchIndex}경기` : "";
                     let matchLabelEl = document.getElementById('match-label');
                     if (matchLabelEl) {
-                        if (matchLabel) {
-                            matchLabelEl.innerText = matchLabel;
+                        if (mainLabel || subLabel) {
+                            let lines = [mainLabel, subLabel].filter(Boolean);
+                            lines[0] = '‹‹ ' + lines[0];
+                            lines[lines.length - 1] = lines[lines.length - 1] + ' ››';
+                            matchLabelEl.innerHTML = lines.map(line => `<span class="block truncate">${line}</span>`).join('');
                             matchLabelEl.style.display = 'block';
                         } else {
                             matchLabelEl.style.display = 'none';
@@ -149,6 +151,16 @@
             });
         };
 
+        function getContrastText(hex){
+            let h = (hex || '#888888').replace('#', '');
+            if (h.length === 3) h = h.split('').map(c => c + c).join('');
+            let r = parseInt(h.substring(0,2), 16) || 0;
+            let g = parseInt(h.substring(2,4), 16) || 0;
+            let b = parseInt(h.substring(4,6), 16) || 0;
+            let luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.6 ? '#141414' : '#ffffff';
+        }
+
         function raceClassOf(race){
             return race === '프로토스' ? 'race-P' : (race === '테란' ? 'race-T' : 'race-Z');
         }
@@ -159,8 +171,9 @@
 
             let teamEdgeHtml = (isSoloMode || !hasTeamName)
                 ? ""
-                : `<div class="team-edge" style="background-color:${teamColor}"></div>
-                   <span class="font-display px-3 pt-2 pb-1.5 text-sm text-white w-full text-center tracking-wide">${teamName}</span>`;
+                : `<div class="chz-cut-sm w-full" style="background-color:${teamColor}">
+                     <span class="font-display block px-3 py-2.5 text-base w-full text-center" style="color:${getContrastText(teamColor)}">${teamName}</span>
+                   </div>`;
 
             let html = `
             <div class="chz-frame ${cutClass} w-[355px] shadow-2xl">
@@ -260,7 +273,7 @@
             <div id="t1-container"></div>
 
             <div class="flex flex-col items-center justify-center gap-3 shrink-0 w-[250px]">
-                <span id="match-label" class="bracket-label w-full font-tech px-3 py-1.5 text-xs font-bold text-[var(--text-dim)] text-center whitespace-nowrap overflow-hidden text-ellipsis" style="display: none;"></span>
+                <span id="match-label" class="w-full font-label px-3 py-1.5 text-xs leading-[1.4] text-[var(--text-dim)] text-center" style="display: none;"></span>
 
                 <div class="flex items-center gap-2 my-0.5">
                     <span id="vs-slash-l" class="vs-slash" style="background-color:#F0A93F"></span>
@@ -274,7 +287,7 @@
                     <div class="flex items-center justify-center h-[88px] mb-2 overflow-hidden w-full">
                         <img id="map-img" src="https://placehold.co/120x80/1b1c20/FFF?text=Map" class="map-img-fixed border border-[#2c2d36] bg-black/50">
                     </div>
-                    <span id="map-name" class="font-tech text-xs font-bold text-gray-200 truncate w-full text-center">맵 이름</span>
+                    <span id="map-name" class="font-label text-sm text-gray-200 truncate w-full text-center px-1">맵 이름</span>
                   </div>
                 </div>
             </div>
