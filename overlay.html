@@ -74,8 +74,7 @@
 
                         Object.values(ms.matchSetsObj).forEach(setObj => {
                             let card = document.createElement('div');
-                            // ml-6을 주어 카드 전체를 우측으로 밀고, 왼쪽 여백 공간에 번호 탭이 들어갈 자리를 확보합니다.
-                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-visible p-2 ml-6";
+                            card.className = "set-card flex flex-col bg-[#141518]/95 text-white border border-[#2c2d33] rounded-xl shadow-2xl backdrop-blur-md w-[280px] shrink-0 overflow-visible p-2 ml-8";
 
                             let t1Wins = 0, t2Wins = 0;
                             if (setObj.matches) {
@@ -122,10 +121,10 @@
                                 let isCurrentActive = (Number(activeMatchIdx) === i);
                                 let rowHighlightClass = isCurrentActive ? "overlay-active-match" : "";
 
-                                // 숫자를 카드의 왼쪽 바깥 여백 공간에 완전히 독립적으로 배치
+                                // 번호 탭 텍스트 색상을 흰색(text-white)으로 변경
                                 bodyHtml += `
                                     <div class="flex items-center relative ${rowHighlightClass} rounded-lg border border-[#2c2d33] bg-[#141518]">
-                                        <div class="absolute -left-7 bg-[#1b1c20] border border-[#2c2d33] text-[#00FFA3] font-black text-base w-7 h-7 rounded-md flex items-center justify-center shadow-lg z-20">${i}</div>
+                                        <div class="absolute -left-10 bg-[#1b1c20] border border-[#2c2d33] text-white font-black text-base w-7 h-7 rounded-md flex items-center justify-center shadow-lg z-20">${i}</div>
                                         <div class="flex items-center justify-center w-full py-2 px-3">
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
                                             <div class="w-16 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
@@ -155,7 +154,7 @@
 </head>
 <body class="flex items-start justify-start p-4 font-sans">
     <div id="list-wrapper">
-        <div id="sets-wrapper" class="flex items-start gap-8 overflow-x-auto"></div>
+        <div id="sets-wrapper" class="flex items-start gap-10 overflow-x-auto"></div>
     </div>
 </body>
 </html>
