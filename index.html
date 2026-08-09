@@ -46,7 +46,7 @@
         }
 
         .preview-frame-top {
-            background-color: #0b0c0e;
+            background-color: #111111;
             background-image: url('https://raw.githubusercontent.com/ChzzkHarm0ny/chzzkstarmatchconsole/refs/heads/main/Image/frames_top.png');
             background-size: 100% 100%;
             background-repeat: no-repeat;
@@ -72,24 +72,10 @@
         .row-hidden { display: none !important; }
     </style>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { db } from "./firebase-config.js";
 
         const ROOM_AUTH_URL = "https://script.google.com/macros/s/AKfycbwFSMBiDHsY0Ap_wWtUFuRhA12Os8N_JBMebIbv9cHpzHND0tJHbIxXQlc1re7_MXWT/exec";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
-            authDomain: "starcraft-console.firebaseapp.com",
-            databaseURL: "https://starcraft-console-default-rtdb.firebaseio.com",
-            projectId: "starcraft-console",
-            storageBucket: "starcraft-console.firebasestorage.app",
-            messagingSenderId: "928203238966",
-            appId: "1:928203238966:web:4c5333274ffb3255ff3297",
-            measurementId: "G-8KXBQ9J2MT"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
 
         let allPlayers = [];
         let allMaps = [];
