@@ -615,10 +615,10 @@
                         title: "", t1Name: "", t1Score: "", t2Score: "", t2Name: "",
                         p1Name: "", p1Score: "", p2Score: "", p2Name: "", pos1: "", pos2: ""
                     };
-                    document.getElementById('cb-show-title').checked = manual.showTitle;
-                    document.getElementById('cb-show-team').checked = manual.showTeam;
-                    document.getElementById('cb-show-player').checked = manual.showPlayer;
-                    document.getElementById('cb-show-bottom').checked = manual.showBottom;
+                    document.getElementById('cb-show-title').checked = manual.showTitle !== false;
+                    document.getElementById('cb-show-team').checked = manual.showTeam !== false;
+                    document.getElementById('cb-show-player').checked = manual.showPlayer !== false;
+                    document.getElementById('cb-show-bottom').checked = manual.showBottom !== false;
 
                     document.getElementById('man-title').value = manual.title || "";
                     document.getElementById('man-t1-name').value = manual.t1Name || "";
