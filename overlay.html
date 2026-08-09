@@ -28,22 +28,9 @@
         }
     </style>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { db } from "./firebase-config.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDkFwwmrV9iFp3XnS3h2Oa0FI-T-3WbxPA",
-            authDomain: "starcraft-console.firebaseapp.com",
-            databaseURL: "https://starcraft-console-default-rtdb.firebaseio.com",
-            projectId: "starcraft-console",
-            storageBucket: "starcraft-console.firebasestorage.app",
-            messagingSenderId: "928203238966",
-            appId: "1:928203238966:web:4c5333274ffb3255ff3297",
-            measurementId: "G-8KXBQ9J2MT"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
         let playerRaceMap = {};
         let lastFetchedGasUrl = null;
 
