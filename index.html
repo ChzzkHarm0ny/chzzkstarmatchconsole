@@ -92,8 +92,6 @@
         let currentMatchMode = "team";
         let team1Name = "1팀";
         let team2Name = "2팀";
-        let team1Color = "#1d3557";
-        let team2Color = "#6a1b1b";
         let player1Color = "#0C48CC";
         let player2Color = "#F40404";
         let player1TextColor = "#ffffff";
@@ -181,9 +179,10 @@
                 if (btn) btn.innerText = "☀️ 라이트모드";
             }
 
-            const isAuth = localStorage.getItem('starcraft_master_auth') === "verified";
+            // [정비된 인증 로직] 마스터키 인증 상태 확인
+            const isMasterAuth = localStorage.getItem('starcraft_master_auth') === "verified";
             const authInputGroup = document.getElementById('auth-input-group');
-            if (isAuth) {
+            if (isMasterAuth) {
                 authInputGroup.classList.add('hidden');
             } else {
                 authInputGroup.classList.remove('hidden');
@@ -193,16 +192,12 @@
             const urlRoom = urlParams.get('room');
             const savedPin = localStorage.getItem('starcraft_room_pin') || "";
             
-            if (urlRoom && (isAuth || savedPin.length > 0)) {
+            // 이미 마스터키가 인증된 상태라면 방 링크 진입 시 추가 인증 없이 바로 입장
+            if (urlRoom && isMasterAuth) {
                 document.getElementById('input-room-id').value = urlRoom;
                 verifyAndEnterRoom(urlRoom, savedPin, true);
             } else {
-                const savedRoom = localStorage.getItem('starcraft_room_id');
-                if (savedRoom && isAuth) {
-                    window.location.href = `?room=${savedRoom}`;
-                } else {
-                    showLoginScreen();
-                }
+                showLoginScreen();
             }
 
             document.getElementById('btn-enter-room').addEventListener('click', async () => {
@@ -215,7 +210,12 @@
                     return;
                 }
 
+                // [정비] 마스터키가 아직 인증되지 않은 경우에만 검증 수행
                 if (localStorage.getItem('starcraft_master_auth') !== "verified") {
+                    if (!authInput) {
+                        alert("최초 접속이므로 관리자 인증키를 입력해주세요.");
+                        return;
+                    }
                     const ok = await verifyMasterKeyOnServer(authInput);
                     if (!ok) {
                         alert("⚠️ 관리자 인증키가 일치하지 않습니다. 올바른 키를 입력해주세요.");
@@ -231,6 +231,7 @@
                 await verifyAndEnterRoom(roomId, pinInput, false);
             });
 
+            // 로그아웃 시 방 정보만 초기화 (마스터키 인증 상태는 유지하여 편의성 제공)
             document.getElementById('btn-logout').addEventListener('click', () => {
                 localStorage.removeItem('starcraft_room_id');
                 localStorage.removeItem('starcraft_room_pin');
@@ -1863,7 +1864,7 @@
                                 </div>
                             </div>
 
-                            <button onclick="triggerManualScoreSaveButton()" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-3 mt-1 rounded-lg text-xs cursor-pointer shadow-lg transition-all border border-[#00e692]">
+                            <button id="btn-save-manual-score" class="w-full bg-[#00FFA3] hover:bg-[#00e692] text-black font-extrabold py-3 mt-1 rounded-lg text-xs cursor-pointer shadow-lg transition-all border border-[#00e692]">
                                 🎯 스코어보드 오버레이 실시간 수동 반영
                             </button>
                         </div>
