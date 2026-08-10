@@ -181,13 +181,12 @@
                 if (btn) btn.innerText = "☀️ 라이트모드";
             }
 
-            // [정비 완료] 마스터키 전역 인증 상태 체크
             const isAuth = localStorage.getItem('starcraft_master_auth') === "verified";
             const authInputGroup = document.getElementById('auth-input-group');
             if (isAuth) {
-                authInputGroup.classList.add('hidden'); // 이미 인증된 경우 마스터키 입력창 숨김
+                authInputGroup.classList.add('hidden');
             } else {
-                authInputGroup.classList.remove('hidden'); // 미인증 시 표시
+                authInputGroup.classList.remove('hidden');
             }
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -195,23 +194,18 @@
             const savedPin = localStorage.getItem('starcraft_room_pin') || "";
             const savedRoom = localStorage.getItem('starcraft_room_id') || "";
 
-            // [정비 완료] 깔끔하게 분기 처리된 진입 및 자동 로그인 로직
             if (isAuth) {
                 if (urlRoom) {
-                    // URL에 방 이름이 포함되어 있고 이미 마스터키 인증된 경우
                     document.getElementById('input-room-id').value = urlRoom;
                     verifyAndEnterRoom(urlRoom, savedPin, true);
                 } else if (savedRoom) {
-                    // URL은 없지만 이전에 참여했던 방 정보가 브라우저에 남아있는 경우 해당 방으로 바로 이동
                     const newUrl = `${window.location.pathname}?room=${savedRoom}`;
                     window.history.replaceState({ path: newUrl }, '', newUrl);
                     verifyAndEnterRoom(savedRoom, savedPin, true);
                 } else {
-                    // 마스터키는 인증되었으나 방을 고르지 않은 경우 로그인(방 선택) 화면 노출
                     showLoginScreen();
                 }
             } else {
-                // 마스터키 인증 전인 경우 무조건 로그인 화면 노출
                 showLoginScreen();
             }
 
@@ -225,7 +219,6 @@
                     return;
                 }
 
-                // 최초 접속 시 마스터키 검증
                 if (localStorage.getItem('starcraft_master_auth') !== "verified") {
                     const ok = await verifyMasterKeyOnServer(authInput);
                     if (!ok) {
@@ -243,7 +236,6 @@
             });
 
             document.getElementById('btn-logout').addEventListener('click', () => {
-                // 로그아웃 시 방 정보만 초기화 (마스터키 인증 상태는 브라우저에 유지하여 재접속 시 편의 제공)
                 localStorage.removeItem('starcraft_room_id');
                 localStorage.removeItem('starcraft_room_pin');
                 localStorage.removeItem('starcraft_active_tab');
@@ -1256,7 +1248,7 @@
                         populatePlayerSelect(document.getElementById(`s${setId}-t1-${i}-${j}`), "선수 선택", t1Players[j], targetList1);
                         populatePlayerSelect(document.getElementById(`s${setId}-t2-${i}-${j}`), "선수 선택", t2Players[j], targetList2);
                     }
-                    populateActiveMapSelect(document.getElementById(`s${setId}-map-${i}`), "맵 선택", m.mapName);
+                    populateActiveMapSelect(document.getElementById(`s${setId}-map-${i}`), "맵 이름(약칭)", m.mapName);
                 }
             }, { onlyOnce: true });
         }
@@ -2030,7 +2022,7 @@
                                 <h4 class="font-bold text-white mb-1">2단계: 시트 내용 채우기 (선수 및 맵 데이터)</h4>
                                 <ul class="list-disc list-inside text-gray-400 space-y-1">
                                     <li><b>Players 시트</b>: `선수명`, `종족(프로토스/테란/저그)`, `이미지 URL` 항목을 입력합니다. <b class="text-yellow-400">선수명은 오버레이에 4글자까지 최적으로 표시되니 가급적 4글자 이내로 등록해 주세요.</b></li>
-                                    <li><b>Maps 시트</b>: `맵 이름`, `맵 이미지 URL` 항목을 입력합니다. 래더맵이나 자주 쓰이는 주요 맵들은 이름(예: "폴리포이드", "투혼" 등)만 정확히 입력해도 깃허브 저장소에 등록된 기본 이미지가 자동으로 적용되므로, URL을 비워두셔도 무방합니다.</li>
+                                    <li><b>Maps 시트</b>: `맵 이름`, `맵 이미지 URL` 항목을 입력합니다. <b class="text-yellow-400">매치리스트 오버레이 칸이 좁으므로, 맵 이름 입력 시 '폴리포이드' 대신 '폴리'처럼 2~3글자 약칭으로 직접 입력해 주시면 예쁘게 출력됩니다.</b></li>
                                 </ul>
                             </div>
 
