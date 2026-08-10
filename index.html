@@ -92,6 +92,8 @@
         let currentMatchMode = "team";
         let team1Name = "1팀";
         let team2Name = "2팀";
+        let team1Color = "#1d3557";
+        let team2Color = "#6a1b1b";
         let player1Color = "#0C48CC";
         let player2Color = "#F40404";
         let player1TextColor = "#ffffff";
@@ -179,24 +181,37 @@
                 if (btn) btn.innerText = "☀️ 라이트모드";
             }
 
-            // [정비된 인증 로직] 마스터키 인증 상태 확인
-            const isMasterAuth = localStorage.getItem('starcraft_master_auth') === "verified";
+            // [정비 완료] 마스터키 전역 인증 상태 체크
+            const isAuth = localStorage.getItem('starcraft_master_auth') === "verified";
             const authInputGroup = document.getElementById('auth-input-group');
-            if (isMasterAuth) {
-                authInputGroup.classList.add('hidden');
+            if (isAuth) {
+                authInputGroup.classList.add('hidden'); // 이미 인증된 경우 마스터키 입력창 숨김
             } else {
-                authInputGroup.classList.remove('hidden');
+                authInputGroup.classList.remove('hidden'); // 미인증 시 표시
             }
 
             const urlParams = new URLSearchParams(window.location.search);
             const urlRoom = urlParams.get('room');
             const savedPin = localStorage.getItem('starcraft_room_pin') || "";
-            
-            // 이미 마스터키가 인증된 상태라면 방 링크 진입 시 추가 인증 없이 바로 입장
-            if (urlRoom && isMasterAuth) {
-                document.getElementById('input-room-id').value = urlRoom;
-                verifyAndEnterRoom(urlRoom, savedPin, true);
+            const savedRoom = localStorage.getItem('starcraft_room_id') || "";
+
+            // [정비 완료] 깔끔하게 분기 처리된 진입 및 자동 로그인 로직
+            if (isAuth) {
+                if (urlRoom) {
+                    // URL에 방 이름이 포함되어 있고 이미 마스터키 인증된 경우
+                    document.getElementById('input-room-id').value = urlRoom;
+                    verifyAndEnterRoom(urlRoom, savedPin, true);
+                } else if (savedRoom) {
+                    // URL은 없지만 이전에 참여했던 방 정보가 브라우저에 남아있는 경우 해당 방으로 바로 이동
+                    const newUrl = `${window.location.pathname}?room=${savedRoom}`;
+                    window.history.replaceState({ path: newUrl }, '', newUrl);
+                    verifyAndEnterRoom(savedRoom, savedPin, true);
+                } else {
+                    // 마스터키는 인증되었으나 방을 고르지 않은 경우 로그인(방 선택) 화면 노출
+                    showLoginScreen();
+                }
             } else {
+                // 마스터키 인증 전인 경우 무조건 로그인 화면 노출
                 showLoginScreen();
             }
 
@@ -210,12 +225,8 @@
                     return;
                 }
 
-                // [정비] 마스터키가 아직 인증되지 않은 경우에만 검증 수행
+                // 최초 접속 시 마스터키 검증
                 if (localStorage.getItem('starcraft_master_auth') !== "verified") {
-                    if (!authInput) {
-                        alert("최초 접속이므로 관리자 인증키를 입력해주세요.");
-                        return;
-                    }
                     const ok = await verifyMasterKeyOnServer(authInput);
                     if (!ok) {
                         alert("⚠️ 관리자 인증키가 일치하지 않습니다. 올바른 키를 입력해주세요.");
@@ -231,8 +242,8 @@
                 await verifyAndEnterRoom(roomId, pinInput, false);
             });
 
-            // 로그아웃 시 방 정보만 초기화 (마스터키 인증 상태는 유지하여 편의성 제공)
             document.getElementById('btn-logout').addEventListener('click', () => {
+                // 로그아웃 시 방 정보만 초기화 (마스터키 인증 상태는 브라우저에 유지하여 재접속 시 편의 제공)
                 localStorage.removeItem('starcraft_room_id');
                 localStorage.removeItem('starcraft_room_pin');
                 localStorage.removeItem('starcraft_active_tab');
