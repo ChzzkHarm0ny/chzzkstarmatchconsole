@@ -49,17 +49,21 @@
         .row-hidden {
             display: none !important;
         }
+
+        #text-title {
+            letter-spacing: 0.06em;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center h-screen p-0">
     <div id="scoreboard-wrapper" class="minimap-scoreboard text-white font-sans">
         
         <!-- [1] 상단 공지 영역 -->
-        <div id="row-title" class="relative w-full h-[24px] shrink-0">
-            <div class="absolute inset-0 z-10 bg-[#111111]"></div>
+        <div id="row-title" class="relative w-full h-[30px] shrink-0">
+            <!-- 프레임 전체를 덮던 검은 배경 레이어 제거: 프레임 PNG만 남기고 그 뒤는 완전 투명 -->
             <div class="absolute inset-0 z-20 frame-top pointer-events-none"></div>
             <div class="absolute inset-0 z-30 flex items-center justify-center h-full">
-                <span id="text-title" class="text-[#00FFA3] font-black tracking-wider text-[13px] drop-shadow-md"></span>
+                <span id="text-title" class="text-[#F0A93F] font-black text-[13px] drop-shadow-md"></span>
             </div>
         </div>
         
