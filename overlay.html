@@ -107,7 +107,7 @@
                                 let t1Players = match.t1Players || [match.t1Player || "미정"];
                                 let t2Players = match.t2Players || [match.t2Player || "미정"];
                                 let mapNameFull = match.mapName || "미정";
-                                let mapName = mapNameFull.slice(0, 2);
+                                let mapName = mapNameFull.slice(0, 3);
                                 let winner = match.winner || "";
 
                                 let t1Html = t1Players.map(p => {
@@ -131,7 +131,7 @@
                                         <div class="text-gray-300 font-bold text-sm w-4 text-center shrink-0">${i}</div>
                                         <div class="flex items-center justify-center flex-1">
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t1Html}</div>
-                                            <div class="w-14 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
+                                            <div class="w-16 text-center text-white font-black truncate text-base px-1" title="${mapNameFull}">${mapName}</div>
                                             <div class="flex-1 text-center flex flex-col leading-tight">${t2Html}</div>
                                         </div>
                                     </div>
