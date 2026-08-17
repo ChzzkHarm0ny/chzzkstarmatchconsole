@@ -1,295 +1,725 @@
 <!DOCTYPE html>
-<html lang="ko" class="dark">
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CHZZK StarCraft - Match Bracket</title>
+<title>MATCH LIST</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+
 <style>
 :root{
   --bg:#0b0c0e;
-  --panel:#141518;
-  --panel2:#1b1c20;
+  --card:#17191d;
+  --card-2:#111317;
   --line:#2c2d33;
-  --line-soft:#202126;
-  --green:#00FFA3;
-  --white:#f5f7f8;
-  --muted:#8d929b;
-  --p1:#0C48CC;
-  --p2:#F40404;
-  --p1text:#fff;
-  --p2text:#fff;
+  --line-soft:#202228;
+  --accent:#00FFA3;
+  --text:#f5f7fa;
+  --sub:#8c929d;
+  --win:#00FFA3;
+  --loss:#626771;
 }
+
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
-body{font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;color:var(--white)}
 
-#app{width:100vw;height:100vh;padding:24px 30px;overflow:hidden}
+html,body{
+  margin:0;
+  width:100%;
+  min-height:100%;
+  background:var(--bg);
+}
 
-/* ---------- header ---------- */
-.header{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;margin-bottom:20px;text-align:center}
-.title{font-size:26px;line-height:1;font-weight:1000;letter-spacing:.16em;color:#fff}
-.title::after{content:"";display:block;width:54px;height:2px;margin:9px auto 0;background:var(--green);border-radius:2px}
-.set-name{font-size:11px;color:#aeb3bb;font-weight:800;letter-spacing:.08em}
+body{
+  color:var(--text);
+  font-family:'Pretendard',Arial,sans-serif;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
 
-/* ---------- horizontal board ---------- */
-.viewport{width:100%;height:calc(100vh - 112px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
-.viewport::-webkit-scrollbar{display:none}
-.board{width:max-content;min-width:100%;display:flex;align-items:stretch;gap:10px;padding:2px 4px 28px}
+#app{
+  width:max-content;
+  min-width:100%;
+  padding:24px 28px 32px;
+}
 
-/* ---------- one match ---------- */
-.match{width:232px;flex:0 0 232px;display:flex;flex-direction:column;position:relative;background:rgba(20,21,24,.97);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.28)}
-.match::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--green);opacity:.8}
+.heading{
+  text-align:center;
+  margin:0 0 22px;
+}
 
-.match-number{height:44px;display:flex;align-items:center;justify-content:center;padding:0 12px;border-bottom:1px solid rgba(0,255,163,.20);background:linear-gradient(180deg,#163027,#101d19);position:relative}
-.match-number strong{font-size:14px;font-weight:1000;letter-spacing:.06em;color:#f5f7f8}
-.match-number span{display:none}
+.heading-title{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+}
 
-/* ---------- team block ---------- */
-.team{padding:14px 10px 13px;background:var(--panel2);border-bottom:1px solid var(--line-soft);transition:.2s;text-align:center}
-.team:last-of-type{border-bottom:0}
-.team.winner{background:linear-gradient(180deg,rgba(0,255,163,.13),rgba(0,255,163,.035));box-shadow:inset 0 0 0 1px rgba(0,255,163,.22)}
-.team.loser{opacity:.54}
+.heading-title::after{
+  content:"";
+  width:48px;
+  height:3px;
+  background:var(--accent);
+  border-radius:99px;
+}
 
-.team-label{display:flex;align-items:center;justify-content:center;min-height:12px;margin-bottom:7px}
-.team-label .side{display:none}
-.result{font-size:9px;font-weight:1000;letter-spacing:.12em;color:transparent;min-height:11px}
-.team.winner .result{color:var(--green)}
-.team.loser .result{color:#666b74}
+.heading-main{
+  font-size:25px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.08em;
+}
 
-.players{display:flex;align-items:center;justify-content:center;gap:7px;min-height:76px}
-.player{min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}
-.player-img{width:72px;height:72px;object-fit:contain;border-radius:8px;border:1px solid #3a3c43;background:#0b0c0e;display:block}
-.player-name{max-width:100%;margin-top:7px;font-size:12px;font-weight:1000;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.player-race{margin-top:3px;font-size:8px;font-weight:1000;letter-spacing:.08em}
+.heading-sub{
+  color:#8f96a2;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.08em;
+}
 
-/* Team play: multiple images become compact but remain visible */
-.team.multi .players{gap:4px}
-.team.multi .player-img{width:43px;height:43px;border-radius:6px}
-.team.multi .player-name{font-size:9px}
-.team.multi .player-race{display:none}
-.team.multi .player{max-width:62px}
+.matches{
+  display:flex;
+  align-items:stretch;
+  gap:18px;
+  width:max-content;
+  margin:0 auto;
+}
 
-/* ---------- map: square area, never cropped ---------- */
-.map-section{padding:12px 10px 13px;background:#101114;border-top:1px solid #24262b;border-bottom:1px solid #24262b;text-align:center}
-.map-box{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#08090b;border:1px solid #303239;border-radius:8px;overflow:hidden}
-.map-img{display:block;width:100%;height:100%;object-fit:contain;padding:5px}
-.map-placeholder{color:#555a63;font-size:9px;font-weight:900;letter-spacing:.1em}
-.map-name{margin-top:8px;color:#e7eaed;font-size:11px;font-weight:1000;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-card{
+  width:248px;
+  flex:0 0 248px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 10px 28px rgba(0,0,0,.35);
+}
 
-/* ---------- subtle connector between columns ---------- */
-.connector{width:10px;flex:0 0 10px;display:flex;align-items:center;justify-content:center;position:relative}
-.connector::after{content:"";width:10px;height:1px;background:#35373d}
+.match-number{
+  height:45px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    linear-gradient(180deg, rgba(0,255,163,.16), rgba(0,255,163,.055));
+  border-bottom:1px solid rgba(0,255,163,.35);
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
 
-.empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#6c7179;font-size:13px;font-weight:900}
-.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:900}
+.player-side{
+  min-height:205px;
+  padding:20px 14px 17px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  position:relative;
+  transition:opacity .2s, filter .2s, background .2s;
+}
 
-/* ---------- winner accent ---------- */
-.winner-mark{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--green);color:#06120d;font-size:10px;font-weight:1000;box-shadow:0 0 10px rgba(0,255,163,.25);position:absolute;right:12px}
+.player-side + .map-side{
+  border-top:1px solid var(--line-soft);
+}
 
+.player-side.is-winner{
+  background:
+    radial-gradient(circle at 50% 28%, rgba(0,255,163,.10), transparent 52%);
+}
 
-@media(max-width:1200px){
-  #app{padding:20px}
-  .match{width:214px;flex-basis:214px}
-  .player-img{width:66px;height:66px}
+.player-side.is-loser{
+  opacity:.48;
+  filter:saturate(.55);
+}
+
+.player-side.unknown{
+  opacity:.65;
+}
+
+.player-image{
+  width:112px;
+  height:112px;
+  object-fit:cover;
+  border-radius:14px;
+  border:1px solid #3a3d45;
+  background:#101216;
+  display:block;
+  box-shadow:0 5px 18px rgba(0,0,0,.35);
+}
+
+.player-image.placeholder{
+  object-fit:contain;
+  padding:18px;
+  opacity:.65;
+}
+
+.player-name-row{
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:24px;
+  max-width:100%;
+}
+
+.player-name{
+  font-size:16px;
+  font-weight:900;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:190px;
+}
+
+.race{
+  margin-top:4px;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+
+.race.protoss{color:#FFE000}
+.race.terran{color:#00AFFF}
+.race.zerg{color:#FF5C7A}
+.race.unknown{color:#8c929d}
+
+.result{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:31px;
+  height:20px;
+  padding:0 7px;
+  border-radius:5px;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.05em;
+}
+
+.result.win{
+  color:#07120d;
+  background:var(--win);
+}
+
+.result.loss{
+  color:#aeb3bd;
+  background:#292c32;
+}
+
+.map-side{
+  min-height:285px;
+  padding:14px 13px 16px;
+  background:var(--card-2);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.map-box{
+  width:100%;
+  aspect-ratio:1 / 1;
+  border:1px solid #30333b;
+  border-radius:9px;
+  background:#090a0c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.map-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+
+.map-placeholder{
+  color:#555b66;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+
+.map-name{
+  margin-top:10px;
+  color:#fff;
+  font-size:14px;
+  line-height:1.2;
+  font-weight:900;
+  text-align:center;
+}
+
+.team-stack{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+
+.team-player{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+}
+
+.team-player .player-image{
+  width:88px;
+  height:88px;
+}
+
+.team-player .player-name{
+  font-size:14px;
+  max-width:180px;
+}
+
+.team-player .race{
+  font-size:10px;
+}
+
+.status{
+  position:fixed;
+  right:14px;
+  bottom:10px;
+  color:#5f6570;
+  font-size:9px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+@media (max-width:900px){
+  #app{padding:18px}
+  .matches{gap:12px}
+  .match-card{
+    width:220px;
+    flex-basis:220px;
+  }
+  .player-image{
+    width:100px;
+    height:100px;
+  }
+}
+
+body.compact .match-card{
+  width:225px;
+  flex-basis:225px;
+}
+body.compact .player-side{
+  min-height:190px;
+}
+body.compact .map-side{
+  min-height:255px;
 }
 </style>
 </head>
+
 <body>
 <div id="app">
-  <header class="header" id="header" style="display:none">
-    <div class="title">MATCH LIST</div>
-    <div id="set-name" class="set-name"></div>
+  <header class="heading">
+    <div class="heading-title">
+      <div class="heading-main">MATCH LIST</div>
+      <div class="heading-sub" id="set-name">불러오는 중</div>
+    </div>
   </header>
 
-  <div id="viewport" class="viewport">
-    <div id="board" class="board"></div>
-  </div>
-  <div id="loading" class="loading">대진표를 불러오는 중...</div>
+  <main id="matches" class="matches"></main>
 </div>
+
+<div id="status" class="status"></div>
 
 <script type="module">
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 import { db } from "./firebase-config.js";
 
+const GAS_URL =
+  "https://script.google.com/macros/s/AKfycbwFSMBiDHsY0Ap_wWtUFuRhA12Os8N_JBMebIbv9cHpzHND0tJHbIxXQlc1re7_MXWT/exec";
+
+const PLAYER_IMAGE_BASE =
+  "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/";
+
 const params = new URLSearchParams(location.search);
-const roomId = params.get('room');
+const roomId = params.get("room");
+const forcedSetId = params.get("set");
 
-let allPlayers = [];
-let allMaps = [];
-let playerColors = {
-  player1Color:'#0C48CC',
-  player2Color:'#F40404',
-  player1TextColor:'#ffffff',
-  player2TextColor:'#ffffff'
-};
+let players = [];
+let maps = [];
 
-const $ = id => document.getElementById(id);
+let playerMap = new Map();
+let mapMap = new Map();
 
 function esc(value){
-  return String(value ?? '').replace(/[&<>'"]/g,c=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'
-  }[c]));
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function findPlayer(name){
-  return allPlayers.find(p=>String(p?.name||'')===String(name||'')) || {
-    name:name || '미정', race:'', img_url:'', img:''
+function norm(value){
+  return String(value ?? "").trim();
+}
+
+function playerInfo(name){
+  const n = norm(name);
+
+  if(!n || n === "-" || n === "미정"){
+    return {
+      name: n || "미정",
+      race: "미정",
+      img: ""
+    };
+  }
+
+  const found = playerMap.get(n);
+
+  if(found){
+    return {
+      name: found.name || n,
+      race: found.race || "미정",
+      img: found.img || ""
+    };
+  }
+
+  return {
+    name:n,
+    race:"미정",
+    img:PLAYER_IMAGE_BASE + encodeURIComponent(n) + ".png"
   };
 }
 
-function playerImage(p, fallback){
-  const direct = p?.img_url || p?.img || p?.image || p?.url;
-  if(direct) return direct;
-  if(p?.name && p.name !== '미정' && p.name !== '-'){
-    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/' + encodeURIComponent(p.name) + '.png';
-  }
-  return 'https://placehold.co/100x100/141518/6f747c?text=' + encodeURIComponent(fallback || '?');
-}
+function mapInfo(name){
+  const n = norm(name);
 
-function findMap(name){
-  return allMaps.find(m=>String(m?.name||'')===String(name||'')) || {name:name || '미정', url:'', img:''};
-}
-
-function mapImage(m){
-  const direct = m?.url || m?.img || m?.img_url || m?.image;
-  if(direct) return direct;
-  if(m?.name && m.name !== '미정'){
-    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/' + encodeURIComponent(m.name) + '.png';
+  if(!n || n === "미정"){
+    return {
+      name:"미정",
+      img:""
+    };
   }
-  return '';
+
+  const found = mapMap.get(n);
+
+  if(found){
+    return {
+      name:found.name || n,
+      // 수정된 Code.gs에서 Maps!B열의 실제 URL을 반환한다.
+      img:found.url || ""
+    };
+  }
+
+  return {
+    name:n,
+    img:""
+  };
 }
 
 function raceClass(race){
-  const r = String(race||'').toUpperCase();
-  if(r.includes('프로') || r === 'P' || r.includes('P')) return 'P';
-  if(r.includes('테란') || r === 'T' || r.includes('T')) return 'T';
-  if(r.includes('저그') || r === 'Z' || r.includes('Z')) return 'Z';
-  return '';
+  const r = norm(race).toLowerCase();
+
+  if(r.includes("프로토스") || r.includes("protoss")) return "protoss";
+  if(r.includes("테란") || r.includes("terran")) return "terran";
+  if(r.includes("저그") || r.includes("zerg")) return "zerg";
+
+  return "unknown";
 }
 
-function raceText(race){
-  const c = raceClass(race);
-  if(c==='P') return 'PROTOSS';
-  if(c==='T') return 'TERRAN';
-  if(c==='Z') return 'ZERG';
-  return race || '';
-}
+function makePlayerImage(player, small=false){
+  const sizeClass = small ? "team-player" : "";
 
-function setThemeColors(){
-  document.documentElement.style.setProperty('--p1',playerColors.player1Color || '#0C48CC');
-  document.documentElement.style.setProperty('--p2',playerColors.player2Color || '#F40404');
-  document.documentElement.style.setProperty('--p1text',playerColors.player1TextColor || '#ffffff');
-  document.documentElement.style.setProperty('--p2text',playerColors.player2TextColor || '#ffffff');
-}
+  if(!player.img){
+    return `
+      <div class="team-player ${sizeClass}">
+        <div class="player-image placeholder">P</div>
+      </div>
+    `;
+  }
 
-function teamBlock(players, side, winner, format){
-  const valid = players.filter(x=>x && x!=='-' && x!=='미정');
-  const display = valid.length ? valid : ['미정'];
-  const multi = display.length > 1;
-  const isWinner = winner === side;
-  const hasResult = winner === 't1' || winner === 't2';
-  const loser = hasResult && !isWinner;
-  const color = side === 't1' ? 'var(--p1)' : 'var(--p2)';
-  const textColor = side === 't1' ? 'var(--p1text)' : 'var(--p2text)';
+  const fallback =
+    PLAYER_IMAGE_BASE +
+    encodeURIComponent(player.name) +
+    ".png";
 
   return `
-    <div class="team ${multi?'multi':''} ${isWinner?'winner':''} ${loser?'loser':''}" style="--team-color:${color};--team-text:${textColor}">
-      <div class="team-label">
-        <span class="side">${side === 't1' ? 'PLAYER 1 / TEAM 1' : 'PLAYER 2 / TEAM 2'}</span>
-        ${isWinner ? '<span class="winner-mark">✓</span>' : `<span class="result">${hasResult?'LOSS':''}</span>`}
-      </div>
-      <div class="players">
-        ${display.map((name,index)=>{
-          const p = findPlayer(name);
-          const img = playerImage(p, side === 't1' ? 'P1' : 'P2');
-          const race = raceText(p.race);
-          return `
-            <div class="player">
-              <img class="player-img" src="${esc(img)}" alt="" onerror="this.src='https://placehold.co/100x100/141518/6f747c?text=${side==='t1'?'P1':'P2'}'">
-              <div class="player-name" style="color:${textColor}">${esc(p.name)}</div>
-              ${race ? `<div class="player-race" style="color:${side==='t1'?'#7da6ff':'#ff8c8c'}">${esc(race)}</div>` : ''}
-            </div>`;
-        }).join('')}
-      </div>
-    </div>`;
+    <div class="team-player ${sizeClass}">
+      <img
+        class="player-image"
+        src="${esc(player.img)}"
+        alt=""
+        data-fallback="${esc(fallback)}"
+      >
+    </div>
+  `;
 }
 
-function render(state){
-  const sets = state.matchSetsObj || state.matchSetsConfig || {};
-  const ids = Object.keys(sets).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
-  if(!ids.length){
-    $('loading').textContent='대진표가 아직 없습니다.';
-    $('loading').style.display='flex';
-    $('header').style.display='none';
-    $('board').innerHTML='';
+function playerHtml(name, winner, side, format){
+  const p = playerInfo(name);
+
+  const valid = p.name !== "미정" && p.name !== "-";
+  const winnerSide = winner === side;
+  const loserSide = winner && winner !== side;
+
+  const resultHtml =
+    winnerSide
+      ? `<span class="result win">WIN</span>`
+      : loserSide
+        ? `<span class="result loss">LOSS</span>`
+        : "";
+
+  if(format > 1){
+    return `
+      <div class="team-player ${winnerSide ? "is-winner" : ""} ${loserSide ? "is-loser" : ""}">
+        ${
+          p.img
+            ? `<img class="player-image" src="${esc(p.img)}" alt="" data-fallback="${esc(PLAYER_IMAGE_BASE + encodeURIComponent(p.name) + ".png")}">`
+            : `<div class="player-image placeholder">P</div>`
+        }
+        <div class="player-name-row">
+          <span class="player-name">${esc(p.name)}</span>
+          ${resultHtml}
+        </div>
+        <div class="race ${raceClass(p.race)}">${esc(p.race)}</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="player-side ${!valid ? "unknown" : ""} ${winnerSide ? "is-winner" : ""} ${loserSide ? "is-loser" : ""}">
+      ${
+        p.img
+          ? `<img class="player-image" src="${esc(p.img)}" alt="" data-fallback="${esc(PLAYER_IMAGE_BASE + encodeURIComponent(p.name) + ".png")}">`
+          : `<div class="player-image placeholder">P</div>`
+      }
+      <div class="player-name-row">
+        <span class="player-name">${esc(p.name)}</span>
+        ${resultHtml}
+      </div>
+      <div class="race ${raceClass(p.race)}">${esc(p.race)}</div>
+    </div>
+  `;
+}
+
+function teamHtml(names, winner, side, format){
+  if(format <= 1){
+    return playerHtml(names[0] || "미정", winner, side, 1);
+  }
+
+  const teamWinner = winner === side;
+  const teamLoser = winner && winner !== side;
+
+  const members = names.map(name => {
+    const p = playerInfo(name);
+
+    return `
+      <div class="team-player ${teamWinner ? "is-winner" : ""} ${teamLoser ? "is-loser" : ""}">
+        ${
+          p.img
+            ? `<img class="player-image" src="${esc(p.img)}" alt="" data-fallback="${esc(PLAYER_IMAGE_BASE + encodeURIComponent(p.name) + ".png")}">`
+            : `<div class="player-image placeholder">P</div>`
+        }
+        <div class="player-name-row">
+          <span class="player-name">${esc(p.name)}</span>
+        </div>
+        <div class="race ${raceClass(p.race)}">${esc(p.race)}</div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="player-side ${teamWinner ? "is-winner" : ""} ${teamLoser ? "is-loser" : ""}">
+      <div class="team-stack">${members}</div>
+      ${
+        teamWinner
+          ? `<span class="result win" style="margin-top:8px">WIN</span>`
+          : teamLoser
+            ? `<span class="result loss" style="margin-top:8px">LOSS</span>`
+            : ""
+      }
+    </div>
+  `;
+}
+
+function mapHtml(name){
+  const m = mapInfo(name);
+
+  return `
+    <div class="map-side">
+      <div class="map-box">
+        ${
+          m.img
+            ? `<img class="map-image" src="${esc(m.img)}" alt="" data-map-name="${esc(m.name)}">`
+            : `<div class="map-placeholder">NO IMAGE</div>`
+        }
+      </div>
+      <div class="map-name">${esc(m.name)}</div>
+    </div>
+  `;
+}
+
+function render(setObj){
+  const container = document.getElementById("matches");
+
+  if(!setObj){
+    document.getElementById("set-name").textContent = "대진표 없음";
+    container.innerHTML = "";
     return;
   }
 
-  const requested = Number(state.bracketCurrentSetId || params.get('set') || ids[0]);
-  const setId = sets[requested] ? requested : ids[0];
-  const currentSet = sets[setId] || {};
-  const total = Number(currentSet.matchesCount || 0);
-  const matches = currentSet.matches || {};
+  document.getElementById("set-name").textContent =
+    setObj.name || `${setObj.id}세트`;
 
-  setThemeColors();
-  $('loading').style.display='none';
-  $('header').style.display='flex';
-  $('set-name').textContent = currentSet.name || `${setId}세트`;
+  const count = Number(setObj.matchesCount || 0);
+  const matches = setObj.matches || {};
 
-  if(total <= 0){
-    $('board').innerHTML='<div class="empty">등록된 대진이 없습니다.</div>';
-    return;
-  }
+  let html = "";
 
-  let html='';
-  for(let i=1;i<=total;i++){
-    const m = matches[i] || {};
-    const format = Math.max(1,Number(m.matchFormat || 1));
-    const t1 = (m.t1Players || [m.t1Player || '미정']).slice(0,format);
-    const t2 = (m.t2Players || [m.t2Player || '미정']).slice(0,format);
-    const mapData = findMap(m.mapName);
-    const mapSrc = mapImage(mapData);
-    const winner = m.winner || '';
+  for(let i=1; i<=count; i++){
+    const m = matches[i] || matches[String(i)] || {};
+    const format = Number(m.matchFormat || 1);
+
+    const t1 =
+      Array.isArray(m.t1Players)
+        ? m.t1Players
+        : [m.t1Player || "미정"];
+
+    const t2 =
+      Array.isArray(m.t2Players)
+        ? m.t2Players
+        : [m.t2Player || "미정"];
+
+    while(t1.length < format) t1.push("미정");
+    while(t2.length < format) t2.push("미정");
 
     html += `
-      <article class="match">
-        <div class="match-number">
-          <strong>${String(i).padStart(2,'0')}</strong>
-          <span>MATCH</span>
-        </div>
+      <article class="match-card">
+        <div class="match-number">${String(i).padStart(2,"0")}</div>
 
-        ${teamBlock(t1,'t1',winner,format)}
+        ${teamHtml(t1, m.winner || "", "t1", format)}
 
-        <div class="map-section">
-          <div class="map-box">
-            ${mapSrc
-              ? `<img class="map-img" src="${esc(mapSrc)}" alt="${esc(mapData.name||'map')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-              : ''}
-            <span class="map-placeholder" style="${mapSrc?'display:none':''}">NO IMAGE</span>
-          </div>
-          <div class="map-name">${esc(mapData.name || '미정')}</div>
-        </div>
+        ${mapHtml(m.mapName || "미정")}
 
-        ${teamBlock(t2,'t2',winner,format)}
-      </article>`;
-
-    if(i<total) html += '<div class="connector" aria-hidden="true"></div>';
+        ${teamHtml(t2, m.winner || "", "t2", format)}
+      </article>
+    `;
   }
 
-  $('board').innerHTML=html;
-}
+  container.innerHTML = html;
 
-if(!roomId){
-  $('loading').textContent='room 파라미터가 없습니다.';
-}else{
-  onValue(ref(db,`rooms/${roomId}/matchState`),snapshot=>{
-    const state = snapshot.val() || {};
-    allPlayers = state.players || [];
-    allMaps = state.maps || [];
-    playerColors = state.playerColors || playerColors;
-    render(state);
+  // 이미지가 실제로 실패했을 때 선수는 기존 GitHub 기본 주소로 한 번 더 시도.
+  document.querySelectorAll("img[data-fallback]").forEach(img => {
+    img.addEventListener("error", () => {
+      const fallback = img.dataset.fallback;
+      if(!fallback || img.src === fallback) return;
+      img.src = fallback;
+    }, {once:true});
+  });
+
+  // 맵은 Maps!B열 URL을 그대로 사용한다.
+  // 실패 시에는 NO IMAGE만 표시하고 이미지를 잘라내지 않는다.
+  document.querySelectorAll("img[data-map-name]").forEach(img => {
+    img.addEventListener("error", () => {
+      const box = img.parentElement;
+      if(box){
+        img.remove();
+        const placeholder = document.createElement("div");
+        placeholder.className = "map-placeholder";
+        placeholder.textContent = "NO IMAGE";
+        box.appendChild(placeholder);
+      }
+    }, {once:true});
   });
 }
+
+async function loadSheetData(){
+  if(!GAS_URL) return;
+
+  try{
+    const res = await fetch(GAS_URL + "?action=getData", {
+      cache:"no-store"
+    });
+
+    if(!res.ok) throw new Error("Google Sheets API HTTP " + res.status);
+
+    const data = await res.json();
+
+    players = Array.isArray(data.players) ? data.players : [];
+    maps = Array.isArray(data.maps) ? data.maps : [];
+
+    playerMap = new Map(
+      players
+        .filter(p => p && p.name)
+        .map(p => [norm(p.name), p])
+    );
+
+    mapMap = new Map(
+      maps
+        .filter(m => m && m.name)
+        .map(m => [norm(m.name), m])
+    );
+  }catch(error){
+    console.error("[BRACKET] 시트 데이터 로드 실패", error);
+  }
+}
+
+function chooseSet(matchSets){
+  const keys = Object.keys(matchSets || {});
+
+  if(!keys.length) return null;
+
+  // index.html의 [대진 반영]에서 저장하는 setId를 우선 사용.
+  if(forcedSetId && matchSets[forcedSetId]){
+    return matchSets[forcedSetId];
+  }
+
+  // bracketSetId가 있으면 그것을 사용.
+  const savedSet =
+    window.__bracketSetId &&
+    matchSets[window.__bracketSetId];
+
+  if(savedSet) return savedSet;
+
+  // 별도 지정이 없으면 1세트, 없으면 첫 번째 세트.
+  return matchSets[1] || matchSets[keys[0]];
+}
+
+async function start(){
+  if(!roomId){
+    document.getElementById("set-name").textContent =
+      "room 파라미터가 필요합니다";
+    return;
+  }
+
+  await loadSheetData();
+
+  const roomRef =
+    ref(db, "rooms/" + roomId + "/matchState");
+
+  onValue(roomRef, snapshot => {
+    const state = snapshot.val() || {};
+    const matchSets = state.matchSetsObj || {};
+
+    window.__bracketSetId =
+      state.bracketSetId != null
+        ? String(state.bracketSetId)
+        : null;
+
+    const selected = chooseSet(matchSets);
+    render(selected);
+  });
+}
+
+start();
 </script>
 </body>
 </html>
