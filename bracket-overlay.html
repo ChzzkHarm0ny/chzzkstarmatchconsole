@@ -23,46 +23,43 @@
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
 body{font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;color:var(--white)}
 
-#app{width:100vw;height:100vh;padding:28px 30px;overflow:hidden}
+#app{width:100vw;height:100vh;padding:24px 30px;overflow:hidden}
 
 /* ---------- header ---------- */
-.header{display:flex;flex-direction:column;align-items:center;gap:7px;margin-bottom:22px}
-.eyebrow{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.16em}
-.eyebrow::before,.eyebrow::after{content:"";width:42px;height:1px;background:var(--line)}
-.title{font-size:27px;line-height:1;font-weight:1000;letter-spacing:.14em;color:#fff}
-.title em{font-style:normal;color:var(--green)}
+.header{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;margin-bottom:20px;text-align:center}
+.title{font-size:26px;line-height:1;font-weight:1000;letter-spacing:.16em;color:#fff}
+.title::after{content:"";display:block;width:54px;height:2px;margin:9px auto 0;background:var(--green);border-radius:2px}
 .set-name{font-size:11px;color:#aeb3bb;font-weight:800;letter-spacing:.08em}
 
 /* ---------- horizontal board ---------- */
-.viewport{width:100%;height:calc(100vh - 125px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.viewport{width:100%;height:calc(100vh - 112px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 .viewport::-webkit-scrollbar{display:none}
 .board{width:max-content;min-width:100%;display:flex;align-items:stretch;gap:10px;padding:2px 4px 28px}
 
 /* ---------- one match ---------- */
-.match{width:214px;flex:0 0 214px;display:flex;flex-direction:column;position:relative;background:rgba(20,21,24,.97);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+.match{width:232px;flex:0 0 232px;display:flex;flex-direction:column;position:relative;background:rgba(20,21,24,.97);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.28)}
 .match::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--green);opacity:.8}
 
-.match-number{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#191a1e,#121316)}
-.match-number strong{font-size:13px;font-weight:1000;letter-spacing:.04em}
-.match-number span{font-size:9px;color:#70757e;font-weight:900;letter-spacing:.08em}
+.match-number{height:44px;display:flex;align-items:center;justify-content:center;padding:0 12px;border-bottom:1px solid rgba(0,255,163,.20);background:linear-gradient(180deg,#163027,#101d19);position:relative}
+.match-number strong{font-size:14px;font-weight:1000;letter-spacing:.06em;color:#f5f7f8}
+.match-number span{display:none}
 
 /* ---------- team block ---------- */
-.team{padding:11px 10px 10px;background:var(--panel2);border-bottom:1px solid var(--line-soft);transition:.2s}
+.team{padding:14px 10px 13px;background:var(--panel2);border-bottom:1px solid var(--line-soft);transition:.2s;text-align:center}
 .team:last-of-type{border-bottom:0}
 .team.winner{background:linear-gradient(180deg,rgba(0,255,163,.13),rgba(0,255,163,.035));box-shadow:inset 0 0 0 1px rgba(0,255,163,.22)}
 .team.loser{opacity:.54}
 
-.team-label{display:flex;align-items:center;justify-content:space-between;min-height:17px;margin-bottom:7px}
-.team-label .side{font-size:9px;font-weight:1000;letter-spacing:.12em;color:#7f858e}
-.team.winner .team-label .side{color:var(--green)}
-.result{font-size:8px;font-weight:1000;letter-spacing:.08em;color:transparent}
+.team-label{display:flex;align-items:center;justify-content:center;min-height:12px;margin-bottom:7px}
+.team-label .side{display:none}
+.result{font-size:9px;font-weight:1000;letter-spacing:.12em;color:transparent;min-height:11px}
 .team.winner .result{color:var(--green)}
 .team.loser .result{color:#666b74}
 
 .players{display:flex;align-items:center;justify-content:center;gap:7px;min-height:76px}
 .player{min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}
-.player-img{width:62px;height:62px;object-fit:contain;border-radius:8px;border:1px solid #3a3c43;background:#0b0c0e;display:block}
-.player-name{max-width:100%;margin-top:6px;font-size:11px;font-weight:1000;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-img{width:72px;height:72px;object-fit:contain;border-radius:8px;border:1px solid #3a3c43;background:#0b0c0e;display:block}
+.player-name{max-width:100%;margin-top:7px;font-size:12px;font-weight:1000;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-race{margin-top:3px;font-size:8px;font-weight:1000;letter-spacing:.08em}
 
 /* Team play: multiple images become compact but remain visible */
@@ -72,18 +69,12 @@ body{font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;color:var(--white)}
 .team.multi .player-race{display:none}
 .team.multi .player{max-width:62px}
 
-.vs{height:20px;display:flex;align-items:center;justify-content:center;color:#686d76;font-size:8px;font-weight:1000;letter-spacing:.15em}
-
-/* ---------- map: intentionally square, never cropped ---------- */
-.map-section{padding:10px;background:#101114;border-top:1px solid #24262b;border-bottom:1px solid #24262b}
-.map-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-.map-label span:first-child{font-size:8px;color:#777d86;font-weight:1000;letter-spacing:.14em}
-.map-label span:last-child{font-size:9px;color:#d9dde1;font-weight:900;max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.map-box{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#08090b;border:1px solid #303239;border-radius:7px;overflow:hidden}
-.map-img{display:block;width:100%;height:100%;object-fit:contain;padding:4px}
+/* ---------- map: square area, never cropped ---------- */
+.map-section{padding:12px 10px 13px;background:#101114;border-top:1px solid #24262b;border-bottom:1px solid #24262b;text-align:center}
+.map-box{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#08090b;border:1px solid #303239;border-radius:8px;overflow:hidden}
+.map-img{display:block;width:100%;height:100%;object-fit:contain;padding:5px}
 .map-placeholder{color:#555a63;font-size:9px;font-weight:900;letter-spacing:.1em}
-
-.format{padding:8px 10px;color:#777c85;text-align:center;font-size:8px;font-weight:900;letter-spacing:.08em;background:#111216}
+.map-name{margin-top:8px;color:#e7eaed;font-size:11px;font-weight:1000;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- subtle connector between columns ---------- */
 .connector{width:10px;flex:0 0 10px;display:flex;align-items:center;justify-content:center;position:relative}
@@ -93,20 +84,20 @@ body{font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;color:var(--white)}
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:900}
 
 /* ---------- winner accent ---------- */
-.winner-mark{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--green);color:#06120d;font-size:9px;font-weight:1000;box-shadow:0 0 10px rgba(0,255,163,.25)}
+.winner-mark{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--green);color:#06120d;font-size:10px;font-weight:1000;box-shadow:0 0 10px rgba(0,255,163,.25);position:absolute;right:12px}
+
 
 @media(max-width:1200px){
   #app{padding:20px}
-  .match{width:200px;flex-basis:200px}
-  .player-img{width:56px;height:56px}
+  .match{width:214px;flex-basis:214px}
+  .player-img{width:66px;height:66px}
 }
 </style>
 </head>
 <body>
 <div id="app">
   <header class="header" id="header" style="display:none">
-    <div class="eyebrow">CHZZK STARCRAFT</div>
-    <div class="title"><em>BRACKET</em> / MATCH LIST</div>
+    <div class="title">MATCH LIST</div>
     <div id="set-name" class="set-name"></div>
   </header>
 
@@ -269,26 +260,17 @@ function render(state){
 
         ${teamBlock(t1,'t1',winner,format)}
 
-        <div class="vs">VS</div>
-
         <div class="map-section">
-          <div class="map-label">
-            <span>MAP</span>
-            <span>${esc(mapData.name || '미정')}</span>
-          </div>
           <div class="map-box">
             ${mapSrc
               ? `<img class="map-img" src="${esc(mapSrc)}" alt="${esc(mapData.name||'map')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
               : ''}
             <span class="map-placeholder" style="${mapSrc?'display:none':''}">NO IMAGE</span>
           </div>
+          <div class="map-name">${esc(mapData.name || '미정')}</div>
         </div>
 
-        <div class="vs">VS</div>
-
         ${teamBlock(t2,'t2',winner,format)}
-
-        <div class="format">${format > 1 ? `${format}V${format} TEAM MATCH` : '1V1 SOLO MATCH'}</div>
       </article>`;
 
     if(i<total) html += '<div class="connector" aria-hidden="true"></div>';
