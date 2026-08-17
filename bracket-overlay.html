@@ -3,44 +3,148 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>대진표 오버레이</title>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<title>CHZZK StarCraft - 대진표</title>
 <style>
+    :root {
+        --bg:#0b0c0e;
+        --panel:#141518;
+        --panel2:#1b1c20;
+        --line:#2c2d33;
+        --green:#00FFA3;
+        --blue:#0C48CC;
+        --red:#F40404;
+        --p1-text:#ffffff;
+        --p2-text:#ffffff;
+        --muted:#9ca3af;
+    }
+    * { box-sizing:border-box; }
     html, body { margin:0; width:100%; height:100%; background:transparent; overflow:hidden; }
-    body { font-family:'Pretendard', Arial, sans-serif; color:#111; }
-    .root { width:100vw; height:100vh; padding:28px; box-sizing:border-box; overflow:hidden; }
-    .title { width:max-content; margin:0 auto 22px; border:3px solid #111; background:rgba(255,255,255,.97); color:#111; padding:8px 44px; font-size:30px; line-height:1; font-weight:1000; }
-    .subtitle { width:max-content; margin:0 auto 18px; color:#fff; font-size:14px; font-weight:900; text-shadow:0 2px 4px #000; }
-    .viewport { width:100%; overflow:hidden; }
-    .track { display:flex; gap:18px; width:max-content; transform:translateX(0); transition:transform .65s ease; }
-    .column { width:150px; flex:0 0 150px; }
-    .number { height:38px; border:3px solid #111; background:rgba(255,255,255,.97); color:#111; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:1000; margin-bottom:12px; box-sizing:border-box; }
-    .cell { height:92px; border:3px solid #111; background:rgba(255,255,255,.97); color:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; box-sizing:border-box; }
-    .cell + .cell { margin-top:12px; }
-    .future { opacity:.12; }
-    .revealed { opacity:1; }
-    .just-revealed { animation:reveal .7s ease both; }
-    @keyframes reveal { 0% { opacity:0; transform:translateY(14px) scale(.96); } 100% { opacity:1; transform:translateY(0) scale(1); } }
-    .player-img { width:44px; height:44px; object-fit:cover; border-radius:50%; margin-bottom:3px; }
-    .player-name { max-width:140px; font-size:14px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .race { font-size:10px; font-weight:800; color:#555; }
-    .map-img { width:118px; height:48px; object-fit:cover; margin-bottom:3px; }
-    .map-name { max-width:140px; font-size:13px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .loading { color:#fff; font-size:18px; font-weight:900; text-shadow:0 2px 4px #000; text-align:center; padding-top:40px; }
+    body { font-family:'Pretendard','Noto Sans KR',Arial,sans-serif; color:#fff; }
+    .root { width:100vw; height:100vh; padding:28px; overflow:hidden; }
+
+    .header {
+        width:100%;
+        min-height:58px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:18px;
+        padding:10px 16px;
+        background:rgba(20,21,24,.96);
+        border:1px solid var(--line);
+        border-radius:14px;
+        box-shadow:0 10px 35px rgba(0,0,0,.35);
+    }
+    .header-title { display:flex; align-items:center; gap:10px; min-width:0; }
+    .live-dot { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px rgba(0,255,163,.7); flex:0 0 auto; }
+    .title { color:var(--green); font-size:18px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .set-name { color:#d1d5db; font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .counter { color:#9ca3af; font-size:11px; font-weight:800; white-space:nowrap; }
+
+    .viewport {
+        width:100%;
+        height:calc(100vh - 112px);
+        margin-top:18px;
+        overflow-x:auto;
+        overflow-y:hidden;
+        scrollbar-width:none;
+    }
+    .viewport::-webkit-scrollbar { display:none; }
+    .track { display:flex; gap:16px; width:max-content; min-width:100%; align-items:flex-start; padding:6px 2px 30px; }
+
+    .match {
+        width:250px;
+        flex:0 0 250px;
+        background:rgba(20,21,24,.96);
+        border:1px solid var(--line);
+        border-radius:12px;
+        overflow:hidden;
+        box-shadow:0 8px 24px rgba(0,0,0,.28);
+    }
+    .match-head {
+        height:34px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        position:relative;
+        background:#111;
+        background-image:url('https://imgur.com/rQV1xEf.png');
+        background-size:100% 100%;
+        background-repeat:no-repeat;
+        border-bottom:1px solid #34363c;
+    }
+    .match-head span { color:var(--green); font-size:12px; font-weight:1000; letter-spacing:.05em; text-shadow:0 1px 3px #000; }
+
+    .player-row {
+        height:62px;
+        display:grid;
+        grid-template-columns:1fr 42px 1fr;
+        align-items:center;
+        position:relative;
+        background-image:url('https://imgur.com/OlWtSfa.png');
+        background-size:100% 100%;
+        background-repeat:no-repeat;
+    }
+    .player-row::before,
+    .player-row::after { content:''; position:absolute; top:0; bottom:0; width:50%; z-index:0; opacity:.9; }
+    .player-row::before { left:0; background:var(--blue); }
+    .player-row::after { right:0; background:var(--red); }
+    .player-side { position:relative; z-index:2; min-width:0; display:flex; align-items:center; gap:7px; padding:0 8px; }
+    .player-side.right { flex-direction:row-reverse; text-align:right; }
+    .player-side.left-name { color:var(--p1-text); }
+    .player-side.right-name { color:var(--p2-text); }
+    .player-img { width:36px; height:36px; flex:0 0 36px; object-fit:cover; border-radius:5px; border:1px solid rgba(255,255,255,.35); background:#0b0c0e; }
+    .player-text { min-width:0; }
+    .player-name { font-size:12px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 3px #000; }
+    .player-meta { font-size:9px; font-weight:800; opacity:.9; margin-top:2px; }
+    .versus { position:relative; z-index:3; height:100%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:1000; text-shadow:0 1px 3px #000; }
+
+    .map-row {
+        min-height:70px;
+        padding:6px 8px 7px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        background:#0f1012;
+        background-image:url('https://imgur.com/GW8D2yb.png');
+        background-size:100% 100%;
+        background-repeat:no-repeat;
+        border-top:1px solid rgba(255,255,255,.04);
+    }
+    .map-img { width:76px; height:42px; object-fit:cover; border:1px solid #3a3b42; border-radius:4px; background:#0b0c0e; }
+    .map-text { min-width:0; }
+    .map-label { color:#9ca3af; font-size:8px; font-weight:900; margin-bottom:2px; }
+    .map-name { max-width:140px; color:#fff; font-size:11px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .format { padding:4px 8px 7px; text-align:center; color:#9ca3af; font-size:9px; font-weight:900; background:#0f1012; }
+    .winner { border-color:var(--green) !important; box-shadow:0 0 0 1px rgba(0,255,163,.18), 0 8px 28px rgba(0,0,0,.35); }
+    .winner .match-head span::after { content:'  •  결과 반영'; color:var(--green); }
+
+    .empty { height:100%; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size:13px; font-weight:800; }
+    .loading { height:100%; display:flex; align-items:center; justify-content:center; color:var(--green); font-size:13px; font-weight:900; }
+
     @media (max-width:900px) {
         .root { padding:16px; }
-        .title { font-size:24px; padding:7px 34px; }
-        .column { width:120px; flex-basis:120px; }
-        .player-name { max-width:110px; font-size:12px; }
-        .map-img { width:94px; height:42px; }
+        .header { min-height:52px; }
+        .title { font-size:15px; }
+        .set-name { display:none; }
+        .match { width:220px; flex-basis:220px; }
+        .viewport { height:calc(100vh - 96px); margin-top:12px; }
     }
 </style>
 </head>
 <body>
 <div class="root">
-    <div id="title" class="title">대진표</div>
-    <div id="subtitle" class="subtitle"></div>
-    <div class="viewport">
+    <div id="header" class="header" style="display:none">
+        <div class="header-title">
+            <span class="live-dot"></span>
+            <span class="title">CHZZK STARCRAFT</span>
+            <span id="set-name" class="set-name"></span>
+        </div>
+        <span id="counter" class="counter"></span>
+    </div>
+    <div id="viewport" class="viewport">
         <div id="track" class="track"></div>
     </div>
     <div id="loading" class="loading">대진표를 불러오는 중...</div>
@@ -52,116 +156,119 @@ import { db } from "./firebase-config.js";
 
 const params = new URLSearchParams(location.search);
 const roomId = params.get('room');
-const requestedSet = Number(params.get('set') || 1);
 
-let matchSetsObj = {};
-let displayStates = {};
-let currentSetId = requestedSet;
-let lastRevealedCount = 0;
+let allPlayers = [];
+let allMaps = [];
+let currentSetId = null;
+let currentSet = null;
+let playerColors = { player1Color:'#0C48CC', player2Color:'#F40404', player1TextColor:'#ffffff', player2TextColor:'#ffffff' };
 
-function playerData(name) {
-    const fallback = {
-        name: name || '미정',
-        race: '',
-        img: ''
-    };
-    return fallback;
+const $ = id => document.getElementById(id);
+
+function player(name) {
+    return allPlayers.find(p => p.name === name) || { name:name || '미정', race:'', img:'' };
 }
-
-function playerImage(name) {
-    if (!name || name === '-' || name === '미정') {
-        return 'https://placehold.co/100x100/1b1c20/FFF?text=P';
+function playerImg(p, fallback='P') {
+    if (p?.img) return p.img;
+    if (p?.name && p.name !== '-' && p.name !== '미정') {
+        return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/' + encodeURIComponent(p.name) + '.png';
     }
-    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/' + encodeURIComponent(name) + '.png';
+    return 'https://placehold.co/80x80/1b1c20/FFF?text=' + fallback;
 }
-
-function mapImage(name) {
-    if (!name || name === '미정') {
-        return 'https://placehold.co/200x80/1b1c20/FFF?text=MAP';
+function map(name) {
+    return allMaps.find(m => m.name === name) || { name:name || '미정', url:'' };
+}
+function mapImg(m) {
+    if (m?.url) return m.url;
+    if (m?.name && m.name !== '미정') {
+        return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/' + encodeURIComponent(m.name) + '.png';
     }
-    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/' + encodeURIComponent(name) + '.png';
+    return 'https://placehold.co/120x70/1b1c20/FFF?text=MAP';
 }
-
-function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
+function esc(v) {
+    return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
 }
 
 function render() {
-    const setIds = Object.keys(matchSetsObj).map(Number).sort((a,b)=>a-b);
-    if (!setIds.length) return;
-    if (!matchSetsObj[currentSetId]) currentSetId = setIds[0];
+    if (!currentSet) return;
+    document.documentElement.style.setProperty('--blue', playerColors.player1Color || '#0C48CC');
+    document.documentElement.style.setProperty('--red', playerColors.player2Color || '#F40404');
+    document.documentElement.style.setProperty('--p1-text', playerColors.player1TextColor || '#ffffff');
+    document.documentElement.style.setProperty('--p2-text', playerColors.player2TextColor || '#ffffff');
+    $('loading').style.display = 'none';
+    $('header').style.display = 'flex';
+    $('set-name').textContent = currentSet.name || '';
 
-    const setObj = matchSetsObj[currentSetId];
-    const state = displayStates[currentSetId] || { revealedCount:0, completed:false };
-    const reveal = Math.max(0, Math.min(Number(state.revealedCount || 0), Number(setObj.matchesCount || 0)));
+    const total = Number(currentSet.matchesCount || 0);
+    const matches = currentSet.matches || {};
+    $('counter').textContent = total + '경기';
 
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('subtitle').textContent = setObj.name || '';
-
-    const track = document.getElementById('track');
     let html = '';
-
-    for (let i=1; i<=Number(setObj.matchesCount || 0); i++) {
-        const m = (setObj.matches || {})[i] || {};
-        const visible = i <= reveal;
-        const newly = visible && i === reveal && reveal !== lastRevealedCount;
+    for (let i=1; i<=total; i++) {
+        const m = matches[i] || {};
         const format = Number(m.matchFormat || 1);
-        const t1 = (m.t1Players || [m.t1Player || '미정']).slice(0, format).filter(x=>x && x!=='-' && x!=='미정');
-        const t2 = (m.t2Players || [m.t2Player || '미정']).slice(0, format).filter(x=>x && x!=='-' && x!=='미정');
-        const t1Text = t1.length ? t1.join(', ') : '미정';
-        const t2Text = t2.length ? t2.join(', ') : '미정';
-        const p1 = playerData(t1[0]);
-        const p2 = playerData(t2[0]);
+        const t1 = (m.t1Players || [m.t1Player || '미정']).slice(0,format).filter(x => x && x !== '-');
+        const t2 = (m.t2Players || [m.t2Player || '미정']).slice(0,format).filter(x => x && x !== '-');
+        const t1Valid = t1.filter(x => x !== '미정');
+        const t2Valid = t2.filter(x => x !== '미정');
+        const p1 = player(t1Valid[0] || '미정');
+        const p2 = player(t2Valid[0] || '미정');
+        const mapData = map(m.mapName);
+        const t1Name = t1Valid.length ? t1Valid.join(', ') : '미정';
+        const t2Name = t2Valid.length ? t2Valid.join(', ') : '미정';
+        const isWinner = m.winner === 't1' || m.winner === 't2';
+        const t1Race = format > 1 ? `${format}v${format}` : (p1.race || '');
+        const t2Race = format > 1 ? `${format}v${format}` : (p2.race || '');
 
-        const p1Cell = visible ? `<div class="cell revealed ${newly?'just-revealed':''}">
-            ${t1.length === 1 ? `<img class="player-img" src="${playerImage(t1[0])}" onerror="this.src='https://placehold.co/100x100/1b1c20/FFF?text=P1'">` : ''}
-            <div class="player-name">${escapeHtml(t1Text)}</div>
-            <div class="race">${format > 1 ? format+'v'+format : escapeHtml(p1.race || '')}</div>
-        </div>` : `<div class="cell future"></div>`;
-
-        const mapCell = visible ? `<div class="cell revealed ${newly?'just-revealed':''}">
-            <img class="map-img" src="${mapImage(m.mapName)}" onerror="this.src='https://placehold.co/200x80/1b1c20/FFF?text=MAP'">
-            <div class="map-name">${escapeHtml(m.mapName || '미정')}</div>
-        </div>` : `<div class="cell future"></div>`;
-
-        const p2Cell = visible ? `<div class="cell revealed ${newly?'just-revealed':''}">
-            ${t2.length === 1 ? `<img class="player-img" src="${playerImage(t2[0])}" onerror="this.src='https://placehold.co/100x100/1b1c20/FFF?text=P2'">` : ''}
-            <div class="player-name">${escapeHtml(t2Text)}</div>
-            <div class="race">${format > 1 ? format+'v'+format : escapeHtml(p2.race || '')}</div>
-        </div>` : `<div class="cell future"></div>`;
-
-        html += `<div class="column">
-            <div class="number">${i}</div>
-            ${p1Cell}
-            ${mapCell}
-            ${p2Cell}
-        </div>`;
+        html += `
+        <section class="match ${isWinner ? 'winner' : ''}">
+            <div class="match-head"><span>${i}경기</span></div>
+            <div class="player-row">
+                <div class="player-side left-name">
+                    <img class="player-img" src="${playerImg(p1,'P1')}" onerror="this.src='https://placehold.co/80x80/1b1c20/FFF?text=P1'">
+                    <div class="player-text">
+                        <div class="player-name">${esc(t1Name)}</div>
+                        <div class="player-meta">${esc(t1Race)}</div>
+                    </div>
+                </div>
+                <div class="versus">VS</div>
+                <div class="player-side right right-name">
+                    <img class="player-img" src="${playerImg(p2,'P2')}" onerror="this.src='https://placehold.co/80x80/1b1c20/FFF?text=P2'">
+                    <div class="player-text">
+                        <div class="player-name">${esc(t2Name)}</div>
+                        <div class="player-meta">${esc(t2Race)}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="map-row">
+                <img class="map-img" src="${mapImg(mapData)}" onerror="this.src='https://placehold.co/120x70/1b1c20/FFF?text=MAP'">
+                <div class="map-text"><div class="map-label">MAP</div><div class="map-name">${esc(mapData.name || '미정')}</div></div>
+            </div>
+            <div class="format">${format > 1 ? format + 'v' + format + ' 팀플' : '1v1 개인전'}</div>
+        </section>`;
     }
-
-    track.innerHTML = html;
-
-    // 경기 위치는 고정하고, 화면이 좁을 때만 현재 공개된 경기 쪽으로 가로 이동합니다.
-    if (reveal > 0) {
-        const columnWidth = 168;
-        const viewport = document.querySelector('.viewport');
-        const visibleWidth = viewport.clientWidth;
-        const target = Math.max(0, (reveal - 1) * columnWidth - Math.max(0, visibleWidth - columnWidth) * 0.55);
-        track.style.transform = `translateX(-${target}px)`;
-    } else {
-        track.style.transform = 'translateX(0)';
-    }
-
-    lastRevealedCount = reveal;
+    $('track').innerHTML = html || '<div class="empty">등록된 대진이 없습니다.</div>';
 }
 
 if (!roomId) {
-    document.getElementById('loading').textContent = 'room 파라미터가 없습니다.';
+    $('loading').textContent = 'room 파라미터가 없습니다.';
 } else {
-    const roomRef = ref(db, `rooms/${roomId}/matchState`);
-    onValue(roomRef, snap => {
-        const data = snap.val() || {};
-        matchSetsObj = data.matchSetsObj || data.matchSetsConfig || {};
-        displayStates = data.bracketDisplayState || {};
+    // 선수/맵 DB를 먼저 읽어 이미지와 종족 정보를 붙입니다.
+    onValue(ref(db, `rooms/${roomId}/matchState`), snap => {
+        const state = snap.val() || {};
+        allPlayers = state.players || [];
+        allMaps = state.maps || [];
+        playerColors = state.playerColors || playerColors;
+        const sets = state.matchSetsObj || state.matchSetsConfig || {};
+        const setIds = Object.keys(sets).map(Number).sort((a,b)=>a-b);
+        if (!setIds.length) {
+            $('loading').textContent = '대진표가 아직 없습니다.';
+            return;
+        }
+
+        const requested = Number(state.bracketCurrentSetId || params.get('set') || setIds[0]);
+        currentSetId = sets[requested] ? requested : setIds[0];
+        currentSet = sets[currentSetId];
         render();
     });
 }
