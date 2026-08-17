@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대진표 오버레이</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style>
+    html, body { margin:0; width:100%; height:100%; background:transparent; overflow:hidden; }
+    body { font-family:'Pretendard', Arial, sans-serif; color:#111; }
+    .root { width:100vw; height:100vh; padding:28px; box-sizing:border-box; overflow:hidden; }
+    .title { width:max-content; margin:0 auto 22px; border:3px solid #111; background:rgba(255,255,255,.97); color:#111; padding:8px 44px; font-size:30px; line-height:1; font-weight:1000; }
+    .subtitle { width:max-content; margin:0 auto 18px; color:#fff; font-size:14px; font-weight:900; text-shadow:0 2px 4px #000; }
+    .viewport { width:100%; overflow:hidden; }
+    .track { display:flex; gap:18px; width:max-content; transform:translateX(0); transition:transform .65s ease; }
+    .column { width:150px; flex:0 0 150px; }
+    .number { height:38px; border:3px solid #111; background:rgba(255,255,255,.97); color:#111; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:1000; margin-bottom:12px; box-sizing:border-box; }
+    .cell { height:92px; border:3px solid #111; background:rgba(255,255,255,.97); color:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; box-sizing:border-box; }
+    .cell + .cell { margin-top:12px; }
+    .future { opacity:.12; }
+    .revealed { opacity:1; }
+    .just-revealed { animation:reveal .7s ease both; }
+    @keyframes reveal { 0% { opacity:0; transform:translateY(14px) scale(.96); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+    .player-img { width:44px; height:44px; object-fit:cover; border-radius:50%; margin-bottom:3px; }
+    .player-name { max-width:140px; font-size:14px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .race { font-size:10px; font-weight:800; color:#555; }
+    .map-img { width:118px; height:48px; object-fit:cover; margin-bottom:3px; }
+    .map-name { max-width:140px; font-size:13px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .loading { color:#fff; font-size:18px; font-weight:900; text-shadow:0 2px 4px #000; text-align:center; padding-top:40px; }
+    @media (max-width:900px) {
+        .root { padding:16px; }
+        .title { font-size:24px; padding:7px 34px; }
+        .column { width:120px; flex-basis:120px; }
+        .player-name { max-width:110px; font-size:12px; }
+        .map-img { width:94px; height:42px; }
+    }
+</style>
+</head>
+<body>
+<div class="root">
+    <div id="title" class="title">대진표</div>
+    <div id="subtitle" class="subtitle"></div>
+    <div class="viewport">
+        <div id="track" class="track"></div>
+    </div>
+    <div id="loading" class="loading">대진표를 불러오는 중...</div>
+</div>
+
+<script type="module">
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { db } from "./firebase-config.js";
+
+const params = new URLSearchParams(location.search);
+const roomId = params.get('room');
+const requestedSet = Number(params.get('set') || 1);
+
+let matchSetsObj = {};
+let displayStates = {};
+let currentSetId = requestedSet;
+let lastRevealedCount = 0;
+
+function playerData(name) {
+    const fallback = {
+        name: name || '미정',
+        race: '',
+        img: ''
+    };
+    return fallback;
+}
+
+function playerImage(name) {
+    if (!name || name === '-' || name === '미정') {
+        return 'https://placehold.co/100x100/1b1c20/FFF?text=P';
+    }
+    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/' + encodeURIComponent(name) + '.png';
+}
+
+function mapImage(name) {
+    if (!name || name === '미정') {
+        return 'https://placehold.co/200x80/1b1c20/FFF?text=MAP';
+    }
+    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/' + encodeURIComponent(name) + '.png';
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
+}
+
+function render() {
+    const setIds = Object.keys(matchSetsObj).map(Number).sort((a,b)=>a-b);
+    if (!setIds.length) return;
+    if (!matchSetsObj[currentSetId]) currentSetId = setIds[0];
+
+    const setObj = matchSetsObj[currentSetId];
+    const state = displayStates[currentSetId] || { revealedCount:0, completed:false };
+    const reveal = Math.max(0, Math.min(Number(state.revealedCount || 0), Number(setObj.matchesCount || 0)));
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('subtitle').textContent = setObj.name || '';
+
+    const track = document.getElementById('track');
+    let html = '';
+
+    for (let i=1; i<=Number(setObj.matchesCount || 0); i++) {
+        const m = (setObj.matches || {})[i] || {};
+        const visible = i <= reveal;
+        const newly = visible && i === reveal && reveal !== lastRevealedCount;
+        const format = Number(m.matchFormat || 1);
+        const t1 = (m.t1Players || [m.t1Player || '미정']).slice(0, format).filter(x=>x && x!=='-' && x!=='미정');
+        const t2 = (m.t2Players || [m.t2Player || '미정']).slice(0, format).filter(x=>x && x!=='-' && x!=='미정');
+        const t1Text = t1.length ? t1.join(', ') : '미정';
+        const t2Text = t2.length ? t2.join(', ') : '미정';
+        const p1 = playerData(t1[0]);
+        const p2 = playerData(t2[0]);
+
+        const p1Cell = visible ? `<div class="cell revealed ${newly?'just-revealed':''}">
+            ${t1.length === 1 ? `<img class="player-img" src="${playerImage(t1[0])}" onerror="this.src='https://placehold.co/100x100/1b1c20/FFF?text=P1'">` : ''}
+            <div class="player-name">${escapeHtml(t1Text)}</div>
+            <div class="race">${format > 1 ? format+'v'+format : escapeHtml(p1.race || '')}</div>
+        </div>` : `<div class="cell future"></div>`;
+
+        const mapCell = visible ? `<div class="cell revealed ${newly?'just-revealed':''}">
+            <img class="map-img" src="${mapImage(m.mapName)}" onerror="this.src='https://placehold.co/200x80/1b1c20/FFF?text=MAP'">
+            <div class="map-name">${escapeHtml(m.mapName || '미정')}</div>
+        </div>` : `<div class="cell future"></div>`;
+
+        const p2Cell = visible ? `<div class="cell revealed ${newly?'just-revealed':''}">
+            ${t2.length === 1 ? `<img class="player-img" src="${playerImage(t2[0])}" onerror="this.src='https://placehold.co/100x100/1b1c20/FFF?text=P2'">` : ''}
+            <div class="player-name">${escapeHtml(t2Text)}</div>
+            <div class="race">${format > 1 ? format+'v'+format : escapeHtml(p2.race || '')}</div>
+        </div>` : `<div class="cell future"></div>`;
+
+        html += `<div class="column">
+            <div class="number">${i}</div>
+            ${p1Cell}
+            ${mapCell}
+            ${p2Cell}
+        </div>`;
+    }
+
+    track.innerHTML = html;
+
+    // 경기 위치는 고정하고, 화면이 좁을 때만 현재 공개된 경기 쪽으로 가로 이동합니다.
+    if (reveal > 0) {
+        const columnWidth = 168;
+        const viewport = document.querySelector('.viewport');
+        const visibleWidth = viewport.clientWidth;
+        const target = Math.max(0, (reveal - 1) * columnWidth - Math.max(0, visibleWidth - columnWidth) * 0.55);
+        track.style.transform = `translateX(-${target}px)`;
+    } else {
+        track.style.transform = 'translateX(0)';
+    }
+
+    lastRevealedCount = reveal;
+}
+
+if (!roomId) {
+    document.getElementById('loading').textContent = 'room 파라미터가 없습니다.';
+} else {
+    const roomRef = ref(db, `rooms/${roomId}/matchState`);
+    onValue(roomRef, snap => {
+        const data = snap.val() || {};
+        matchSetsObj = data.matchSetsObj || data.matchSetsConfig || {};
+        displayStates = data.bracketDisplayState || {};
+        render();
+    });
+}
+</script>
+</body>
+</html>
