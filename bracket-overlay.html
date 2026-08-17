@@ -3,151 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CHZZK StarCraft - 대진표</title>
+<title>CHZZK StarCraft - Match Bracket</title>
 <style>
-    :root {
-        --bg:#0b0c0e;
-        --panel:#141518;
-        --panel2:#1b1c20;
-        --line:#2c2d33;
-        --green:#00FFA3;
-        --blue:#0C48CC;
-        --red:#F40404;
-        --p1-text:#ffffff;
-        --p2-text:#ffffff;
-        --muted:#9ca3af;
-    }
-    * { box-sizing:border-box; }
-    html, body { margin:0; width:100%; height:100%; background:transparent; overflow:hidden; }
-    body { font-family:'Pretendard','Noto Sans KR',Arial,sans-serif; color:#fff; }
-    .root { width:100vw; height:100vh; padding:28px; overflow:hidden; }
+:root{
+  --bg:#0b0c0e;
+  --panel:#141518;
+  --panel2:#1b1c20;
+  --line:#2c2d33;
+  --line-soft:#202126;
+  --green:#00FFA3;
+  --white:#f5f7f8;
+  --muted:#8d929b;
+  --p1:#0C48CC;
+  --p2:#F40404;
+  --p1text:#fff;
+  --p2text:#fff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
+body{font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;color:var(--white)}
 
-    .header {
-        width:100%;
-        min-height:58px;
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:18px;
-        padding:10px 16px;
-        background:rgba(20,21,24,.96);
-        border:1px solid var(--line);
-        border-radius:14px;
-        box-shadow:0 10px 35px rgba(0,0,0,.35);
-    }
-    .header-title { display:flex; align-items:center; gap:10px; min-width:0; }
-    .live-dot { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px rgba(0,255,163,.7); flex:0 0 auto; }
-    .title { color:var(--green); font-size:18px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .set-name { color:#d1d5db; font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .counter { color:#9ca3af; font-size:11px; font-weight:800; white-space:nowrap; }
+#app{width:100vw;height:100vh;padding:28px 30px;overflow:hidden}
 
-    .viewport {
-        width:100%;
-        height:calc(100vh - 112px);
-        margin-top:18px;
-        overflow-x:auto;
-        overflow-y:hidden;
-        scrollbar-width:none;
-    }
-    .viewport::-webkit-scrollbar { display:none; }
-    .track { display:flex; gap:16px; width:max-content; min-width:100%; align-items:flex-start; padding:6px 2px 30px; }
+/* ---------- header ---------- */
+.header{display:flex;flex-direction:column;align-items:center;gap:7px;margin-bottom:22px}
+.eyebrow{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.16em}
+.eyebrow::before,.eyebrow::after{content:"";width:42px;height:1px;background:var(--line)}
+.title{font-size:27px;line-height:1;font-weight:1000;letter-spacing:.14em;color:#fff}
+.title em{font-style:normal;color:var(--green)}
+.set-name{font-size:11px;color:#aeb3bb;font-weight:800;letter-spacing:.08em}
 
-    .match {
-        width:250px;
-        flex:0 0 250px;
-        background:rgba(20,21,24,.96);
-        border:1px solid var(--line);
-        border-radius:12px;
-        overflow:hidden;
-        box-shadow:0 8px 24px rgba(0,0,0,.28);
-    }
-    .match-head {
-        height:34px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        position:relative;
-        background:#111;
-        background-image:url('https://imgur.com/rQV1xEf.png');
-        background-size:100% 100%;
-        background-repeat:no-repeat;
-        border-bottom:1px solid #34363c;
-    }
-    .match-head span { color:var(--green); font-size:12px; font-weight:1000; letter-spacing:.05em; text-shadow:0 1px 3px #000; }
+/* ---------- horizontal board ---------- */
+.viewport{width:100%;height:calc(100vh - 125px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.viewport::-webkit-scrollbar{display:none}
+.board{width:max-content;min-width:100%;display:flex;align-items:stretch;gap:10px;padding:2px 4px 28px}
 
-    .player-row {
-        height:62px;
-        display:grid;
-        grid-template-columns:1fr 42px 1fr;
-        align-items:center;
-        position:relative;
-        background-image:url('https://imgur.com/OlWtSfa.png');
-        background-size:100% 100%;
-        background-repeat:no-repeat;
-    }
-    .player-row::before,
-    .player-row::after { content:''; position:absolute; top:0; bottom:0; width:50%; z-index:0; opacity:.9; }
-    .player-row::before { left:0; background:var(--blue); }
-    .player-row::after { right:0; background:var(--red); }
-    .player-side { position:relative; z-index:2; min-width:0; display:flex; align-items:center; gap:7px; padding:0 8px; }
-    .player-side.right { flex-direction:row-reverse; text-align:right; }
-    .player-side.left-name { color:var(--p1-text); }
-    .player-side.right-name { color:var(--p2-text); }
-    .player-img { width:36px; height:36px; flex:0 0 36px; object-fit:cover; border-radius:5px; border:1px solid rgba(255,255,255,.35); background:#0b0c0e; }
-    .player-text { min-width:0; }
-    .player-name { font-size:12px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 3px #000; }
-    .player-meta { font-size:9px; font-weight:800; opacity:.9; margin-top:2px; }
-    .versus { position:relative; z-index:3; height:100%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:1000; text-shadow:0 1px 3px #000; }
+/* ---------- one match ---------- */
+.match{width:214px;flex:0 0 214px;display:flex;flex-direction:column;position:relative;background:rgba(20,21,24,.97);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+.match::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--green);opacity:.8}
 
-    .map-row {
-        min-height:70px;
-        padding:6px 8px 7px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:8px;
-        background:#0f1012;
-        background-image:url('https://imgur.com/GW8D2yb.png');
-        background-size:100% 100%;
-        background-repeat:no-repeat;
-        border-top:1px solid rgba(255,255,255,.04);
-    }
-    .map-img { width:76px; height:42px; object-fit:cover; border:1px solid #3a3b42; border-radius:4px; background:#0b0c0e; }
-    .map-text { min-width:0; }
-    .map-label { color:#9ca3af; font-size:8px; font-weight:900; margin-bottom:2px; }
-    .map-name { max-width:140px; color:#fff; font-size:11px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.match-number{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#191a1e,#121316)}
+.match-number strong{font-size:13px;font-weight:1000;letter-spacing:.04em}
+.match-number span{font-size:9px;color:#70757e;font-weight:900;letter-spacing:.08em}
 
-    .format { padding:4px 8px 7px; text-align:center; color:#9ca3af; font-size:9px; font-weight:900; background:#0f1012; }
-    .winner { border-color:var(--green) !important; box-shadow:0 0 0 1px rgba(0,255,163,.18), 0 8px 28px rgba(0,0,0,.35); }
-    .winner .match-head span::after { content:'  •  결과 반영'; color:var(--green); }
+/* ---------- team block ---------- */
+.team{padding:11px 10px 10px;background:var(--panel2);border-bottom:1px solid var(--line-soft);transition:.2s}
+.team:last-of-type{border-bottom:0}
+.team.winner{background:linear-gradient(180deg,rgba(0,255,163,.13),rgba(0,255,163,.035));box-shadow:inset 0 0 0 1px rgba(0,255,163,.22)}
+.team.loser{opacity:.54}
 
-    .empty { height:100%; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size:13px; font-weight:800; }
-    .loading { height:100%; display:flex; align-items:center; justify-content:center; color:var(--green); font-size:13px; font-weight:900; }
+.team-label{display:flex;align-items:center;justify-content:space-between;min-height:17px;margin-bottom:7px}
+.team-label .side{font-size:9px;font-weight:1000;letter-spacing:.12em;color:#7f858e}
+.team.winner .team-label .side{color:var(--green)}
+.result{font-size:8px;font-weight:1000;letter-spacing:.08em;color:transparent}
+.team.winner .result{color:var(--green)}
+.team.loser .result{color:#666b74}
 
-    @media (max-width:900px) {
-        .root { padding:16px; }
-        .header { min-height:52px; }
-        .title { font-size:15px; }
-        .set-name { display:none; }
-        .match { width:220px; flex-basis:220px; }
-        .viewport { height:calc(100vh - 96px); margin-top:12px; }
-    }
+.players{display:flex;align-items:center;justify-content:center;gap:7px;min-height:76px}
+.player{min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}
+.player-img{width:62px;height:62px;object-fit:contain;border-radius:8px;border:1px solid #3a3c43;background:#0b0c0e;display:block}
+.player-name{max-width:100%;margin-top:6px;font-size:11px;font-weight:1000;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-race{margin-top:3px;font-size:8px;font-weight:1000;letter-spacing:.08em}
+
+/* Team play: multiple images become compact but remain visible */
+.team.multi .players{gap:4px}
+.team.multi .player-img{width:43px;height:43px;border-radius:6px}
+.team.multi .player-name{font-size:9px}
+.team.multi .player-race{display:none}
+.team.multi .player{max-width:62px}
+
+.vs{height:20px;display:flex;align-items:center;justify-content:center;color:#686d76;font-size:8px;font-weight:1000;letter-spacing:.15em}
+
+/* ---------- map: intentionally square, never cropped ---------- */
+.map-section{padding:10px;background:#101114;border-top:1px solid #24262b;border-bottom:1px solid #24262b}
+.map-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.map-label span:first-child{font-size:8px;color:#777d86;font-weight:1000;letter-spacing:.14em}
+.map-label span:last-child{font-size:9px;color:#d9dde1;font-weight:900;max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-box{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#08090b;border:1px solid #303239;border-radius:7px;overflow:hidden}
+.map-img{display:block;width:100%;height:100%;object-fit:contain;padding:4px}
+.map-placeholder{color:#555a63;font-size:9px;font-weight:900;letter-spacing:.1em}
+
+.format{padding:8px 10px;color:#777c85;text-align:center;font-size:8px;font-weight:900;letter-spacing:.08em;background:#111216}
+
+/* ---------- subtle connector between columns ---------- */
+.connector{width:10px;flex:0 0 10px;display:flex;align-items:center;justify-content:center;position:relative}
+.connector::after{content:"";width:10px;height:1px;background:#35373d}
+
+.empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#6c7179;font-size:13px;font-weight:900}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:900}
+
+/* ---------- winner accent ---------- */
+.winner-mark{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--green);color:#06120d;font-size:9px;font-weight:1000;box-shadow:0 0 10px rgba(0,255,163,.25)}
+
+@media(max-width:1200px){
+  #app{padding:20px}
+  .match{width:200px;flex-basis:200px}
+  .player-img{width:56px;height:56px}
+}
 </style>
 </head>
 <body>
-<div class="root">
-    <div id="header" class="header" style="display:none">
-        <div class="header-title">
-            <span class="live-dot"></span>
-            <span class="title">CHZZK STARCRAFT</span>
-            <span id="set-name" class="set-name"></span>
-        </div>
-        <span id="counter" class="counter"></span>
-    </div>
-    <div id="viewport" class="viewport">
-        <div id="track" class="track"></div>
-    </div>
-    <div id="loading" class="loading">대진표를 불러오는 중...</div>
+<div id="app">
+  <header class="header" id="header" style="display:none">
+    <div class="eyebrow">CHZZK STARCRAFT</div>
+    <div class="title"><em>BRACKET</em> / MATCH LIST</div>
+    <div id="set-name" class="set-name"></div>
+  </header>
+
+  <div id="viewport" class="viewport">
+    <div id="board" class="board"></div>
+  </div>
+  <div id="loading" class="loading">대진표를 불러오는 중...</div>
 </div>
 
 <script type="module">
@@ -159,118 +125,188 @@ const roomId = params.get('room');
 
 let allPlayers = [];
 let allMaps = [];
-let currentSetId = null;
-let currentSet = null;
-let playerColors = { player1Color:'#0C48CC', player2Color:'#F40404', player1TextColor:'#ffffff', player2TextColor:'#ffffff' };
+let playerColors = {
+  player1Color:'#0C48CC',
+  player2Color:'#F40404',
+  player1TextColor:'#ffffff',
+  player2TextColor:'#ffffff'
+};
 
 const $ = id => document.getElementById(id);
 
-function player(name) {
-    return allPlayers.find(p => p.name === name) || { name:name || '미정', race:'', img:'' };
-}
-function playerImg(p, fallback='P') {
-    if (p?.img) return p.img;
-    if (p?.name && p.name !== '-' && p.name !== '미정') {
-        return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/' + encodeURIComponent(p.name) + '.png';
-    }
-    return 'https://placehold.co/80x80/1b1c20/FFF?text=' + fallback;
-}
-function map(name) {
-    return allMaps.find(m => m.name === name) || { name:name || '미정', url:'' };
-}
-function mapImg(m) {
-    if (m?.url) return m.url;
-    if (m?.name && m.name !== '미정') {
-        return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/' + encodeURIComponent(m.name) + '.png';
-    }
-    return 'https://placehold.co/120x70/1b1c20/FFF?text=MAP';
-}
-function esc(v) {
-    return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
+function esc(value){
+  return String(value ?? '').replace(/[&<>'"]/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'
+  }[c]));
 }
 
-function render() {
-    if (!currentSet) return;
-    document.documentElement.style.setProperty('--blue', playerColors.player1Color || '#0C48CC');
-    document.documentElement.style.setProperty('--red', playerColors.player2Color || '#F40404');
-    document.documentElement.style.setProperty('--p1-text', playerColors.player1TextColor || '#ffffff');
-    document.documentElement.style.setProperty('--p2-text', playerColors.player2TextColor || '#ffffff');
-    $('loading').style.display = 'none';
-    $('header').style.display = 'flex';
-    $('set-name').textContent = currentSet.name || '';
-
-    const total = Number(currentSet.matchesCount || 0);
-    const matches = currentSet.matches || {};
-    $('counter').textContent = total + '경기';
-
-    let html = '';
-    for (let i=1; i<=total; i++) {
-        const m = matches[i] || {};
-        const format = Number(m.matchFormat || 1);
-        const t1 = (m.t1Players || [m.t1Player || '미정']).slice(0,format).filter(x => x && x !== '-');
-        const t2 = (m.t2Players || [m.t2Player || '미정']).slice(0,format).filter(x => x && x !== '-');
-        const t1Valid = t1.filter(x => x !== '미정');
-        const t2Valid = t2.filter(x => x !== '미정');
-        const p1 = player(t1Valid[0] || '미정');
-        const p2 = player(t2Valid[0] || '미정');
-        const mapData = map(m.mapName);
-        const t1Name = t1Valid.length ? t1Valid.join(', ') : '미정';
-        const t2Name = t2Valid.length ? t2Valid.join(', ') : '미정';
-        const isWinner = m.winner === 't1' || m.winner === 't2';
-        const t1Race = format > 1 ? `${format}v${format}` : (p1.race || '');
-        const t2Race = format > 1 ? `${format}v${format}` : (p2.race || '');
-
-        html += `
-        <section class="match ${isWinner ? 'winner' : ''}">
-            <div class="match-head"><span>${i}경기</span></div>
-            <div class="player-row">
-                <div class="player-side left-name">
-                    <img class="player-img" src="${playerImg(p1,'P1')}" onerror="this.src='https://placehold.co/80x80/1b1c20/FFF?text=P1'">
-                    <div class="player-text">
-                        <div class="player-name">${esc(t1Name)}</div>
-                        <div class="player-meta">${esc(t1Race)}</div>
-                    </div>
-                </div>
-                <div class="versus">VS</div>
-                <div class="player-side right right-name">
-                    <img class="player-img" src="${playerImg(p2,'P2')}" onerror="this.src='https://placehold.co/80x80/1b1c20/FFF?text=P2'">
-                    <div class="player-text">
-                        <div class="player-name">${esc(t2Name)}</div>
-                        <div class="player-meta">${esc(t2Race)}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="map-row">
-                <img class="map-img" src="${mapImg(mapData)}" onerror="this.src='https://placehold.co/120x70/1b1c20/FFF?text=MAP'">
-                <div class="map-text"><div class="map-label">MAP</div><div class="map-name">${esc(mapData.name || '미정')}</div></div>
-            </div>
-            <div class="format">${format > 1 ? format + 'v' + format + ' 팀플' : '1v1 개인전'}</div>
-        </section>`;
-    }
-    $('track').innerHTML = html || '<div class="empty">등록된 대진이 없습니다.</div>';
+function findPlayer(name){
+  return allPlayers.find(p=>String(p?.name||'')===String(name||'')) || {
+    name:name || '미정', race:'', img_url:'', img:''
+  };
 }
 
-if (!roomId) {
-    $('loading').textContent = 'room 파라미터가 없습니다.';
-} else {
-    // 선수/맵 DB를 먼저 읽어 이미지와 종족 정보를 붙입니다.
-    onValue(ref(db, `rooms/${roomId}/matchState`), snap => {
-        const state = snap.val() || {};
-        allPlayers = state.players || [];
-        allMaps = state.maps || [];
-        playerColors = state.playerColors || playerColors;
-        const sets = state.matchSetsObj || state.matchSetsConfig || {};
-        const setIds = Object.keys(sets).map(Number).sort((a,b)=>a-b);
-        if (!setIds.length) {
-            $('loading').textContent = '대진표가 아직 없습니다.';
-            return;
-        }
+function playerImage(p, fallback){
+  const direct = p?.img_url || p?.img || p?.image || p?.url;
+  if(direct) return direct;
+  if(p?.name && p.name !== '미정' && p.name !== '-'){
+    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/' + encodeURIComponent(p.name) + '.png';
+  }
+  return 'https://placehold.co/100x100/141518/6f747c?text=' + encodeURIComponent(fallback || '?');
+}
 
-        const requested = Number(state.bracketCurrentSetId || params.get('set') || setIds[0]);
-        currentSetId = sets[requested] ? requested : setIds[0];
-        currentSet = sets[currentSetId];
-        render();
-    });
+function findMap(name){
+  return allMaps.find(m=>String(m?.name||'')===String(name||'')) || {name:name || '미정', url:'', img:''};
+}
+
+function mapImage(m){
+  const direct = m?.url || m?.img || m?.img_url || m?.image;
+  if(direct) return direct;
+  if(m?.name && m.name !== '미정'){
+    return 'https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/' + encodeURIComponent(m.name) + '.png';
+  }
+  return '';
+}
+
+function raceClass(race){
+  const r = String(race||'').toUpperCase();
+  if(r.includes('프로') || r === 'P' || r.includes('P')) return 'P';
+  if(r.includes('테란') || r === 'T' || r.includes('T')) return 'T';
+  if(r.includes('저그') || r === 'Z' || r.includes('Z')) return 'Z';
+  return '';
+}
+
+function raceText(race){
+  const c = raceClass(race);
+  if(c==='P') return 'PROTOSS';
+  if(c==='T') return 'TERRAN';
+  if(c==='Z') return 'ZERG';
+  return race || '';
+}
+
+function setThemeColors(){
+  document.documentElement.style.setProperty('--p1',playerColors.player1Color || '#0C48CC');
+  document.documentElement.style.setProperty('--p2',playerColors.player2Color || '#F40404');
+  document.documentElement.style.setProperty('--p1text',playerColors.player1TextColor || '#ffffff');
+  document.documentElement.style.setProperty('--p2text',playerColors.player2TextColor || '#ffffff');
+}
+
+function teamBlock(players, side, winner, format){
+  const valid = players.filter(x=>x && x!=='-' && x!=='미정');
+  const display = valid.length ? valid : ['미정'];
+  const multi = display.length > 1;
+  const isWinner = winner === side;
+  const hasResult = winner === 't1' || winner === 't2';
+  const loser = hasResult && !isWinner;
+  const color = side === 't1' ? 'var(--p1)' : 'var(--p2)';
+  const textColor = side === 't1' ? 'var(--p1text)' : 'var(--p2text)';
+
+  return `
+    <div class="team ${multi?'multi':''} ${isWinner?'winner':''} ${loser?'loser':''}" style="--team-color:${color};--team-text:${textColor}">
+      <div class="team-label">
+        <span class="side">${side === 't1' ? 'PLAYER 1 / TEAM 1' : 'PLAYER 2 / TEAM 2'}</span>
+        ${isWinner ? '<span class="winner-mark">✓</span>' : `<span class="result">${hasResult?'LOSS':''}</span>`}
+      </div>
+      <div class="players">
+        ${display.map((name,index)=>{
+          const p = findPlayer(name);
+          const img = playerImage(p, side === 't1' ? 'P1' : 'P2');
+          const race = raceText(p.race);
+          return `
+            <div class="player">
+              <img class="player-img" src="${esc(img)}" alt="" onerror="this.src='https://placehold.co/100x100/141518/6f747c?text=${side==='t1'?'P1':'P2'}'">
+              <div class="player-name" style="color:${textColor}">${esc(p.name)}</div>
+              ${race ? `<div class="player-race" style="color:${side==='t1'?'#7da6ff':'#ff8c8c'}">${esc(race)}</div>` : ''}
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function render(state){
+  const sets = state.matchSetsObj || state.matchSetsConfig || {};
+  const ids = Object.keys(sets).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+  if(!ids.length){
+    $('loading').textContent='대진표가 아직 없습니다.';
+    $('loading').style.display='flex';
+    $('header').style.display='none';
+    $('board').innerHTML='';
+    return;
+  }
+
+  const requested = Number(state.bracketCurrentSetId || params.get('set') || ids[0]);
+  const setId = sets[requested] ? requested : ids[0];
+  const currentSet = sets[setId] || {};
+  const total = Number(currentSet.matchesCount || 0);
+  const matches = currentSet.matches || {};
+
+  setThemeColors();
+  $('loading').style.display='none';
+  $('header').style.display='flex';
+  $('set-name').textContent = currentSet.name || `${setId}세트`;
+
+  if(total <= 0){
+    $('board').innerHTML='<div class="empty">등록된 대진이 없습니다.</div>';
+    return;
+  }
+
+  let html='';
+  for(let i=1;i<=total;i++){
+    const m = matches[i] || {};
+    const format = Math.max(1,Number(m.matchFormat || 1));
+    const t1 = (m.t1Players || [m.t1Player || '미정']).slice(0,format);
+    const t2 = (m.t2Players || [m.t2Player || '미정']).slice(0,format);
+    const mapData = findMap(m.mapName);
+    const mapSrc = mapImage(mapData);
+    const winner = m.winner || '';
+
+    html += `
+      <article class="match">
+        <div class="match-number">
+          <strong>${String(i).padStart(2,'0')}</strong>
+          <span>MATCH</span>
+        </div>
+
+        ${teamBlock(t1,'t1',winner,format)}
+
+        <div class="vs">VS</div>
+
+        <div class="map-section">
+          <div class="map-label">
+            <span>MAP</span>
+            <span>${esc(mapData.name || '미정')}</span>
+          </div>
+          <div class="map-box">
+            ${mapSrc
+              ? `<img class="map-img" src="${esc(mapSrc)}" alt="${esc(mapData.name||'map')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+              : ''}
+            <span class="map-placeholder" style="${mapSrc?'display:none':''}">NO IMAGE</span>
+          </div>
+        </div>
+
+        <div class="vs">VS</div>
+
+        ${teamBlock(t2,'t2',winner,format)}
+
+        <div class="format">${format > 1 ? `${format}V${format} TEAM MATCH` : '1V1 SOLO MATCH'}</div>
+      </article>`;
+
+    if(i<total) html += '<div class="connector" aria-hidden="true"></div>';
+  }
+
+  $('board').innerHTML=html;
+}
+
+if(!roomId){
+  $('loading').textContent='room 파라미터가 없습니다.';
+}else{
+  onValue(ref(db,`rooms/${roomId}/matchState`),snapshot=>{
+    const state = snapshot.val() || {};
+    allPlayers = state.players || [];
+    allMaps = state.maps || [];
+    playerColors = state.playerColors || playerColors;
+    render(state);
+  });
 }
 </script>
 </body>
