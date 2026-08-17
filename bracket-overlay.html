@@ -118,16 +118,18 @@ margin:0 0 22px;
 }
 
 .matches{
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(var(--match-count, 7), minmax(0, 1fr));
   align-items:stretch;
-  gap:18px;
-  width:max-content;
+  gap:clamp(7px, .75vw, 14px);
+  width:100%;
+  max-width:100%;
   margin:0 auto;
 }
 
 .match-card{
-  width:248px;
-  flex:0 0 248px;
+  width:100%;
+  min-width:0;
   background:var(--card);
   border:1px solid var(--line);
   border-radius:12px;
@@ -150,8 +152,8 @@ margin:0 0 22px;
 }
 
 .player-side{
-  min-height:205px;
-  padding:20px 14px 17px;
+  min-height:clamp(150px, 10.7vw, 205px);
+  padding:clamp(10px, 1.05vw, 20px) clamp(7px, .7vw, 14px) clamp(10px, .9vw, 17px);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -180,8 +182,8 @@ margin:0 0 22px;
 }
 
 .player-image{
-  width:112px;
-  height:112px;
+  width:clamp(62px, 5.8vw, 112px);
+  height:clamp(62px, 5.8vw, 112px);
   object-fit:cover;
   border-radius:14px;
   border:1px solid #3a3d45;
@@ -207,7 +209,7 @@ margin:0 0 22px;
 }
 
 .player-name{
-  font-size:16px;
+  font-size:clamp(11px, .84vw, 16px);
   font-weight:900;
   color:#fff;
   white-space:nowrap;
@@ -252,8 +254,8 @@ margin:0 0 22px;
 }
 
 .map-side{
-  min-height:285px;
-  padding:14px 13px 16px;
+  min-height:0;
+  padding:clamp(7px, .7vw, 14px) clamp(6px, .65vw, 13px) clamp(8px, .8vw, 16px);
   background:var(--card-2);
   display:flex;
   flex-direction:column;
@@ -288,9 +290,9 @@ margin:0 0 22px;
 }
 
 .map-name{
-  margin-top:10px;
+  margin-top:clamp(5px, .5vw, 10px);
   color:#fff;
-  font-size:14px;
+  font-size:clamp(10px, .73vw, 14px);
   line-height:1.2;
   font-weight:900;
   text-align:center;
@@ -337,27 +339,17 @@ margin:0 0 22px;
 }
 
 @media (max-width:900px){
-  #app{padding:18px}
-  .matches{gap:12px}
-  .match-card{
-    width:220px;
-    flex-basis:220px;
-  }
-  .player-image{
-    width:100px;
-    height:100px;
-  }
+  #app{padding:14px}
+  .matches{gap:6px}
+  .heading{margin-bottom:14px}
+  .heading-main{font-size:20px}
 }
 
-body.compact .match-card{
-  width:225px;
-  flex-basis:225px;
-}
 body.compact .player-side{
-  min-height:190px;
+  min-height:145px;
 }
 body.compact .map-side{
-  min-height:255px;
+  min-height:0;
 }
 </style>
 </head>
@@ -620,7 +612,11 @@ function render(setObj){
   const count = Number(setObj.matchesCount || 0);
   const matches = setObj.matches || {};
 
-  let html = "";
+  // 경기 수에 따라 한 화면 안에서 카드 폭을 자동으로 줄입니다.
+  // 가로 스크롤/사이드바 없이 현재 브라우저 폭을 그대로 사용합니다.
+  container.style.setProperty("--match-count", Math.max(1, count));
+
+  let html = ""; 
 
   for(let i=1; i<=count; i++){
     const m = matches[i] || matches[String(i)] || {};
