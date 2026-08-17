@@ -313,6 +313,7 @@
             document.getElementById('btn-copy-url').addEventListener('click', () => copyUrl('overlay-url-input', 'btn-copy-url'));
             document.getElementById('btn-copy-score-url').addEventListener('click', () => copyUrl('score-url-input', 'btn-copy-score-url'));
             document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
+            document.getElementById('btn-copy-bracket-url').addEventListener('click', () => copyUrl('bracket-url-input', 'btn-copy-bracket-url'));
             
             document.getElementById('btn-save-gas-url').addEventListener('click', saveUserGasUrl);
             document.getElementById('select-match-mode').addEventListener('change', saveMatchMode);
@@ -1414,12 +1415,13 @@
             updateScoreboardPreviewFromConsole();
 
             let p1 = set(ref(db, "rooms/" + currentRoomId + "/matchState/matchSetsObj/" + setId), s);
+            let p3 = set(ref(db, "rooms/" + currentRoomId + "/matchState/currentBracketSetId"), setId);
             let p2 = update(ref(db, "rooms/" + currentRoomId + "/manualScore"), {
                 t1Score: t1WinsCount,
                 t2Score: t2WinsCount
             });
 
-            Promise.all([p1, p2]).then(() => {
+            Promise.all([p1, p2, p3]).then(() => {
                 updateVsMatchDropdownOptions();
 
                 let vsSelect = document.getElementById('vs-match-select');
@@ -1597,6 +1599,7 @@
             document.getElementById('overlay-url-input').value = baseUrl + "/overlay.html?room=" + roomId;
             document.getElementById('score-url-input').value = baseUrl + "/score-overlay.html?room=" + roomId;
             document.getElementById('vs-url-input').value = baseUrl + "/vs-overlay.html?room=" + roomId;
+            document.getElementById('bracket-url-input').value = baseUrl + "/bracket-overlay.html?room=" + roomId;
         }
 
         function copyUrl(inputId, btnId) {
@@ -1757,6 +1760,14 @@
                         <button id="btn-toggle-list" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐 (숨기기)</button>
                         <input type="text" id="overlay-url-input" readonly class="w-36 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
                         <button id="btn-copy-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
+                    </div>
+                </div>
+
+                <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-3">
+                    <span class="text-xs font-bold text-[#00FFA3]">🗂️ 대진표 오버레이 (선수/맵 이미지 포함, [대진 반영] 누른 세트가 자동 송출됩니다)</span>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="bracket-url-input" readonly class="w-36 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                        <button id="btn-copy-bracket-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
                     </div>
                 </div>
 
