@@ -73,277 +73,6 @@
         .row-hidden { display: none !important; }
 
 
-        /* =========================================================
-           대진표 송출 탭 / OBS용 브래킷
-        ========================================================= */
-        .bracket-preview-shell {
-            background:#0b0c0e;
-            border:1px solid #2c2d33;
-            border-radius:14px;
-            padding:18px;
-            overflow:hidden;
-        }
-        .bracket-scroll {
-            width:100%;
-            overflow-x:auto;
-            overflow-y:hidden;
-            scrollbar-color:#3a3b42 #141518;
-            scrollbar-width:thin;
-            padding-bottom:8px;
-        }
-        .bracket-track {
-            display:flex;
-            gap:14px;
-            min-width:max-content;
-            align-items:stretch;
-        }
-        .bracket-column {
-            width:138px;
-            flex:0 0 138px;
-            display:flex;
-            flex-direction:column;
-            align-items:stretch;
-        }
-        .bracket-number {
-            height:38px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            border:2px solid #2c2d33;
-            border-radius:7px;
-            background:#141518;
-            color:#00FFA3;
-            font-size:14px;
-            font-weight:900;
-            margin-bottom:10px;
-        }
-        .bracket-cell {
-            height:86px;
-            border:2px solid #2c2d33;
-            border-radius:7px;
-            background:#141518;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            text-align:center;
-            overflow:hidden;
-            position:relative;
-        }
-        .bracket-cell + .bracket-cell { margin-top:10px; }
-        .bracket-cell.future { opacity:.34; }
-        .bracket-cell.revealed {
-            border-color:#00FFA3;
-            background:#111b17;
-            animation: bracketCellReveal .65s ease both;
-        }
-        @keyframes bracketCellReveal {
-            0% { opacity:0; transform:translateY(10px) scale(.97); }
-            100% { opacity:1; transform:translateY(0) scale(1); }
-        }
-        .bracket-player-img {
-            width:40px;
-            height:40px;
-            border-radius:50%;
-            object-fit:cover;
-            border:1px solid #3a3b42;
-            background:#0b0c0e;
-            margin-bottom:4px;
-        }
-        .bracket-player-name {
-            max-width:124px;
-            font-size:12px;
-            font-weight:900;
-            color:#fff;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
-        }
-        .bracket-player-race {
-            font-size:9px;
-            color:#9ca3af;
-            margin-top:2px;
-        }
-        .bracket-map-img {
-            width:106px;
-            height:44px;
-            object-fit:cover;
-            border-radius:4px;
-            border:1px solid #3a3b42;
-            background:#0b0c0e;
-            margin-bottom:4px;
-        }
-        .bracket-map-name {
-            font-size:11px;
-            font-weight:800;
-            color:#d1d5db;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            max-width:120px;
-        }
-        .bracket-arrow {
-            position:absolute;
-            right:-9px;
-            top:50%;
-            width:20px;
-            height:2px;
-            background:#00FFA3;
-            opacity:.45;
-        }
-        .bracket-arrow::after {
-            content:'';
-            position:absolute;
-            right:0;
-            top:-4px;
-            width:8px;
-            height:8px;
-            border-top:2px solid #00FFA3;
-            border-right:2px solid #00FFA3;
-            transform:rotate(45deg);
-        }
-        .bracket-preview-stage {
-            background:transparent;
-            min-height:360px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding:16px 0;
-        }
-        .bracket-preview-stage .bracket-scroll {
-            max-width:100%;
-        }
-        .bracket-empty {
-            width:100%;
-            min-height:260px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:#6b7280;
-            font-size:12px;
-        }
-        .bracket-control-button {
-            background:#2c2d33;
-            color:#fff;
-            border:1px solid #3a3b42;
-            padding:8px 12px;
-            border-radius:7px;
-            font-size:11px;
-            font-weight:800;
-            cursor:pointer;
-        }
-        .bracket-control-button:hover { background:#3c3d44; }
-        .bracket-control-button.primary { background:#00FFA3; color:#000; border-color:#00FFA3; }
-        .bracket-control-button.primary:hover { background:#00e692; }
-        .bracket-control-button.danger { color:#ff7676; border-color:#6b3030; }
-        .bracket-status {
-            color:#9ca3af;
-            font-size:11px;
-            font-weight:700;
-        }
-        .bracket-overlay-body {
-            margin:0;
-            min-height:100vh;
-            background:transparent;
-            color:#fff;
-            font-family:'Pretendard',sans-serif;
-            overflow:hidden;
-        }
-        .bracket-overlay-root {
-            width:100vw;
-            height:100vh;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:flex-start;
-            padding:28px;
-            overflow:hidden;
-        }
-        .bracket-overlay-title {
-            border:3px solid #111;
-            background:rgba(255,255,255,.96);
-            color:#111;
-            padding:8px 42px;
-            font-size:28px;
-            font-weight:1000;
-            margin-bottom:22px;
-        }
-        .bracket-overlay-viewport {
-            width:100%;
-            overflow:hidden;
-        }
-        .bracket-overlay-track {
-            display:flex;
-            gap:18px;
-            width:max-content;
-            transition:transform .65s ease;
-        }
-        .bracket-overlay-column {
-            width:150px;
-            flex:0 0 150px;
-        }
-        .bracket-overlay-number {
-            height:38px;
-            border:3px solid #111;
-            background:rgba(255,255,255,.96);
-            color:#111;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:22px;
-            font-weight:1000;
-            margin-bottom:12px;
-        }
-        .bracket-overlay-cell {
-            height:92px;
-            border:3px solid #111;
-            background:rgba(255,255,255,.96);
-            color:#111;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            overflow:hidden;
-        }
-        .bracket-overlay-cell + .bracket-overlay-cell { margin-top:12px; }
-        .bracket-overlay-cell.future { opacity:.12; }
-        .bracket-overlay-cell.revealed { opacity:1; }
-        .bracket-overlay-player-img {
-            width:44px;
-            height:44px;
-            border-radius:50%;
-            object-fit:cover;
-            margin-bottom:3px;
-        }
-        .bracket-overlay-player-name {
-            max-width:138px;
-            font-size:14px;
-            font-weight:1000;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
-        }
-        .bracket-overlay-race {
-            font-size:10px;
-            font-weight:800;
-            color:#555;
-        }
-        .bracket-overlay-map-img {
-            width:118px;
-            height:48px;
-            object-fit:cover;
-            margin-bottom:3px;
-        }
-        .bracket-overlay-map-name {
-            font-size:13px;
-            font-weight:1000;
-        }
-        @media (max-width:900px) {
-            .bracket-column { width:112px; flex-basis:112px; }
-            .bracket-overlay-column { width:120px; flex-basis:120px; }
-            .bracket-overlay-root { padding:16px; }
-        }
-
     </style>
     <script type="module">
         import { ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
@@ -363,9 +92,6 @@
             1: { id: 1, name: "1세트 (프로리그)", matchesCount: 7, matches: {}, nameCustom: false }
         };
         let activeSetId = 1;
-        let bracketDisplaySetId = 1;
-        let bracketDisplayState = { revealedCount: 0, completed: false, runId: 0 };
-        let bracketDisplayListenerAttached = false;
         let currentMatchMode = "team";
         let team1Name = "1팀";
         let team2Name = "2팀";
@@ -590,29 +316,6 @@
             document.getElementById('btn-copy-bracket-url')?.addEventListener('click', () => copyUrl('bracket-url-input', 'btn-copy-bracket-url'));
             document.getElementById('btn-copy-score-url').addEventListener('click', () => copyUrl('score-url-input', 'btn-copy-score-url'));
             document.getElementById('btn-copy-vs-url').addEventListener('click', () => copyUrl('vs-url-input', 'btn-copy-vs-url'));
-
-            const bracketSetSelect = document.getElementById('bracket-display-set');
-            if (bracketSetSelect) {
-                bracketSetSelect.addEventListener('change', () => {
-                    bracketDisplaySetId = Number(bracketSetSelect.value);
-                    loadBracketDisplayState(bracketDisplaySetId);
-                    renderBracketDisplayTab();
-                    const bracketUrl = document.getElementById('bracket-url-input');
-                    if (bracketUrl) {
-                        const currentUrl = window.location.href.split('?')[0];
-                        const baseUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '');
-                        bracketUrl.value = baseUrl + '/bracket-overlay.html?room=' + encodeURIComponent(currentRoomId) + '&set=' + bracketDisplaySetId;
-                    }
-                });
-            }
-            const btnBracketStart = document.getElementById('btn-bracket-start');
-            const btnBracketNext = document.getElementById('btn-bracket-next');
-            const btnBracketAll = document.getElementById('btn-bracket-all');
-            const btnBracketReset = document.getElementById('btn-bracket-reset');
-            if (btnBracketStart) btnBracketStart.addEventListener('click', () => startBracketReveal());
-            if (btnBracketNext) btnBracketNext.addEventListener('click', () => revealNextBracketMatch());
-            if (btnBracketAll) btnBracketAll.addEventListener('click', () => revealAllBracketMatches());
-            if (btnBracketReset) btnBracketReset.addEventListener('click', () => resetBracketReveal());
 
             document.getElementById('btn-save-gas-url').addEventListener('click', saveUserGasUrl);
             document.getElementById('select-match-mode').addEventListener('change', saveMatchMode);
@@ -946,18 +649,6 @@
                     renderSelectionUI();
                     renderMatchSetTabs();
                     renderMatchSetPanels();
-                    renderBracketSetSelector();
-                    if (!bracketDisplayListenerAttached) {
-                        bracketDisplayListenerAttached = true;
-                        const bracketStateRef = ref(db, "rooms/" + currentRoomId + "/matchState/bracketDisplayState");
-                        onValue(bracketStateRef, (snap) => {
-                            const allStates = snap.val() || {};
-                            const selectedState = allStates[bracketDisplaySetId];
-                            bracketDisplayState = selectedState || { revealedCount: 0, completed: false, runId: 0 };
-                            renderBracketDisplayTab();
-                        });
-                    }
-                    renderBracketDisplayTab();
                     updateScoreboardPreviewFromConsole();
                 }
             });
@@ -1730,8 +1421,10 @@
                 t1Score: t1WinsCount,
                 t2Score: t2WinsCount
             });
+            // [대진 반영]을 누른 세트를 대진표 오버레이가 즉시 표시하도록 지정합니다.
+            let p3 = set(ref(db, "rooms/" + currentRoomId + "/matchState/bracketCurrentSetId"), Number(setId));
 
-            Promise.all([p1, p2]).then(() => {
+            Promise.all([p1, p2, p3]).then(() => {
                 updateVsMatchDropdownOptions();
 
                 let vsSelect = document.getElementById('vs-match-select');
@@ -1904,195 +1597,6 @@
         }
 
 
-        /* =========================================================
-           대진표 송출 제어
-           - 모든 경기 칸은 처음부터 고정된 위치를 가짐
-           - revealedCount만 증가시키며 기존 경기는 절대 이동하지 않음
-           - Firebase: rooms/{room}/matchState/bracketDisplayState/{setId}
-        ========================================================= */
-        function getBracketSetList() {
-            return Object.values(matchSetsObj || {}).sort((a,b) => Number(a.id) - Number(b.id));
-        }
-
-        function getBracketSet(setId) {
-            return (matchSetsObj || {})[setId] || null;
-        }
-
-        function getBracketMatch(setObj, index) {
-            if (!setObj) return null;
-            return (setObj.matches || {})[index] || {};
-        }
-
-        function getPlayerDataByName(name) {
-            return allPlayers.find(p => p.name === name) || {
-                name: name || "미정",
-                race: "",
-                img: "https://placehold.co/100x100/1b1c20/FFF?text=P"
-            };
-        }
-
-        function getPlayerImageUrl(player) {
-            if (player && player.img) return player.img;
-            const name = player?.name || "";
-            return name
-                ? "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/images/" + encodeURIComponent(name) + ".png"
-                : "https://placehold.co/100x100/1b1c20/FFF?text=P";
-        }
-
-        function getMapDataByName(name) {
-            return allMaps.find(m => m.name === name) || { name: name || "미정", url: "" };
-        }
-
-        function getMapImageUrl(map) {
-            if (map && map.url) return map.url;
-            const name = map?.name || "";
-            return name
-                ? "https://raw.githubusercontent.com/ChzzkHarm0ny/SZD/main/maps/" + encodeURIComponent(name) + ".png"
-                : "https://placehold.co/200x80/1b1c20/FFF?text=MAP";
-        }
-
-        function renderBracketSetSelector() {
-            const select = document.getElementById('bracket-display-set');
-            if (!select) return;
-            const current = String(bracketDisplaySetId);
-            select.innerHTML = '';
-            getBracketSetList().forEach(setObj => {
-                const option = new Option(setObj.name || (setObj.id + '세트'), String(setObj.id));
-                if (String(setObj.id) === current) option.selected = true;
-                select.appendChild(option);
-            });
-            if (!getBracketSet(bracketDisplaySetId)) {
-                const first = getBracketSetList()[0];
-                if (first) {
-                    bracketDisplaySetId = Number(first.id);
-                    select.value = String(bracketDisplaySetId);
-                }
-            }
-        }
-
-        function bracketPlayerCellHtml(name, revealed, compact=false) {
-            const valid = name && name !== '-' && name !== '미정';
-            if (!revealed) return `<div class="bracket-cell future"></div>`;
-            if (!valid) return `<div class="bracket-cell revealed"><div class="bracket-player-name">미정</div></div>`;
-            const p = getPlayerDataByName(name);
-            return `<div class="bracket-cell revealed">
-                <img class="bracket-player-img" src="${getPlayerImageUrl(p)}" onerror="this.src='https://placehold.co/100x100/1b1c20/FFF?text=P'">
-                <div class="bracket-player-name">${name}</div>
-                <div class="bracket-player-race">${p.race || ''}</div>
-            </div>`;
-        }
-
-        function bracketMapCellHtml(name, revealed) {
-            if (!revealed) return `<div class="bracket-cell future"></div>`;
-            const map = getMapDataByName(name);
-            return `<div class="bracket-cell revealed">
-                <img class="bracket-map-img" src="${getMapImageUrl(map)}" onerror="this.src='https://placehold.co/200x80/1b1c20/FFF?text=MAP'">
-                <div class="bracket-map-name">${map.name || '미정'}</div>
-            </div>`;
-        }
-
-        function renderBracketPreview() {
-            const root = document.getElementById('bracket-preview-root');
-            const setObj = getBracketSet(bracketDisplaySetId);
-            if (!root || !setObj) {
-                if (root) root.innerHTML = '<div class="bracket-empty">대진표 세트를 먼저 만들어 주세요.</div>';
-                return;
-            }
-            const reveal = Math.max(0, Math.min(Number(bracketDisplayState.revealedCount || 0), Number(setObj.matchesCount || 0)));
-            let html = '<div class="bracket-scroll"><div class="bracket-track">';
-            for (let i = 1; i <= Number(setObj.matchesCount || 0); i++) {
-                const m = getBracketMatch(setObj, i);
-                const visible = i <= reveal;
-                const t1 = m.t1Players || [m.t1Player || '미정'];
-                const t2 = m.t2Players || [m.t2Player || '미정'];
-                const format = Number(m.matchFormat || 1);
-                const t1Names = t1.slice(0, format).filter(x => x && x !== '-' && x !== '미정');
-                const t2Names = t2.slice(0, format).filter(x => x && x !== '-' && x !== '미정');
-                const p1 = t1Names.length > 0 ? t1Names.join(', ') : '미정';
-                const p2 = t2Names.length > 0 ? t2Names.join(', ') : '미정';
-                const p1Data = getPlayerDataByName(t1Names[0] || '미정');
-                const p2Data = getPlayerDataByName(t2Names[0] || '미정');
-                const p1Html = visible ? `<div class="bracket-cell revealed">
-                    ${t1Names.length === 1 ? `<img class="bracket-player-img" src="${getPlayerImageUrl(p1Data)}" onerror="this.src='https://placehold.co/100x100/1b1c20/FFF?text=P1'">` : ''}
-                    <div class="bracket-player-name">${p1}</div>
-                    <div class="bracket-player-race">${format > 1 ? format + 'v' + format : (p1Data.race || '')}</div>
-                </div>` : `<div class="bracket-cell future"></div>`;
-                const p2Html = visible ? `<div class="bracket-cell revealed">
-                    ${t2Names.length === 1 ? `<img class="bracket-player-img" src="${getPlayerImageUrl(p2Data)}" onerror="this.src='https://placehold.co/100x100/1b1c20/FFF?text=P2'">` : ''}
-                    <div class="bracket-player-name">${p2}</div>
-                    <div class="bracket-player-race">${format > 1 ? format + 'v' + format : (p2Data.race || '')}</div>
-                </div>` : `<div class="bracket-cell future"></div>`;
-                html += `<div class="bracket-column">
-                    <div class="bracket-number">${i}</div>
-                    ${p1Html}
-                    ${bracketMapCellHtml(m.mapName || '미정', visible)}
-                    ${p2Html}
-                    ${i < Number(setObj.matchesCount || 0) ? '<span class="bracket-arrow"></span>' : ''}
-                </div>`;
-            }
-            html += '</div></div>';
-            root.innerHTML = html;
-            const scroll = root.querySelector('.bracket-scroll');
-            if (scroll && reveal > 0) {
-                const target = Math.max(0, (reveal - 1) * 152 - Math.max(0, scroll.clientWidth - 152) * 0.55);
-                scroll.scrollTo({left: target, behavior: 'smooth'});
-            }
-            const status = document.getElementById('bracket-display-status');
-            if (status) {
-                status.textContent = reveal >= Number(setObj.matchesCount || 0)
-                    ? '전체 대진표 완성'
-                    : `현재 ${reveal} / ${setObj.matchesCount}경기 표시`;
-            }
-        }
-
-        function renderBracketDisplayTab() {
-            renderBracketSetSelector();
-            renderBracketPreview();
-        }
-
-        async function loadBracketDisplayState(setId) {
-            if (!currentRoomId || !setId) return;
-            try {
-                const snap = await get(ref(db, `rooms/${currentRoomId}/matchState/bracketDisplayState/${setId}`));
-                bracketDisplayState = snap.val() || { revealedCount: 0, completed: false, runId: 0 };
-            } catch (e) {
-                console.error('대진표 송출 상태 로드 실패:', e);
-            }
-            renderBracketPreview();
-        }
-
-        function saveBracketDisplayState(state) {
-            if (!currentRoomId) return;
-            bracketDisplayState = state;
-            set(ref(db, `rooms/${currentRoomId}/matchState/bracketDisplayState/${bracketDisplaySetId}`), state);
-            renderBracketPreview();
-        }
-
-        function startBracketReveal() {
-            const setObj = getBracketSet(bracketDisplaySetId);
-            if (!setObj) return;
-            saveBracketDisplayState({ revealedCount: 1, completed: Number(setObj.matchesCount) <= 1, runId: Date.now() });
-        }
-
-        function revealNextBracketMatch() {
-            const setObj = getBracketSet(bracketDisplaySetId);
-            if (!setObj) return;
-            const total = Number(setObj.matchesCount || 0);
-            const next = Math.min(total, Number(bracketDisplayState.revealedCount || 0) + 1);
-            saveBracketDisplayState({ ...bracketDisplayState, revealedCount: next, completed: next >= total });
-        }
-
-        function revealAllBracketMatches() {
-            const setObj = getBracketSet(bracketDisplaySetId);
-            if (!setObj) return;
-            const total = Number(setObj.matchesCount || 0);
-            saveBracketDisplayState({ ...bracketDisplayState, revealedCount: total, completed: true, runId: bracketDisplayState.runId || Date.now() });
-        }
-
-        function resetBracketReveal() {
-            saveBracketDisplayState({ revealedCount: 0, completed: false, runId: Date.now() });
-        }
-
         function generateOverlayUrls(roomId) {
             const currentUrl = window.location.href.split('?')[0];
             const baseUrl = currentUrl.replace(/index\.html$/, '').replace(/\/$/, '');
@@ -2100,7 +1604,7 @@
             document.getElementById('score-url-input').value = baseUrl + "/score-overlay.html?room=" + roomId;
             document.getElementById('vs-url-input').value = baseUrl + "/vs-overlay.html?room=" + roomId;
             const bracketUrl = document.getElementById('bracket-url-input');
-            if (bracketUrl) bracketUrl.value = baseUrl + "/bracket-overlay.html?room=" + encodeURIComponent(roomId) + "&set=" + bracketDisplaySetId;
+            if (bracketUrl) bracketUrl.value = baseUrl + "/bracket-overlay.html?room=" + encodeURIComponent(roomId);
         }
 
         function copyUrl(inputId, btnId) {
@@ -2183,9 +1687,8 @@
             <div class="flex gap-2 mb-6 border-b border-[#2c2d33] pb-3 flex-wrap">
                 <button data-tab="roster" class="tab-btn bg-[#00FFA3] text-black px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">👥 1. 선수 및 맵 선택</button>
                 <button data-tab="match" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚔️ 2. 중계 대시보드</button>
-                <button data-tab="bracket" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">📋 3. 대진표 송출</button>
-                <button data-tab="settings" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚙️ 4. 기본 설정 및 링크</button>
-                <button data-tab="guide" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">📖 5. 콘솔 사용법 설명서</button>
+                <button data-tab="settings" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">⚙️ 3. 기본 설정 및 링크</button>
+                <button data-tab="guide" class="tab-btn bg-[#1b1c20] text-gray-300 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all">📖 4. 콘솔 사용법 설명서</button>
             </div>
 
             <div id="tab-roster" class="tab-content">
@@ -2255,13 +1758,15 @@
                         <button id="btn-add-match-set" class="bg-[#00FFA3] hover:bg-[#00e692] text-black px-3 py-1.5 rounded text-xs font-bold cursor-pointer whitespace-nowrap">+새 세트(묶음) 추가</button>
                     </div>
                 </div>
-
-                <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-3">
-                    <span class="text-xs font-bold text-[#00FFA3]">📋 매치리스트 오버레이 제어</span>
-                    <div class="flex items-center gap-2">
-                        <button id="btn-toggle-list" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 화면 켜짐 (숨기기)</button>
+                <div class="mb-4 bg-[#1b1c20] p-3 rounded-xl border border-[#2c2d33] flex items-center justify-between gap-3 flex-wrap">
+                    <span class="text-xs font-bold text-[#00FFA3]">📋 매치리스트 / 대진표 오버레이</span>
+                    <div class="flex items-center gap-2 flex-wrap justify-end">
+                        <button id="btn-toggle-list" data-state="true" class="bg-[#00FFA3] text-black px-3 py-1 rounded text-[11px] font-bold cursor-pointer">📺 매치리스트 켜짐</button>
                         <input type="text" id="overlay-url-input" readonly class="w-36 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
-                        <button id="btn-copy-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
+                        <button id="btn-copy-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">매치리스트 링크</button>
+                        <span class="text-gray-600">|</span>
+                        <input type="text" id="bracket-url-input" readonly class="w-36 bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1 text-[11px] text-gray-300">
+                        <button id="btn-copy-bracket-url" class="bg-[#2c2d33] text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">대진표 링크</button>
                     </div>
                 </div>
 
@@ -2459,57 +1964,6 @@
                 </div>
             </div>
 
-
-            <div id="tab-bracket" class="tab-content hidden">
-                <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                    <div class="flex items-center justify-between gap-3 flex-wrap">
-                        <div>
-                            <h3 class="text-sm font-bold text-[#00FFA3]">📋 대진표 송출</h3>
-                            <p class="text-[10px] text-gray-400 mt-1">경기를 하나씩 공개하지만, 공개된 1·2·3경기의 위치는 절대로 이동하지 않습니다.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[11px] text-gray-400">세트</span>
-                            <select id="bracket-display-set" class="bg-[#0b0c0e] border border-[#2c2d33] rounded px-3 py-1.5 text-xs text-[#00FFA3] font-bold"></select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                    <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <button id="btn-bracket-start" class="bracket-control-button primary">▶ 1경기부터 시작</button>
-                            <button id="btn-bracket-next" class="bracket-control-button">다음 경기</button>
-                            <button id="btn-bracket-all" class="bracket-control-button">전체 공개</button>
-                            <button id="btn-bracket-reset" class="bracket-control-button danger">초기화</button>
-                        </div>
-                        <span id="bracket-display-status" class="bracket-status">현재 0경기 표시</span>
-                    </div>
-                    <div class="text-[10px] text-gray-500">※ 대진 내용은 [⚔️ 2. 중계 대시보드]에서 수정합니다. 이 탭에서는 송출 순서만 제어합니다.</div>
-                </div>
-
-                <div class="bracket-preview-shell mb-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold text-[#00FFA3]">🔍 대진표 미리보기</span>
-                        <span class="text-[10px] text-gray-500">1 → 2 → 3 → ... 순서로 오른쪽에 고정 생성</span>
-                    </div>
-                    <div id="bracket-preview-root" class="bracket-preview-stage">
-                        <div class="bracket-empty">대진표를 불러오는 중...</div>
-                    </div>
-                </div>
-
-                <div class="bg-[#1b1c20] p-4 rounded-xl border border-[#2c2d33]">
-                    <div class="flex items-center justify-between gap-3 flex-wrap mb-2">
-                        <div>
-                            <h3 class="text-sm font-bold text-[#00FFA3]">🎥 OBS 대진표 오버레이</h3>
-                            <p class="text-[10px] text-gray-400 mt-1">OBS 브라우저 소스에는 아래 링크를 사용하세요. 관리자 화면과 독립적으로 대진표가 표시됩니다.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="bracket-url-input" readonly class="w-72 max-w-full bg-[#0b0c0e] border border-[#2c2d33] rounded px-2 py-1.5 text-[10px] text-gray-300">
-                            <button id="btn-copy-bracket-url" class="bg-[#2c2d33] hover:bg-[#3c3d44] text-white px-3 py-1.5 rounded text-[11px] font-bold cursor-pointer">링크 복사</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div id="tab-settings" class="tab-content hidden">
                 <div class="mb-4 bg-[#1b1c20] p-4 rounded-xl border border-[#00FFA3]/30 flex items-center justify-between">
